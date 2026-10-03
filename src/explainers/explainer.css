@@ -1,0 +1,13 @@
+/* Shared look for article explainers: a hairline box, ink lines, orange for the thing you touch. */
+.explainer { margin: 2em 0; border: 1px solid var(--rule); padding: 12px 16px 14px; background: #fff; }
+.explainer svg { display: block; width: 100%; height: auto; cursor: crosshair; user-select: none; }
+.explainer figcaption { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; font-size: 12px; color: var(--muted); padding-top: 8px; border-top: 1px solid var(--rule-soft); }
+.explainer figcaption b { font-weight: normal; color: var(--ink); font-family: var(--mono); }
+.explainer button { margin-left: auto; font: 12px var(--sans); padding: 3px 10px; border: 1px solid var(--link); border-radius: 3px; background: #fff; color: var(--link); cursor: pointer; }
+
+.ex-reach { fill: none; stroke: var(--rule); stroke-dasharray: 4 4; }
+.ex-ground { stroke: #3b3632; stroke-width: 1.2; }
+.ex-link { fill: none; stroke: #3b3632; stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+.ex-joint { fill: #fff; stroke: #3b3632; stroke-width: 1.6; }
+.ex-target { fill: var(--heat); fill-opacity: .15; stroke: var(--heat); stroke-width: 1.6; cursor: grab; }
+.ex-warn { color: var(--heat); }

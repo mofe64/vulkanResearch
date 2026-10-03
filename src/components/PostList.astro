@@ -1,0 +1,37 @@
+---
+import { TYPE_LABEL, fmtDate, postUrl, projectUrl, type Post } from "../lib/content";
+import { getEntry } from "astro:content";
+
+interface Props { posts: Post[]; showProject?: boolean }
+const { posts, showProject = true } = Astro.props;
+const names = new Map<string, string>();
+for (const p of posts) {
+  const id = p.data.project.id;
+  if (!names.has(id)) names.set(id, (await getEntry("projects", id))?.data.name ?? id);
+}
+---
+
+<ul class="list">
+  {posts.map((e) => (
+    <li>
+      <time datetime={e.data.date.toISOString().slice(0, 10)}>{fmtDate(e.data.date)}</time>
+      <span>
+        {showProject && <><a href={projectUrl(e.data.project.id)} class="proj">{names.get(e.data.project.id)}</a>: </>}
+        <a href={postUrl(e)}>{e.data.title}</a>
+        <span class="chip">{TYPE_LABEL[e.data.type]}</span>
+        {e.data.draft && <span class="chip">Draft</span>}
+      </span>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .list { list-style: none; margin: 0; padding: 0; }
+  li { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; padding: 8px 0; border-top: 1px solid var(--rule); }
+  time { font-size: 11px; color: var(--muted); padding-top: 3px; }
+  .proj { color: var(--ink); }
+  .chip { display: inline-block; background: var(--chip); color: var(--muted); font-size: 10px; padding: 0 6px; border-radius: 3px; margin-left: 6px; vertical-align: 1px; }
+  @media (max-width: 480px) {
+    li { grid-template-columns: 1fr; gap: 0; }
+  }
+</style>

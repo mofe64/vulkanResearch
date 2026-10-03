@@ -1,0 +1,164 @@
+---
+// A 4:3 box that shows a drawing, and upgrades to an interactive 3D model when one is given.
+// - The drawing is plain <img>, so the page looks right with JS off or before three.js arrives.
+// - three.js (~170 KB gz) is only downloaded when a box with a model scrolls near the viewport.
+// - "ink" style renders white surfaces with dark crease lines, to sit with the line drawings.
+// Usable from .astro pages and from .mdx articles: <RobotViewer model="/models/orion-v2.glb" art="/art/orion-v2-poster.png" alt="Orion V2" />
+interface Props {
+  art: string;
+  alt: string;
+  model?: string;
+  look?: "ink" | "shaded";
+  autoRotate?: boolean;
+}
+const { art, alt, model, look = "ink", autoRotate = true } = Astro.props;
+---
+
+<robot-viewer
+  class="viewer"
+  data-model={model}
+  data-look={look}
+  data-autorotate={autoRotate ? "true" : "false"}
+>
+  <img class="poster" src={art} alt={alt} width="600" height="450" loading="lazy" decoding="async" draggable="false" />
+  {model && <span class="hint" aria-hidden="true">Drag to turn</span>}
+</robot-viewer>
+
+<style>
+  .viewer {
+    display: block; position: relative;
+    aspect-ratio: 4 / 3; border: 1px solid var(--rule); overflow: hidden; background: #fff;
+  }
+  .poster { display: block; width: 100%; height: 100%; object-fit: cover; transition: opacity .5s; }
+  .viewer :global(canvas) {
+    position: absolute; inset: 0; width: 100% !important; height: 100% !important;
+    opacity: 0; transition: opacity .5s; cursor: grab; touch-action: pan-y;
+  }
+  .viewer :global(canvas:active) { cursor: grabbing; }
+  /* Once the 3D view is up, the (now invisible) poster must not catch the pointer, or drags move the image instead. */
+  .viewer.is-3d .poster { opacity: 0; pointer-events: none; }
+  .viewer :global(canvas) { z-index: 1; }
+  .viewer.is-3d :global(canvas) { opacity: 1; }
+  .hint {
+    position: absolute; right: 10px; bottom: 8px; font-size: 11px; color: var(--muted);
+    opacity: 0; transition: opacity .5s; pointer-events: none;
+  }
+  .viewer.is-3d .hint { opacity: 1; }
+</style>
+
+<script>
+  import type { Mesh } from "three"; // type-only: erased at build, three.js itself is still lazy-loaded below
+  // A custom element: the browser calls connectedCallback for every <robot-viewer> on the page,
+  // including ones added later, so there is no manual "find all and init" step.
+  class RobotViewer extends HTMLElement {
+    private started = false;
+
+    connectedCallback() {
+      if (!this.dataset.model || !hasWebGL()) return;
+      // Start loading a little before the box is on screen.
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting) && !this.started) {
+            this.started = true;
+            io.disconnect();
+            this.mount().catch((err) => console.warn(`[robot-viewer] ${this.dataset.model}:`, err));
+          }
+        },
+        { rootMargin: "300px" },
+      );
+      io.observe(this);
+    }
+
+    private async mount() {
+      // Dynamic imports become a separate chunk that only pages with a model ever fetch.
+      const THREE = await import("three");
+      const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
+      const { OrbitControls } = await import("three/addons/controls/OrbitControls.js");
+
+      const ink = this.dataset.look !== "shaded";
+      const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      // Models are compressed with gltfpack (EXT_meshopt_compression); the decoder is a small WASM module.
+      const { MeshoptDecoder } = await import("three/addons/libs/meshopt_decoder.module.js");
+      const gltf = await new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync(this.dataset.model!);
+      const model = gltf.scene;
+
+      if (ink) {
+        // Re-skin every mesh: soft white surface + dark lines where faces meet at > 30°.
+        const surface = new THREE.MeshLambertMaterial({
+          color: 0xffffff, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1,
+        });
+        const line = new THREE.LineBasicMaterial({ color: 0x3b3632 });
+        model.traverse((o) => {
+          if ((o as Mesh).isMesh) {
+            const mesh = o as Mesh;
+            mesh.material = surface;
+            mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry, 30), line));
+          }
+        });
+      }
+
+      // Centre the model at the origin and scale it to a unit-ish size, whatever units the CAD export used.
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const centre = box.getCenter(new THREE.Vector3());
+      const radius = Math.max(size.x, size.y, size.z) / 2 || 1;
+      model.position.sub(centre);
+      const pivot = new THREE.Group();
+      pivot.add(model);
+      pivot.scale.setScalar(1 / radius);
+
+      const scene = new THREE.Scene();
+      scene.add(pivot);
+      scene.add(new THREE.HemisphereLight(0xffffff, 0xd9d6cf, ink ? 2.2 : 1.4));
+      const sun = new THREE.DirectionalLight(0xffffff, ink ? 0.8 : 1.6);
+      sun.position.set(2, 3, 2);
+      scene.add(sun);
+
+      const camera = new THREE.PerspectiveCamera(35, 4 / 3, 0.01, 100);
+      camera.position.set(2.5, 1.5, 3.0); // three-quarter view, far enough back for a tall model to fit
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+      this.prepend(renderer.domElement);
+
+      const controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableZoom = false; // keep the page wheel-scrollable
+      controls.enablePan = false;
+      controls.enableDamping = true;
+      controls.autoRotate = this.dataset.autorotate === "true" && !reducedMotion;
+      controls.autoRotateSpeed = 1.2;
+      // The visitor has taken over: stop spinning so the lamp stays where they put it.
+      controls.addEventListener("start", () => {
+        controls.autoRotate = false;
+        this.dataset.interacted = "true";
+      });
+
+      const resize = () => {
+        const { clientWidth: w, clientHeight: h } = this;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      };
+      new ResizeObserver(resize).observe(this);
+      resize();
+
+      // Only spend GPU time while the box is visible.
+      const tick = () => { controls.update(); renderer.render(scene, camera); };
+      new IntersectionObserver(([e]) => renderer.setAnimationLoop(e.isIntersecting ? tick : null)).observe(this);
+
+      tick();
+      this.classList.add("is-3d");
+    }
+  }
+
+  function hasWebGL() {
+    try {
+      return !!document.createElement("canvas").getContext("webgl2");
+    } catch {
+      return false;
+    }
+  }
+
+  if (!customElements.get("robot-viewer")) customElements.define("robot-viewer", RobotViewer);
+</script>

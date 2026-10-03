@@ -1,0 +1,77 @@
+---
+import { render } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import RobotViewer from "../../components/RobotViewer.astro";
+import PostList from "../../components/PostList.astro";
+import Timeline from "../../components/Timeline.astro";
+import { getPosts, getProjects, type Project } from "../../lib/content";
+
+export async function getStaticPaths() {
+  return (await getProjects()).map((project) => ({ params: { id: project.id }, props: { project } }));
+}
+
+const { project } = Astro.props as { project: Project };
+const p = project.data;
+const { Content } = await render(project);
+const posts = await getPosts((e) => e.data.project.id === project.id);
+// Newest version first, each with the entries filed under it.
+const versions = [...p.versions].reverse().map((v) => ({ ...v, posts: posts.filter((e) => e.data.version === v.v) }));
+---
+
+<Base title={p.name} description={p.tagline}>
+  <div class="top">
+    <div class="intro">
+      <span class="eyebrow">{p.focus.join(", ")} · {p.status} since {p.started}</span>
+      <h1>{p.name}</h1>
+      <p class="tagline">{p.tagline}</p>
+      <div class="summary"><Content /></div>
+      <div class="meta">
+        <span>Stack <b>{p.stack}</b></span>
+        {p.licence && <span>Licence <b>{p.licence}</b></span>}
+      </div>
+    </div>
+    <RobotViewer art={p.art} alt={`${p.name}: ${p.short}`} model={p.model} />
+  </div>
+
+  <section class="log">
+    <h2>Timeline</h2>
+    <Timeline project={project} posts={posts} />
+    {versions.map((v) => (
+      <div class="version">
+        <div class="vhead">
+          <span class="v">{v.v}</span>
+          <span class="muted">{v.dates}</span>
+        </div>
+        <p class="vtext">{v.text}</p>
+        {v.posts.length > 0 && <PostList posts={v.posts} showProject={false} />}
+      </div>
+    ))}
+  </section>
+</Base>
+
+<style>
+  .top {
+    display: grid; grid-template-columns: minmax(0, 1fr) 480px; gap: 56px; align-items: start;
+    padding: 32px var(--gutter) 48px; border-top: 1px solid var(--rule);
+  }
+  .intro { display: flex; flex-direction: column; gap: 14px; }
+  h1 { font-size: 64px; line-height: 1.05; }
+  .tagline { font-family: var(--serif); font-style: italic; font-size: 20px; line-height: 1.45; color: var(--quote); }
+  .summary { color: var(--text-2); max-width: 62ch; }
+  .summary :global(p) { margin: 0; }
+  .meta { display: flex; gap: 22px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .meta b { font-weight: normal; color: var(--ink); }
+
+  .log { padding: 48px var(--gutter) 56px; border-top: 1px solid var(--rule); }
+  .log h2 { font-size: 30px; margin-bottom: 24px; }
+  .version { padding: 20px 0 28px; border-top: 1px solid var(--ink); max-width: 860px; }
+  .vhead { display: flex; align-items: baseline; gap: 14px; }
+  .v { font-family: var(--serif); font-size: 24px; }
+  .vhead .muted { font-size: 12px; }
+  .vtext { color: var(--quote); margin: 4px 0 16px; }
+
+  @media (max-width: 900px) {
+    .top { grid-template-columns: 1fr; gap: 28px; }
+    h1 { font-size: 44px; }
+  }
+</style>

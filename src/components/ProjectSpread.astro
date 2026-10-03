@@ -1,0 +1,72 @@
+---
+import { render } from "astro:content";
+import RobotViewer from "./RobotViewer.astro";
+import { projectUrl, type Project } from "../lib/content";
+
+interface Props { project: Project; num: number }
+const { project, num } = Astro.props;
+const p = project.data;
+const { Content: Summary } = await render(project);
+---
+
+<article class="spread">
+  <RobotViewer art={p.art} alt={`${p.name}: ${p.short}`} model={p.model} />
+  <div class="body">
+    <span class="eyebrow">{String(num).padStart(2, "0")} · {p.focus.join(", ")}</span>
+    <div class="name">
+      <h3><a href={projectUrl(project.id)}>{p.name}</a></h3>
+      <span class="muted">{p.status} since {p.started}</span>
+    </div>
+    <p class="tagline">{p.tagline}</p>
+    <div class="summary"><Summary /></div>
+    <ol class="versions">
+      {p.versions.map((v) => (
+        <li>
+          <span class="v">{v.v}</span>
+          <span class="dates">{v.dates}</span>
+          <span class="text">{v.text}</span>
+        </li>
+      ))}
+    </ol>
+    <div class="meta">
+      <span>Stack <b>{p.stack}</b></span>
+      {p.licence && <span>Licence <b>{p.licence}</b></span>}
+      <a href={projectUrl(project.id)}>Project log →</a>
+    </div>
+  </div>
+</article>
+
+<style>
+  .spread {
+    display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 56px;
+    padding: 48px var(--gutter); border-bottom: 1px solid var(--rule);
+  }
+  .body { display: flex; flex-direction: column; gap: 12px; }
+  .name { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .name span { font-size: 12px; }
+  h3 { font-size: 40px; line-height: 1.1; }
+  .tagline { font-family: var(--serif); font-style: italic; font-size: 18px; line-height: 1.45; color: var(--quote); }
+  .summary { color: var(--text-2); max-width: 62ch; }
+  .summary :global(p) { margin: 0; }
+
+  .versions { list-style: none; margin: 6px 0 0 4px; padding: 0; border-left: 1px solid var(--rule); }
+  .versions li {
+    display: grid; grid-template-columns: 64px 150px minmax(0, 1fr); gap: 12px;
+    padding: 5px 0 5px 16px; font-size: 13px;
+  }
+  .v { font-family: var(--serif); font-size: 15px; }
+  .dates { font-size: 11px; color: var(--muted); padding-top: 2px; }
+  .text { color: var(--quote); }
+
+  .meta { display: flex; gap: 22px; flex-wrap: wrap; font-size: 12px; color: var(--muted); padding-top: 6px; }
+  .meta b { font-weight: normal; color: var(--ink); }
+
+  @media (max-width: 900px) {
+    .spread { grid-template-columns: 1fr; gap: 24px; padding-block: 36px; }
+    h3 { font-size: 32px; }
+  }
+  @media (max-width: 560px) {
+    .versions li { grid-template-columns: 52px minmax(0, 1fr); }
+    .versions .text { grid-column: 2; }
+  }
+</style>

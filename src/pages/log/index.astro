@@ -1,0 +1,29 @@
+---
+import Base from "../../layouts/Base.astro";
+import PostList from "../../components/PostList.astro";
+import { getPosts } from "../../lib/content";
+
+const posts = await getPosts();
+const years = [...new Set(posts.map((p) => p.data.date.getUTCFullYear()))];
+---
+
+<Base title="Log" description="Every article, paper, release and milestone from the lab.">
+  <div class="wrap">
+    <span class="eyebrow">The log</span>
+    <h1>Everything we've shipped, written and learned.</h1>
+    <p class="muted">Articles, papers, releases and milestones across every project, newest first.</p>
+    {years.map((y) => (
+      <section>
+        <h2>{y}</h2>
+        <PostList posts={posts.filter((p) => p.data.date.getUTCFullYear() === y)} />
+      </section>
+    ))}
+  </div>
+</Base>
+
+<style>
+  .wrap { padding: 32px var(--gutter) 56px; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 14px; }
+  h1 { font-size: 40px; line-height: 1.15; max-width: 22ch; }
+  section { margin-top: 24px; }
+  h2 { font-size: 22px; margin-bottom: 8px; }
+</style>

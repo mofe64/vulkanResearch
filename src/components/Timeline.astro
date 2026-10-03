@@ -1,0 +1,71 @@
+---
+// One project's timeline: a bar per version, a dot per post (each dot links to the post).
+import { TYPE_DOT, TYPE_LABEL, projectTimeline, type Post, type PostType, type Project } from "../lib/content";
+
+interface Props { project: Project; posts: Post[] }
+const { project, posts } = Astro.props;
+const t = projectTimeline(project, posts);
+// Legend lists only the kinds of entry this project actually has.
+const kinds = [...new Set(posts.map((p) => p.data.type))] as PostType[];
+---
+
+<figure class="timeline" aria-label={`${project.data.name} timeline`}>
+  {kinds.length > 0 && (
+    <ul class="legend">
+      {kinds.map((k) => (
+        <li><span class="key" style={`background:${TYPE_DOT[k][0]};border-color:${TYPE_DOT[k][1]}`} />{TYPE_LABEL[k]}</li>
+      ))}
+    </ul>
+  )}
+  <div class="axis" aria-hidden="true">
+    {t.ticks.map((x) => <span style={`left:${x.left}`}>{x.label}</span>)}
+  </div>
+  <div class="track" style={`--step:${t.gridStep}`}>
+    <span class="now" style={`left:${t.today}`} />
+    {t.bars.map((b) => (
+      <>
+      <div class:list={["bar", { current: b.current }]} style={`left:${b.left};width:${b.width}`} title={b.dates}>
+        {!b.current && <span>{b.label}</span>}
+      </div>
+      {b.current && <span class="now-label" style={`left:calc(${t.today} + 6px)`}>{b.label}</span>}
+      </>
+    ))}
+    {t.dots.map((d) => (
+      <a class="dot" href={d.href} style={`left:${d.left};background:${d.fill};border-color:${d.border}`} title={d.title} aria-label={d.title} />
+    ))}
+  </div>
+  <div class="below" aria-hidden="true"><span class="today" style={`left:${t.today}`}>Today</span></div>
+</figure>
+
+<style>
+  .timeline { margin: 0 0 32px; max-width: 860px; font-size: 11px; color: var(--muted); }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 0 0 14px; padding: 0; list-style: none; }
+  .legend li { display: flex; align-items: center; gap: 6px; }
+  .key { width: 8px; height: 8px; border-radius: 50%; border: 1px solid; display: block; }
+
+  .axis { position: relative; height: 22px; }
+  .axis span { position: absolute; white-space: nowrap; }
+  .below { position: relative; height: 20px; }
+  .below .today { position: absolute; top: 4px; transform: translateX(-100%); padding-right: 4px; color: var(--heat); }
+
+  .track {
+    position: relative; height: 84px; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+    background: repeating-linear-gradient(90deg, var(--rule-soft) 0, var(--rule-soft) 1px, transparent 1px, transparent var(--step));
+  }
+  .now { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--heat); }
+  .bar {
+    position: absolute; top: 20px; height: 24px;
+    border: 1px solid var(--ink); background: #fff;
+    display: flex; align-items: center; padding: 0 8px;
+    font-size: 11px; color: var(--ink); white-space: nowrap; overflow: hidden;
+  }
+  .bar.current { background: var(--chip); }
+  /* The current version is labelled just past the Today line, so a young (short) bar still reads. */
+  .now-label { position: absolute; top: 20px; height: 24px; display: flex; align-items: center; font-size: 11px; color: var(--ink); white-space: nowrap; }
+  .dot {
+    position: absolute; top: 56px; width: 10px; height: 10px; margin-left: -5px;
+    border-radius: 50%; border: 1px solid;
+  }
+  .dot::after { content: ""; position: absolute; inset: -9px; } /* easier to tap */
+  .dot:hover { transform: scale(1.4); }
+</style>

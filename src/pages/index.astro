@@ -1,0 +1,41 @@
+---
+import Base from "../layouts/Base.astro";
+import Hero from "../components/Hero.astro";
+import ProjectSpread from "../components/ProjectSpread.astro";
+import { getProjectsByActivity } from "../lib/content";
+
+// The workbench shows what is moving right now; everything else is one click away on /projects/.
+const RECENT = 3;
+const all = await getProjectsByActivity();
+const recent = all.slice(0, RECENT);
+---
+
+<Base>
+  <Hero />
+
+  <section id="workbench" class="workbench" aria-labelledby="workbench-title">
+    <div class="head">
+      <div class="title">
+        <span class="eyebrow">The workbench</span>
+        <h2 id="workbench-title">What we're building now</h2>
+      </div>
+      <a href="/projects/" class="all">View all projects ({all.length}) →</a>
+    </div>
+    {recent.map(({ project }, i) => <ProjectSpread project={project} num={i + 1} />)}
+    <div class="foot">
+      <a href="/projects/" class="btn-outline">View all projects</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .workbench { border-top: 1px solid var(--rule); }
+  .head {
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 12px 24px; flex-wrap: wrap;
+    padding: 56px var(--gutter) 8px;
+  }
+  .title { display: flex; flex-direction: column; gap: 6px; }
+  h2 { font-size: 36px; line-height: 1.15; }
+  .all { font-size: 14px; padding-bottom: 6px; }
+  .foot { padding: 32px var(--gutter) 56px; }
+</style>

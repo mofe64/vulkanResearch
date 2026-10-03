@@ -1,0 +1,65 @@
+---
+// Every project, most recently active first. Light on purpose: posters only, no 3D, so the list stays fast.
+import Base from "../../layouts/Base.astro";
+import { fmtDate, getPosts, getProjectsByActivity, projectUrl } from "../../lib/content";
+
+const rows = await Promise.all(
+  (await getProjectsByActivity()).map(async ({ project, last }) => ({
+    project,
+    last,
+    posts: (await getPosts((p) => p.data.project.id === project.id)).length,
+    current: project.data.versions.at(-1)!,
+  })),
+);
+---
+
+<Base title="Projects" description="Every project from the lab, most recently active first.">
+  <div class="wrap">
+    <span class="eyebrow">Projects</span>
+    <h1>Everything on the workbench.</h1>
+    <p class="muted">{rows.length} {rows.length === 1 ? "project" : "projects"}</p>
+
+    <ul class="list">
+      {rows.map(({ project, last, posts, current }) => (
+        <li>
+          <a href={projectUrl(project.id)} class="thumb" tabindex="-1" aria-hidden="true">
+            <img src={project.data.art} alt="" width="600" height="450" loading="lazy" decoding="async" />
+          </a>
+          <div class="body">
+            <span class="eyebrow">{project.data.focus.join(", ")}</span>
+            <h2><a href={projectUrl(project.id)}>{project.data.name}</a></h2>
+            <p class="tagline">{project.data.tagline}</p>
+            <dl class="meta">
+              <div><dt>Status</dt><dd>{project.data.status} since {project.data.started}</dd></div>
+              <div><dt>Current</dt><dd>{current.v}, since {current.dates.split("–")[0].trim()}</dd></div>
+              <div><dt>Last update</dt><dd>{fmtDate(last)}</dd></div>
+              <div><dt>Posts</dt><dd>{posts}</dd></div>
+            </dl>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+</Base>
+
+<style>
+  .wrap { padding: 32px var(--gutter) 56px; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 14px; }
+  h1 { font-size: 40px; line-height: 1.15; }
+  .list { list-style: none; margin: 16px 0 0; padding: 0; }
+  li {
+    display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 32px; align-items: start;
+    padding: 28px 0; border-top: 1px solid var(--rule);
+  }
+  .thumb { display: block; aspect-ratio: 4 / 3; border: 1px solid var(--rule); overflow: hidden; }
+  .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .body { display: flex; flex-direction: column; gap: 8px; }
+  h2 { font-size: 32px; line-height: 1.1; }
+  .tagline { font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--quote); max-width: 60ch; }
+  .meta { display: flex; flex-wrap: wrap; gap: 6px 28px; margin: 6px 0 0; font-size: 12px; }
+  .meta dt { color: var(--muted); }
+  .meta dd { margin: 0; color: var(--ink); }
+  @media (max-width: 640px) {
+    li { grid-template-columns: 1fr; gap: 16px; }
+    .thumb { max-width: 360px; }
+  }
+</style>

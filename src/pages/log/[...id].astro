@@ -1,0 +1,74 @@
+---
+import { getEntry, render } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import { TYPE_LABEL, fmtDate, getPosts, projectUrl, type Post } from "../../lib/content";
+
+// One static page per post, built at build time. The URL is the file path: /log/orion/2026-04-02-why-we-.../
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { id: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props as { post: Post };
+const project = (await getEntry("projects", post.data.project.id))!;
+const { Content } = await render(post);
+const d = post.data;
+---
+
+<Base title={d.title} description={d.summary}>
+  <article class="post">
+    <header>
+      <span class="eyebrow">
+        {TYPE_LABEL[d.type]} · <a href={projectUrl(project.id)}>{project.data.name}</a> {d.version}
+      </span>
+      <h1>{d.title}</h1>
+      <div class="meta">
+        <time datetime={d.date.toISOString().slice(0, 10)}>{fmtDate(d.date)}</time>
+        {d.source && <span>{d.source}</span>}
+        {d.draft && <span class="draft">Draft, not published</span>}
+      </div>
+    </header>
+    <div class="prose">
+      <Content />
+    </div>
+    <footer>
+      <a href={projectUrl(project.id)}>← More from {project.data.name}</a>
+      <a href="/log/">The full log →</a>
+    </footer>
+  </article>
+</Base>
+
+<script>
+  // Mermaid (~600 KB) is fetched only when an article actually contains a diagram.
+  const blocks = document.querySelectorAll<HTMLElement>(".prose pre.mermaid");
+  if (blocks.length) {
+    import("mermaid").then(async ({ default: mermaid }) => {
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "strict",
+        theme: "base",
+        themeVariables: {
+          fontFamily: '"Lucida Grande", "Helvetica Neue", Arial, sans-serif',
+          fontSize: "13px",
+          primaryColor: "#ffffff",
+          primaryBorderColor: "#333333",
+          primaryTextColor: "#333333",
+          lineColor: "#767676",
+          secondaryColor: "#f7f6f3",
+          tertiaryColor: "#f7f6f3",
+        },
+      });
+      await mermaid.run({ nodes: [...blocks] });
+    });
+  }
+</script>
+
+<style>
+  .post { padding: 32px var(--gutter) 56px; border-top: 1px solid var(--rule); }
+  header { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; max-width: 760px; }
+  h1 { font-size: 44px; line-height: 1.12; letter-spacing: -.01em; text-wrap: balance; }
+  .meta { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .draft { color: var(--heat); }
+  footer { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; max-width: 68ch; margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 13px; }
+  @media (max-width: 600px) { h1 { font-size: 32px; } }
+</style>

@@ -1,0 +1,47 @@
+# --- Dependencies ---
+node_modules/
+
+# --- Build output ---
+dist/
+
+# --- Astro generated types / cache / dev log ---
+.astro/
+
+# --- Environment variables (never commit secrets) ---
+.env
+.env.*
+!.env.example
+
+# --- Logs ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Python (scripts/step2glb.py) ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# --- Raw CAD input for step2glb (convert, then commit only the .glb) ---
+*.step
+*.stp
+
+# --- Editors / IDEs ---
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/
+*.swp
+*~
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+
+# --- Misc tooling caches ---
+.cache/
+.eslintcache
+coverage/
