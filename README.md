@@ -113,3 +113,4 @@ everyone else (WCAG 2.2.2: anything moving for more than 5 s needs a way to paus
 - `public/art/` — drawings and model posters; `public/models/` — `.glb` files
 - `scripts/` — hero animation, STEP → glTF conversion, model poster capture
 - `../vulkan-research-hero-illustration/` — the original Claude Design handoff, for reference
+# vulkanResearch
