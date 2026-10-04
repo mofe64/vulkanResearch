@@ -2,6 +2,7 @@
 // Every animation is gated on an ancestor with [data-playing], runs a finite number of times,
 // and ends in the drawn pose, so the slideshow can wait for "one cycle" with element.getAnimations().
 import fs from "node:fs";
+import { pathKeyframes } from "./path-keyframes.mjs";
 const SRC = new URL("../../vulkan-research-hero-illustration/project", import.meta.url).pathname;
 const OUT = new URL("../src/assets/hero", import.meta.url).pathname;
 fs.mkdirSync(OUT, { recursive: true });
@@ -104,10 +105,11 @@ fs.writeFileSync(`${OUT}/smith.svg`, forge("vulkan-hero-smith-gripper.svg", "hs"
   s = s.replace(bot, `<g class="hw-path"><g class="hw-bot" transform="translate(332 224) rotate(-8)">`)
        .replace(botEnd, `<circle class="hw-led" cx="-34" cy="0" r="3.2" fill="#D0592A" stroke="none"></circle></g></g>`);
   s = addStyle(s, `
-    [data-playing] .hw-path{offset-path:path("${line}");offset-rotate:auto;animation:hw-drive 6.5s ease-in-out 1 both}
+    .hw-path{transform-box:view-box;transform-origin:0 0}
+    [data-playing] .hw-path{animation:hw-drive 6.5s linear 1 both}
     [data-playing] .hw-bot{transform:none}
     [data-playing] .hw-led{animation:hw-led .65s steps(1) 10 both}
-    @keyframes hw-drive{0%,6%{offset-distance:0%}94%,100%{offset-distance:100%}}
+    @keyframes hw-drive{${pathKeyframes(line, { from: 6, to: 94 })}}
     @keyframes hw-led{0%{opacity:1}50%{opacity:.2}}`);
   fs.writeFileSync(`${OUT}/wren.svg`, s);
 }

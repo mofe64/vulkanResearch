@@ -1,6 +1,7 @@
 ---
 import { getEntry, render } from "astro:content";
 import Base from "../../layouts/Base.astro";
+import ReadingMap from "../../components/ReadingMap.astro";
 import { TYPE_LABEL, fmtDate, getPosts, projectUrl, type Post } from "../../lib/content";
 
 // One static page per post, built at build time. The URL is the file path: /log/orion/2026-04-02-why-we-.../
@@ -11,8 +12,10 @@ export async function getStaticPaths() {
 
 const { post } = Astro.props as { post: Post };
 const project = (await getEntry("projects", post.data.project.id))!;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
 const d = post.data;
+// Long articles get a reading map; a short note with a heading or two doesn't need one.
+const showMap = headings.filter((h) => h.depth === 2 || h.depth === 3).length >= 3;
 ---
 
 <Base title={d.title} description={d.summary}>
@@ -28,11 +31,14 @@ const d = post.data;
         {d.draft && <span class="draft">Draft, not published</span>}
       </div>
     </header>
-    <div class="prose">
-      <Content />
+    <div class:list={["layout", { "has-map": showMap }]}>
+      {showMap && <aside class="side"><ReadingMap headings={headings} /></aside>}
+      <div class="prose">
+        <Content />
+      </div>
     </div>
     <footer>
-      <a href={projectUrl(project.id)}>← More from {project.data.name}</a>
+      <a href={`${projectUrl(project.id)}#log`}>← More from {project.data.name}</a>
       <a href="/log/">The full log →</a>
     </footer>
   </article>
@@ -69,6 +75,13 @@ const d = post.data;
   h1 { font-size: 44px; line-height: 1.12; letter-spacing: -.01em; text-wrap: balance; }
   .meta { display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
   .draft { color: var(--heat); }
+  /* With a reading map: on wide screens it sits in a column to the right of the article. */
+  @media (min-width: 1100px) {
+    .layout.has-map { display: grid; grid-template-columns: minmax(0, 68ch) 240px; gap: 64px; }
+    .layout.has-map .side { grid-column: 2; grid-row: 1; } /* stretches to the article height, so the map can stick */
+    .layout.has-map .prose { grid-column: 1; grid-row: 1; }
+  }
+  .prose :global(h2), .prose :global(h3) { scroll-margin-top: 24px; }
   footer { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; max-width: 68ch; margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 13px; }
   @media (max-width: 600px) { h1 { font-size: 32px; } }
 </style>

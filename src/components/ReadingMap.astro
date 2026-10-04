@@ -1,0 +1,80 @@
+---
+// Reading map: a table of contents built from an article's ## and ### headings.
+// Wide screens: a sticky column beside the article that marks the section being read.
+// Narrow screens: a collapsed "Reading map" disclosure above the article.
+import type { MarkdownHeading } from "astro";
+
+interface Props { headings: MarkdownHeading[] }
+const items = Astro.props.headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+<nav class="map" aria-label="Reading map" data-reading-map>
+  <details>
+    <summary>Reading map <span class="count">{items.length} sections</span></summary>
+    <ol>
+      {items.map((h) => (
+        <li class:list={[`d${h.depth}`]}><a href={`#${h.slug}`}>{h.text}</a></li>
+      ))}
+    </ol>
+  </details>
+</nav>
+
+<style>
+  .map { font-size: 13px; line-height: 1.45; }
+  summary {
+    display: flex; align-items: baseline; gap: 8px; list-style: none;
+    cursor: pointer; padding: 10px 0;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "▸"; font-size: 12px; letter-spacing: 0; }
+  details[open] summary::before { content: "▾"; }
+  .count { letter-spacing: 0; text-transform: none; }
+  ol { list-style: none; margin: 0; padding: 0 0 8px; border-left: 1px solid var(--rule); }
+  li a { display: block; padding: 5px 0 5px 14px; margin-left: -1px; border-left: 1px solid transparent; color: var(--text-2); }
+  li.d3 a { padding-left: 28px; font-size: 12px; }
+  li a:hover { color: var(--ink); text-decoration: none; }
+  li a[aria-current="true"] { color: var(--ink); border-left-color: var(--heat); }
+
+  /* Narrow: a bordered box above the article. */
+  @media (max-width: 1099px) {
+    .map { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); margin-bottom: 28px; max-width: 68ch; }
+    li a { padding-block: 8px; } /* comfortable tap targets */
+  }
+  /* Wide: always open, sticky beside the article; the summary becomes a plain label. */
+  @media (min-width: 1100px) {
+    .map { position: sticky; top: 24px; max-height: calc(100vh - 48px); overflow-y: auto; }
+    summary { pointer-events: none; padding-top: 0; }
+    summary::before { display: none; }
+  }
+</style>
+
+<script>
+  // Keeps the map open on wide screens and marks the section currently in view.
+  document.querySelectorAll<HTMLElement>("[data-reading-map]").forEach((map) => {
+    const details = map.querySelector("details")!;
+    const wide = matchMedia("(min-width: 1100px)");
+    const sync = () => { if (wide.matches) details.open = true; };
+    sync();
+    wide.addEventListener("change", sync);
+
+    // On narrow screens, picking a section closes the map so the article is visible.
+    map.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => { if (!wide.matches) details.open = false; }));
+
+    const links = new Map([...map.querySelectorAll<HTMLAnchorElement>("a")].map((a) => [decodeURIComponent(a.hash.slice(1)), a]));
+    const headings = [...links.keys()].map((id) => document.getElementById(id)).filter((h): h is HTMLElement => !!h);
+    if (!headings.length) return;
+
+    // The current section is the last heading that has scrolled above the top third of the screen.
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const line = innerHeight / 3;
+      let current = headings[0];
+      for (const h of headings) if (h.getBoundingClientRect().top <= line) current = h;
+      links.forEach((a, id) => (id === current.id ? a.setAttribute("aria-current", "true") : a.removeAttribute("aria-current")));
+    };
+    addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    update();
+  });
+</script>
