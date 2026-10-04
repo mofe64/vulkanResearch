@@ -7,6 +7,8 @@ interface Props { project: Project; num: number }
 const { project, num } = Astro.props;
 const p = project.data;
 const { Content: Summary } = await render(project);
+// Only the version being worked on now; the full history lives on the project page.
+const latest = p.versions.at(-1)!;
 ---
 
 <article class="spread">
@@ -19,15 +21,13 @@ const { Content: Summary } = await render(project);
     </div>
     <p class="tagline">{p.tagline}</p>
     <div class="summary"><Summary /></div>
-    <ol class="versions">
-      {p.versions.map((v) => (
-        <li>
-          <span class="v">{v.v}</span>
-          <span class="dates">{v.dates}</span>
-          <span class="text">{v.text}</span>
-        </li>
-      ))}
-    </ol>
+    <div class="latest">
+      <div class="vhead">
+        <span class="v">{latest.v}</span>
+        <span class="dates">{latest.dates}</span>
+      </div>
+      <p class="text">{latest.text}</p>
+    </div>
     <div class="meta">
       <span>Stack <b>{p.stack}</b></span>
       {p.licence && <span>Licence <b>{p.licence}</b></span>}
@@ -49,14 +49,11 @@ const { Content: Summary } = await render(project);
   .summary { color: var(--text-2); max-width: 62ch; }
   .summary :global(p) { margin: 0; }
 
-  .versions { list-style: none; margin: 6px 0 0 4px; padding: 0; border-left: 1px solid var(--rule); }
-  .versions li {
-    display: grid; grid-template-columns: 64px 150px minmax(0, 1fr); gap: 12px;
-    padding: 5px 0 5px 16px; font-size: 13px;
-  }
+  .latest { margin: 6px 0 0 4px; padding: 2px 0 2px 16px; border-left: 1px solid var(--ink); max-width: 62ch; }
+  .vhead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
   .v { font-family: var(--serif); font-size: 15px; }
-  .dates { font-size: 11px; color: var(--muted); padding-top: 2px; }
-  .text { color: var(--quote); }
+  .dates { font-size: 11px; color: var(--muted); }
+  .text { margin: 4px 0 0; font-size: 13px; color: var(--quote); }
 
   .meta { display: flex; gap: 22px; flex-wrap: wrap; font-size: 12px; color: var(--muted); padding-top: 6px; }
   .meta b { font-weight: normal; color: var(--ink); }
@@ -64,9 +61,5 @@ const { Content: Summary } = await render(project);
   @media (max-width: 900px) {
     .spread { grid-template-columns: 1fr; gap: 24px; padding-block: 36px; }
     h3 { font-size: 32px; }
-  }
-  @media (max-width: 560px) {
-    .versions li { grid-template-columns: 52px minmax(0, 1fr); }
-    .versions .text { grid-column: 2; }
   }
 </style>
