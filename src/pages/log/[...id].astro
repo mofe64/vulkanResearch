@@ -38,7 +38,7 @@ const showMap = headings.filter((h) => h.depth === 2 || h.depth === 3).length >=
       </div>
     </div>
     <footer>
-      <a href={projectUrl(project.id)}>← More from {project.data.name}</a>
+      <a href={`${projectUrl(project.id)}#log`}>← More from {project.data.name}</a>
       <a href="/log/">The full log →</a>
     </footer>
   </article>

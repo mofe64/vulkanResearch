@@ -5,6 +5,7 @@ import RobotViewer from "../../components/RobotViewer.astro";
 import PostList from "../../components/PostList.astro";
 import Timeline from "../../components/Timeline.astro";
 import { getPosts, getProjects, type Project } from "../../lib/content";
+import { publicFileSize } from "../../lib/file-size.mjs";
 
 export async function getStaticPaths() {
   return (await getProjects()).map((project) => ({ params: { id: project.id }, props: { project } }));
@@ -16,6 +17,16 @@ const { Content } = await render(project);
 const posts = await getPosts((e) => e.data.project.id === project.id);
 // Newest version first, each with the entries filed under it.
 const versions = [...p.versions].reverse().map((v) => ({ ...v, posts: posts.filter((e) => e.data.version === v.v) }));
+
+const cad = p.resources.cad.map((r) => ({ ...r, size: publicFileSize(r.file) as string | null }));
+
+// `ready: false` tabs are shown so visitors know what's coming, but can't be opened yet.
+const TABS = [
+  { id: "overview", label: "Overview", ready: true },
+  { id: "log", label: "Log", count: posts.length, ready: true },
+  { id: "resources", label: "Resources", ready: true },
+  { id: "learn", label: "Learn", ready: false },
+];
 ---
 
 <Base title={p.name} description={p.tagline}>
@@ -33,20 +44,92 @@ const versions = [...p.versions].reverse().map((v) => ({ ...v, posts: posts.filt
     <RobotViewer art={p.art} alt={`${p.name}: ${p.short}`} model={p.model} />
   </div>
 
-  <section class="log">
-    <h2>Timeline</h2>
-    <Timeline project={project} posts={posts} />
-    {versions.map((v) => (
-      <div class="version">
-        <div class="vhead">
-          <span class="v">{v.v}</span>
-          <span class="muted">{v.dates}</span>
+  <div class="tabs" data-tabs>
+    <div class="tablist" role="tablist" aria-label={`${p.name} sections`}>
+      {TABS.map((t, i) => (
+        <button
+          type="button"
+          role="tab"
+          id={`tab-${t.id}`}
+          aria-controls={t.ready ? `panel-${t.id}` : undefined}
+          aria-selected={i === 0 ? "true" : "false"}
+          tabindex={i === 0 ? 0 : -1}
+          disabled={!t.ready}
+          data-tab={t.id}
+        >
+          {t.label}
+          {t.count !== undefined && <span class="count">{t.count}</span>}
+          {!t.ready && <span class="soon">Soon</span>}
+        </button>
+      ))}
+    </div>
+
+    <section class="panel" role="tabpanel" id="panel-overview" aria-labelledby="tab-overview" tabindex="0">
+      <h2 class="visually-hidden">Overview</h2>
+      <Timeline project={project} posts={posts} />
+      {versions.map((v) => (
+        <div class="version">
+          <div class="vhead">
+            <span class="v">{v.v}</span>
+            <span class="muted">{v.dates}</span>
+          </div>
+          <p class="vtext">{v.text}</p>
+          {v.posts.length > 0 && (
+            <a href="#log" class="vlog" data-go="log">
+              {v.posts.length} {v.posts.length === 1 ? "entry" : "entries"} in the log →
+            </a>
+          )}
         </div>
-        <p class="vtext">{v.text}</p>
-        {v.posts.length > 0 && <PostList posts={v.posts} showProject={false} />}
-      </div>
-    ))}
-  </section>
+      ))}
+    </section>
+
+    <section class="panel" role="tabpanel" id="panel-log" aria-labelledby="tab-log" tabindex="0">
+      <h2 class="visually-hidden">Log</h2>
+      {posts.length === 0 && <p class="muted">Nothing written up yet.</p>}
+      {versions.filter((v) => v.posts.length > 0).map((v) => (
+        <div class="version">
+          <div class="vhead">
+            <span class="v">{v.v}</span>
+            <span class="muted">{v.dates}</span>
+          </div>
+          <PostList posts={v.posts} showProject={false} />
+        </div>
+      ))}
+    </section>
+
+    <section class="panel" role="tabpanel" id="panel-resources" aria-labelledby="tab-resources" tabindex="0">
+      <h2 class="visually-hidden">Resources</h2>
+      <h3 class="rhead">CAD files</h3>
+      {cad.length === 0 && <p class="muted">No CAD files published yet.</p>}
+      <ul class="files">
+        {cad.map((r) => (
+          <li>
+            <div class="finfo">
+              <span class="flabel">{r.label}{r.version && <span class="muted"> · {r.version}</span>}</span>
+              <span class="fformat">{r.format}{r.size && ` · ${r.size}`}</span>
+              {r.note && <span class="fnote">{r.note}</span>}
+            </div>
+            <a href={r.file} download class="btn-outline">Download</a>
+          </li>
+        ))}
+      </ul>
+
+      <h3 class="rhead">Source code</h3>
+      <ul class="files">
+        <li class:list={{ off: !p.resources.source }}>
+          <div class="finfo">
+            <span class="flabel">Repository</span>
+            <span class="fnote">
+              {p.resources.source ? "The project's code." : "We're choosing where to host the code. It will be linked here once it's public."}
+            </span>
+          </div>
+          {p.resources.source
+            ? <a href={p.resources.source} class="btn-outline">View source ↗</a>
+            : <span class="btn-outline is-disabled" aria-disabled="true">Coming soon</span>}
+        </li>
+      </ul>
+    </section>
+  </div>
 </Base>
 
 <style>
@@ -62,16 +145,115 @@ const versions = [...p.versions].reverse().map((v) => ({ ...v, posts: posts.filt
   .meta { display: flex; gap: 22px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
   .meta b { font-weight: normal; color: var(--ink); }
 
-  .log { padding: 48px var(--gutter) 56px; border-top: 1px solid var(--rule); }
-  .log h2 { font-size: 30px; margin-bottom: 24px; }
+  /* ---------- Tabs ---------- */
+  .tabs { padding: 0 var(--gutter) 56px; }
+  .tablist {
+    display: flex; gap: 4px; border-bottom: 1px solid var(--rule);
+    overflow-x: auto; scrollbar-width: none; /* swipe sideways on narrow phones rather than wrap */
+  }
+  .tablist::-webkit-scrollbar { display: none; }
+  [role="tab"] {
+    display: flex; align-items: baseline; gap: 6px; flex: none;
+    padding: 14px 14px 12px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: none;
+    font: 15px var(--serif); color: var(--text-2); cursor: pointer;
+  }
+  [role="tab"]:first-child { padding-left: 0; }
+  [role="tab"]:hover:not(:disabled) { color: var(--ink); }
+  [role="tab"][aria-selected="true"] { color: var(--ink); border-bottom-color: var(--heat); }
+  [role="tab"]:disabled { color: #b5b5b5; cursor: not-allowed; }
+  [role="tab"]:focus-visible { outline: 2px solid var(--link); outline-offset: -2px; }
+  .count, .soon { font: 10px var(--sans); color: var(--muted); }
+  .soon { background: var(--chip); padding: 0 6px; border-radius: 3px; }
+
+  .panel { padding-top: 32px; }
+  .panel:focus-visible { outline: none; }
+  /* Without JS every panel shows, one after another; the script hides all but the selected one. */
+  .tabs.is-ready .panel:not(.is-active) { display: none; }
+
   .version { padding: 20px 0 28px; border-top: 1px solid var(--ink); max-width: 860px; }
-  .vhead { display: flex; align-items: baseline; gap: 14px; }
+  .vhead { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
   .v { font-family: var(--serif); font-size: 24px; }
   .vhead .muted { font-size: 12px; }
-  .vtext { color: var(--quote); margin: 4px 0 16px; }
+  .vtext { color: var(--quote); margin: 4px 0 0; max-width: 72ch; }
+  .vlog { display: inline-block; margin-top: 10px; font-size: 13px; }
+  #panel-log .vhead { margin-bottom: 12px; }
+
+  .rhead { font-size: 20px; margin: 8px 0 12px; }
+  .rhead ~ .rhead { margin-top: 40px; }
+  .files { list-style: none; margin: 0; padding: 0; max-width: 860px; }
+  .files li {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px 24px;
+    padding: 16px 0; border-top: 1px solid var(--rule);
+  }
+  .files li:last-child { border-bottom: 1px solid var(--rule); }
+  .finfo { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .flabel { color: var(--ink); font-size: 15px; }
+  .fformat { font-size: 12px; color: var(--muted); }
+  .fnote { font-size: 13px; color: var(--quote); }
+  .files .btn-outline { flex: none; }
+  .off .flabel { color: var(--muted); }
+  .is-disabled { border-color: var(--rule); color: #a5a5a5; cursor: not-allowed; }
 
   @media (max-width: 900px) {
     .top { grid-template-columns: 1fr; gap: 28px; }
     h1 { font-size: 44px; }
   }
+  @media (max-width: 480px) {
+    [role="tab"] { padding-inline: 10px; } /* all four tabs fit on a 375px phone */
+  }
+  @media (max-width: 560px) {
+    .files li { flex-direction: column; align-items: flex-start; }
+  }
 </style>
+
+<script>
+  // Tabs that follow the WAI-ARIA tabs pattern: arrows move between tabs, Home/End jump to the ends.
+  // The selected tab is mirrored in the URL hash (#log, #resources), so a tab can be linked and survives reload.
+  document.querySelectorAll<HTMLElement>("[data-tabs]").forEach((root) => {
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')].filter((t) => !t.disabled);
+    const panelOf = (t: HTMLButtonElement) => document.getElementById(t.getAttribute("aria-controls")!)!;
+
+    function select(tab: HTMLButtonElement, { focus = false, updateHash = true } = {}) {
+      tabs.forEach((t) => {
+        const on = t === tab;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        panelOf(t).classList.toggle("is-active", on);
+      });
+      if (focus) tab.focus();
+      if (updateHash) {
+        const id = tab.dataset.tab!;
+        history.replaceState(null, "", id === "overview" ? location.pathname : `#${id}`);
+      }
+    }
+
+    const fromHash = () => tabs.find((t) => `#${t.dataset.tab}` === location.hash) ?? tabs[0];
+
+    tabs.forEach((t, i) => {
+      t.addEventListener("click", () => select(t));
+      t.addEventListener("keydown", (e) => {
+        const next = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[e.key];
+        if (next === undefined) return;
+        e.preventDefault();
+        select(tabs[(next + tabs.length) % tabs.length], { focus: true });
+      });
+    });
+
+    // In-page links such as "3 entries in the log →" switch tabs instead of jumping.
+    root.querySelectorAll<HTMLAnchorElement>("[data-go]").forEach((a) =>
+      a.addEventListener("click", (e) => {
+        const tab = tabs.find((t) => t.dataset.tab === a.dataset.go);
+        if (!tab) return;
+        e.preventDefault();
+        select(tab);
+        root.scrollIntoView({ block: "start" });
+      }),
+    );
+
+    addEventListener("hashchange", () => select(fromHash(), { updateHash: false }));
+    select(fromHash(), { updateHash: false });
+    root.classList.add("is-ready");
+    // Arriving on /projects/x/#log: bring the tabs into view, since no element has that id to jump to.
+    if (fromHash() !== tabs[0]) root.scrollIntoView({ block: "start" });
+  });
+</script>

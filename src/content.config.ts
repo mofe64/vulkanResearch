@@ -24,6 +24,23 @@ const projects = defineCollection({
         text: z.string(),
       }),
     ),
+    // Downloads shown on the project's Resources tab. `file` is a path under public/.
+    resources: z
+      .object({
+        cad: z
+          .array(
+            z.object({
+              label: z.string(), // "STEP assembly"
+              file: z.string(), // "/downloads/orion/orion-v2-step.zip"
+              format: z.string(), // "STEP · 22 parts"
+              version: z.string().optional(), // which version the files belong to
+              note: z.string().optional(),
+            }),
+          )
+          .default([]),
+        source: z.string().optional(), // repository URL; the Source code entry stays disabled until this is set
+      })
+      .default({ cad: [] }),
   }),
 });
 
