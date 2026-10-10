@@ -3,7 +3,6 @@ title: "Teaching Orion to Hear Its Name - Training Our Custom Wake Word Model"
 date: 2026-09-28
 type: article
 project: orion
-version: "v1"
 summary: "How we built the data, trained small wake-phrase classifiers and evaluated them in the listener, cutting the visible pause after “Hey Orion” to about half a second."
 tags: ["AI", "Orion", "Robotics"]
 # Copied from the strawhat Obsidian vault (AI/Teaching Orion to Hear Its Name - Training Our Custom Wake Word Model.md)

@@ -19,7 +19,6 @@ title: "Giving Orion a Voice - How Our Robot Listens and Speaks"
 date: 2026-09-16
 type: article          # article | paper | release | milestone | update
 project: orion         # must match a file in src/content/projects/
-version: "v1"          # files the post under this version on the project page
 summary: "One or two sentences for lists and link previews."
 tags: [AI, Robotics]   # optional
 draft: true            # optional: visible in `npm run dev`, left out of builds
@@ -62,8 +61,9 @@ Fenced code blocks are syntax-highlighted at build time (Shiki, no client JS).
 
 ## 3D robot models
 
-Orion V2 is built from the Fusion component STEP exports (assembly coordinates) in
-`~/dev/cardinal/orionProject/orionV2Build/step/`. To refresh it after a CAD change:
+Orion (currently the V2.1 CAD) is built from the Fusion component STEP exports (assembly coordinates) in
+`~/dev/cardinal/orionProject/orionV2Build/step/`. Parts are matched by part number (`OR21-10-...` and
+`10 ...` both work), and the joint pivots are measured from the part 22 horn caps. To refresh it after a CAD change:
 
 ```sh
 CAD=~/dev/cardinal/orionProject

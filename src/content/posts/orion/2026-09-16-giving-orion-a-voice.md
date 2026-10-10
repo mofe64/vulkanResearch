@@ -3,7 +3,6 @@ title: "Giving Orion a Voice - How Our Robot Listens and Speaks"
 date: 2026-09-16
 type: article
 project: orion
-version: "v1"
 summary: "The full conversation pipeline on Orion's Raspberry Pi, from microphone capture and wake detection to speech recognition, agent replies and synthesis, while keeping its character."
 tags: ["AI", "Orion", "Robotics"]
 # Copied from the strawhat Obsidian vault (AI/Giving Orion a Voice - How Our Robot Listens and Speaks.md)

@@ -1,11 +1,11 @@
-"""Convert Orion V2 component STEP exports (assembly coordinates, mm, Z-up) into one binary glTF (m, Y-up).
+"""Convert Orion component STEP exports (assembly coordinates, mm, Z-up) into one binary glTF (m, Y-up).
 
 The parts are grouped under a joint hierarchy (shoulder -> elbow -> wrist), each joint a glTF node placed on its
 pitch axis, so the arm can be posed here and animated later in the browser.
 
 usage: step2glb.py <step dir> <out.glb> [shoulder=-20,elbow=65,wrist=-30]   (degrees; + tips toward the face)
 """
-import json, math, os, struct, sys
+import json, math, os, re, struct, sys
 import numpy as np
 from OCP.STEPControl import STEPControl_Reader
 from OCP.IFSelect import IFSelect_RetDone
@@ -21,21 +21,29 @@ POSE = {"shoulder": -20.0, "elbow": 65.0, "wrist": -30.0}
 if len(sys.argv) > 3:
     POSE.update({k: float(v) for k, v in (kv.split("=") for kv in sys.argv[3].split(","))})
 
-# Joint pivots (glTF metres, Y-up), measured from the flush horn caps that sit on each servo axis.
-# Every pitch joint turns about the X axis. Parts are matched by the start of their file name.
+# Every pitch joint turns about the X axis. Parts are matched by part number at the start of their file name,
+# with any revision prefix dropped: "OR21-10-lower-arm" and "10 lower straight bridge" are both part "10 ...".
+# The pivot heights (glTF metres, Y-up) are measured from the flush horn caps (part 22) that sit on each servo
+# axis, so a CAD change that moves a joint needs no edit here; the numbers below are only the fallback.
 JOINTS = [
-    ("shoulder", 0.123, ("10 ", "22 shoulder")),
-    ("elbow", 0.273, ("13 ", "22 elbow")),
-    ("wrist", 0.384, ("16 ", "17 ", "18 ", "19 ", "20 ", "21 ", "24 ", "22 Wrist")),
+    ["shoulder", 0.123, ("10 ", "22 shoulder")],
+    ["elbow", 0.273, ("13 ", "22 elbow")],
+    ["wrist", 0.404, ("16 ", "17 ", "18 ", "19 ", "20 ", "21 ", "24 ", "22 wrist")],
 ]
+def part_key(name):
+    """'OR21-22-elbow-left-elbow-cap-left' -> '22 elbow left elbow cap left'."""
+    return re.sub(r"^[a-z]+\d*-", "", name.lower()).replace("-", " ")
 def joint_of(name):
+    key = part_key(name)
     for j, (_, _, prefixes) in enumerate(JOINTS):
-        if name.startswith(prefixes):
+        if key.startswith(prefixes):
             return j
     return -1  # base
 LIN, ANG = 0.15, 0.35  # mm chord deviation, radians
 
 LIGHT = ("01 ", "02 ", "03 ", "04 ", "04b", "05 ", "06 ", "20 ", "21 ", "24 ")
+def is_light(name):
+    return part_key(name).startswith(LIGHT)
 MATERIALS = [
     {"name": "light", "pbrMetallicRoughness": {"baseColorFactor": [0.90, 0.90, 0.88, 1], "metallicFactor": 0, "roughnessFactor": 0.65}},
     {"name": "dark", "pbrMetallicRoughness": {"baseColorFactor": [0.13, 0.13, 0.14, 1], "metallicFactor": 0, "roughnessFactor": 0.55}},
@@ -101,12 +109,19 @@ for f in files:
         {"bufferView": vn, "componentType": 5126, "count": len(N), "type": "VEC3"},
         {"bufferView": vi, "componentType": 5125, "count": len(I), "type": "SCALAR"},
     ]
-    mat = 0 if name.startswith(LIGHT) else 1
+    mat = 0 if is_light(name) else 1
     gltf["meshes"].append({"name": name, "primitives": [{"attributes": {"POSITION": a0, "NORMAL": a0 + 1}, "indices": a0 + 2, "material": mat}]})
-    parts.append((name, len(gltf["meshes"]) - 1))
+    parts.append((name, len(gltf["meshes"]) - 1, float((P[:, 1].min() + P[:, 1].max()) / 2)))
     total += len(I) // 3
     mn, mx = (P.min(0) * 1000).round(), (P.max(0) * 1000).round()
     print(f"{name:45s} {len(I)//3:7d} tris  x {mn[0]:5.0f}..{mx[0]:5.0f}  y(up) {mn[1]:5.0f}..{mx[1]:5.0f}  z {mn[2]:5.0f}..{mx[2]:5.0f}  {MATERIALS[mat]['name']}")
+
+# Pivot heights from the horn caps (centre height of all caps for that joint).
+for jt in JOINTS:
+    caps = [cy for n, _, cy in parts if part_key(n).startswith("22 " + jt[0])]
+    if caps:
+        jt[1] = round(sum(caps) / len(caps), 4)
+print("pivots (m):", {jt[0]: jt[1] for jt in JOINTS})
 
 # Build the hierarchy: base parts at the root; each joint node sits on its pivot (relative to the parent joint)
 # and holds its parts offset back by the pivot, so the joint's rotation turns them about the axis.
@@ -118,15 +133,15 @@ def add_node(node):
     gltf["nodes"].append(node)
     return len(gltf["nodes"]) - 1
 
-root_children = [add_node({"name": n, "mesh": m}) for n, m in parts if joint_of(n) == -1]
+root_children = [add_node({"name": n, "mesh": m}) for n, m, _ in parts if joint_of(n) == -1]
 parent_children, parent_y = root_children, 0.0
 for j, (jname, y, _) in enumerate(JOINTS):
-    kids = [add_node({"name": n, "mesh": m, "translation": [0, -y, 0]}) for n, m in parts if joint_of(n) == j]
+    kids = [add_node({"name": n, "mesh": m, "translation": [0, -y, 0]}) for n, m, _ in parts if joint_of(n) == j]
     node = {"name": jname, "translation": [0, y - parent_y, 0], "rotation": quat_x(POSE[jname]), "children": kids}
     idx = add_node(node)
     parent_children.append(idx)
     parent_children, parent_y = node["children"], y
-gltf["scenes"][0]["nodes"] = [add_node({"name": "Orion V2", "children": root_children})]
+gltf["scenes"][0]["nodes"] = [add_node({"name": "Orion", "children": root_children})]
 print("pose:", POSE)
 
 gltf["buffers"].append({"byteLength": len(blob)})

@@ -53,7 +53,6 @@ const posts = defineCollection({
     date: z.coerce.date(),
     type: z.enum(["milestone", "release", "paper", "article", "update"]),
     project: reference("projects"),
-    version: z.string(),
     summary: z.string().optional(),
     source: z.string().optional(), // e.g. "Preprint · 9 pages · PDF and code"
     tags: z.array(z.string()).default([]),
