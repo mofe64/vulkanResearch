@@ -23,7 +23,7 @@ resources:
       file: "/downloads/orion/orion-v2.1-stl.zip"
       format: "STL · 26 files · Orion V2.1"
       note: "Ready to print. Print 16 of the flush plug; each arm file holds both halves."
-  # source: ""  # set the repository URL once the code has a home; until then the entry shows as coming soon
+  source: "https://github.com/mofe64/orion"
 ---
 
 Orion is a home robot in the form of a desk lamp, built to assist and interact in a warm, playful, expressive way. Its onboard computer runs microphone processing, wake detection, speech recognition, speech synthesis and the motion runtime.
