@@ -15,8 +15,8 @@ const { project } = Astro.props as { project: Project };
 const p = project.data;
 const { Content } = await render(project);
 const posts = await getPosts((e) => e.data.project.id === project.id);
-// Newest version first, each with the entries filed under it.
-const versions = [...p.versions].reverse().map((v) => ({ ...v, posts: posts.filter((e) => e.data.version === v.v) }));
+// Newest version first.
+const versions = [...p.versions].reverse();
 
 const cad = p.resources.cad.map((r) => ({ ...r, size: publicFileSize(r.file) as string | null }));
 
@@ -74,11 +74,6 @@ const TABS = [
             <span class="muted">{v.dates}</span>
           </div>
           <p class="vtext">{v.text}</p>
-          {v.posts.length > 0 && (
-            <a href="#log" class="vlog" data-go="log">
-              {v.posts.length} {v.posts.length === 1 ? "entry" : "entries"} in the log →
-            </a>
-          )}
         </div>
       ))}
     </section>
@@ -86,15 +81,7 @@ const TABS = [
     <section class="panel" role="tabpanel" id="panel-log" aria-labelledby="tab-log" tabindex="0">
       <h2 class="visually-hidden">Log</h2>
       {posts.length === 0 && <p class="muted">Nothing written up yet.</p>}
-      {versions.filter((v) => v.posts.length > 0).map((v) => (
-        <div class="version">
-          <div class="vhead">
-            <span class="v">{v.v}</span>
-            <span class="muted">{v.dates}</span>
-          </div>
-          <PostList posts={v.posts} showProject={false} />
-        </div>
-      ))}
+      {posts.length > 0 && <PostList posts={posts} showProject={false} />}
     </section>
 
     <section class="panel" role="tabpanel" id="panel-resources" aria-labelledby="tab-resources" tabindex="0">
@@ -175,8 +162,6 @@ const TABS = [
   .v { font-family: var(--serif); font-size: 24px; }
   .vhead .muted { font-size: 12px; }
   .vtext { color: var(--quote); margin: 4px 0 0; max-width: 72ch; }
-  .vlog { display: inline-block; margin-top: 10px; font-size: 13px; }
-  #panel-log .vhead { margin-bottom: 12px; }
 
   .rhead { font-size: 20px; margin: 8px 0 12px; }
   .rhead ~ .rhead { margin-top: 40px; }
@@ -238,17 +223,6 @@ const TABS = [
         select(tabs[(next + tabs.length) % tabs.length], { focus: true });
       });
     });
-
-    // In-page links such as "3 entries in the log →" switch tabs instead of jumping.
-    root.querySelectorAll<HTMLAnchorElement>("[data-go]").forEach((a) =>
-      a.addEventListener("click", (e) => {
-        const tab = tabs.find((t) => t.dataset.tab === a.dataset.go);
-        if (!tab) return;
-        e.preventDefault();
-        select(tab);
-        root.scrollIntoView({ block: "start" });
-      }),
-    );
 
     addEventListener("hashchange", () => select(fromHash(), { updateHash: false }));
     select(fromHash(), { updateHash: false });

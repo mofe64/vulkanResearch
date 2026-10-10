@@ -16,24 +16,13 @@ versions:
     text: "First build on the open LeLamp reference design: servo-driven lamp arm, Raspberry Pi 5 and ReSpeaker microphones running the first voice and motion pipeline."
   - v: "v2"
     dates: "30 Sep 2026 – present"
-    text: "Redesigned body: a 230 × 210 mm base, 150 mm and 111 mm arm spans, and a 140 mm head carrying the camera, speaker and LED ring. 25 printed PLA pieces."
+    text: "Redesigned body: a 200 × 230 mm base, straight two-piece arms with 150 mm and 131 mm spans, and a 125 mm head carrying the camera, speaker and LED ring."
 resources:
   cad:
-    - label: "CAD parts"
-      file: "/downloads/orion/orion-v2-step.zip"
-      format: "STEP · 22 parts in assembly position"
-      version: "v2"
-      note: "For editing or remixing in any CAD tool."
     - label: "Printable parts"
-      file: "/downloads/orion/orion-v2-stl.zip"
-      format: "STL · one file per part"
-      version: "v2"
-      note: "For any slicer."
-    - label: "Print plates"
-      file: "/downloads/orion/orion-v2-print-plates.zip"
-      format: "Bambu Studio 3MF · 8 plates"
-      version: "v2"
-      note: "Sliced for a Bambu Lab A1, 0.4 mm nozzle, PLA."
+      file: "/downloads/orion/orion-v2.1-stl.zip"
+      format: "STL · 26 files · Orion V2.1"
+      note: "Digitally checked for fit and slicing; not yet confirmed on a physical build."
   # source: ""  # set the repository URL once the code has a home; until then the entry shows as coming soon
 ---
 
