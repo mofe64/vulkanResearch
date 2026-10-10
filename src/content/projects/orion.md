@@ -22,7 +22,7 @@ resources:
     - label: "Printable parts"
       file: "/downloads/orion/orion-v2.1-stl.zip"
       format: "STL · 26 files · Orion V2.1"
-      note: "Ready to print. Print 16 of the flush plug; each arm file holds both halves."
+      note: "Every printed part of Orion V2.1, ready for your slicer. Print notes are in the README inside the zip."
   source: "https://github.com/mofe64/orion"
 ---
 
