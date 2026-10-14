@@ -25,6 +25,9 @@ resources:
       note: "Every printed part of Orion V2.1, ready for your slicer. Print notes are in the README inside the zip."
   source: "https://github.com/mofe64/orion"
   bom:
+    - item: "Raspberry Pi 5"
+      detail: "8GB"
+      url: "https://thepihut.com/products/raspberry-pi-5?variant=42531604955331"
     - item: "Serial Bus Servo Driver Board"
       url: "https://thepihut.com/products/serial-bus-servo-driver-board?variant=43300989665475"
     - item: "ReSpeaker XMOS XVF3800 4-mic array"
