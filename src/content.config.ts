@@ -39,8 +39,18 @@ const projects = defineCollection({
           )
           .default([]),
         source: z.string().optional(), // repository URL; the Source code entry stays disabled until this is set
+        // Bill of materials: the bought parts, each with a link to buy it.
+        bom: z
+          .array(
+            z.object({
+              item: z.string(), // "Raspberry Pi Camera Module 3"
+              detail: z.string().optional(), // the option to pick on the shop page, or a quantity
+              url: z.url(),
+            }),
+          )
+          .default([]),
       })
-      .default({ cad: [] }),
+      .default({ cad: [], bom: [] }),
   }),
 });
 

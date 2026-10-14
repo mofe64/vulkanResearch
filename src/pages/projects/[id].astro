@@ -18,6 +18,14 @@ const posts = await getPosts((e) => e.data.project.id === project.id);
 // Newest version first.
 const versions = [...p.versions].reverse();
 
+// Shop name shown on each buy link, from the link's host.
+const SHOPS: Record<string, string> = { "thepihut.com": "The Pi Hut", "aliexpress.com": "AliExpress" };
+const shopOf = (url: string) => {
+  const host = new URL(url).hostname.replace(/^www\./, "");
+  return SHOPS[host] ?? host;
+};
+const bom = p.resources.bom.map((b) => ({ ...b, shop: shopOf(b.url) }));
+
 const cad = p.resources.cad.map((r) => ({ ...r, size: publicFileSize(r.file) as string | null }));
 
 // `ready: false` tabs are shown so visitors know what's coming, but can't be opened yet.
@@ -86,6 +94,25 @@ const TABS = [
 
     <section class="panel" role="tabpanel" id="panel-resources" aria-labelledby="tab-resources" tabindex="0">
       <h2 class="visually-hidden">Resources</h2>
+      {bom.length > 0 && (
+        <>
+          <h3 class="rhead">Bill of materials</h3>
+          <p class="rintro">The parts to buy. Printed parts are under CAD files below.</p>
+          <ol class="files bom">
+            {bom.map((b, i) => (
+              <li>
+                <span class="bnum">{String(i + 1).padStart(2, "0")}</span>
+                <div class="finfo">
+                  <span class="flabel">{b.item}</span>
+                  {b.detail && <span class="fformat">{b.detail}</span>}
+                </div>
+                <a href={b.url} class="buy" target="_blank" rel="noopener">Buy at {b.shop} ↗</a>
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+
       <h3 class="rhead">CAD files</h3>
       {cad.length === 0 && <p class="muted">No CAD files published yet.</p>}
       <ul class="files">
@@ -165,6 +192,11 @@ const TABS = [
 
   .rhead { font-size: 20px; margin: 8px 0 12px; }
   .rhead ~ .rhead { margin-top: 40px; }
+  .rintro { font-size: 13px; color: var(--quote); margin: -4px 0 12px; }
+  .bom li { justify-content: flex-start; padding: 12px 0; }
+  .bnum { flex: none; width: 28px; font-size: 11px; color: var(--muted); }
+  .bom .finfo { flex: 1; }
+  .buy { flex: none; font-size: 13px; white-space: nowrap; }
   .files { list-style: none; margin: 0; padding: 0; max-width: 860px; }
   .files li {
     display: flex; justify-content: space-between; align-items: center; gap: 12px 24px;
@@ -188,6 +220,9 @@ const TABS = [
   }
   @media (max-width: 560px) {
     .files li { flex-direction: column; align-items: flex-start; }
+    /* Parts list: number in its own column, the buy link under the part name. */
+    .bom li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 4px 0; }
+    .bom .buy { grid-column: 2; padding: 6px 0; }
   }
 </style>
 
