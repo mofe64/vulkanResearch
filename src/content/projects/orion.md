@@ -28,6 +28,8 @@ resources:
     - item: "Raspberry Pi 5"
       detail: "8GB"
       url: "https://thepihut.com/products/raspberry-pi-5?variant=42531604955331"
+    - item: "Active Cooler for Raspberry Pi 5"
+      url: "https://thepihut.com/products/active-cooler-for-raspberry-pi-5"
     - item: "Serial Bus Servo Driver Board"
       url: "https://thepihut.com/products/serial-bus-servo-driver-board?variant=43300989665475"
     - item: "ReSpeaker XMOS XVF3800 4-mic array"
