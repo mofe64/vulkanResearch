@@ -24,6 +24,7 @@ resources:
       format: "STL · 26 files · Orion V2.1"
       note: "Every printed part of Orion V2.1, ready for your slicer. Print notes are in the README inside the zip."
   source: "https://github.com/mofe64/orion"
+  guide: "/projects/orion/assembly/"
   bom:
     - item: "Raspberry Pi 5"
       detail: "8GB"

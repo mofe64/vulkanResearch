@@ -114,3 +114,15 @@ everyone else (WCAG 2.2.2: anything moving for more than 5 s needs a way to paus
 - `scripts/` — hero animation, STEP → glTF conversion, model poster capture
 - `../vulkan-research-hero-illustration/` — the original Claude Design handoff, for reference
 # vulkanResearch
+
+## Assembly guides
+
+`src/pages/projects/orion/assembly.astro` is Orion's build guide. Each `<AssemblyStep>` lists the printed parts in
+place by the end of that step (`parts`) and the ones it adds (`focus`, drawn orange). Parts are named by their CAD
+part number (`"01"`, `"04b"`, `"22"`). On wide screens a sticky 3D view (`AssemblyViewer.astro`) follows the step
+being read; on phones each step shows a still picture instead. After changing the model or a step's parts, re-render
+the stills with `npm run dev` running:
+
+```sh
+node scripts/assembly-stills.mjs http://localhost:4321/projects/orion/assembly/ public/guides/orion
+```

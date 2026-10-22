@@ -101,6 +101,21 @@ const TABS = [
 
     <section class="panel" role="tabpanel" id="panel-resources" aria-labelledby="tab-resources" tabindex="0">
       <h2 class="visually-hidden">Resources</h2>
+      {p.resources.guide && (
+        <>
+          <h3 class="rhead">Assembly guide</h3>
+          <ul class="files">
+            <li>
+              <div class="finfo">
+                <span class="flabel">Build {p.name}, step by step</span>
+                <span class="fnote">Every step with its screws, a 3D view of where the parts go, and why it's done that way.</span>
+              </div>
+              <a href={p.resources.guide} class="btn-outline">Open the guide</a>
+            </li>
+          </ul>
+        </>
+      )}
+
       {bomGroups.length > 0 && (
         <>
           <h3 class="rhead">Bill of materials</h3>

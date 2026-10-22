@@ -39,6 +39,7 @@ const projects = defineCollection({
           )
           .default([]),
         source: z.string().optional(), // repository URL; the Source code entry stays disabled until this is set
+        guide: z.string().optional(), // path of the project's assembly guide page
         // Bill of materials: the bought parts, each with a link to buy it.
         bom: z
           .array(
