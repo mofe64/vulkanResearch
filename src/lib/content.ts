@@ -1,6 +1,7 @@
 import { getCollection, type CollectionEntry } from "astro:content";
 
 export type Project = CollectionEntry<"projects">;
+export type Lesson = CollectionEntry<"lessons">;
 export type Post = CollectionEntry<"posts">;
 export type PostType = Post["data"]["type"];
 
@@ -110,4 +111,13 @@ export function projectTimeline(project: Project, posts: Post[]) {
   // Grid lines every month (or year), drawn by the track's background.
   const gridStep = `${((monthly ? 1 : 12) / span) * 100}%`;
   return { ticks, bars, dots, today: pct(nowM), gridStep };
+}
+
+/** A lesson's address: /projects/orion/learn/how-orion-moves/ */
+export const lessonSlug = (l: Lesson) => l.id.split("/").pop()!;
+export const lessonUrl = (l: Lesson) => `/projects/${l.data.project.id}/learn/${lessonSlug(l)}/`;
+
+/** A project's lessons in teaching order. */
+export async function getLessons(projectId: string) {
+  return (await getCollection("lessons", (l) => l.data.project.id === projectId)).sort((a, b) => a.data.order - b.data.order);
 }

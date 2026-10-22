@@ -1,5 +1,5 @@
 /* The explainer kit's look: hairlines, ink lines, orange (--heat) for what the reader is changing. */
-.lx { border: 1px solid var(--rule); background: #fff; font-size: 13px; color: var(--ink); }
+.lx { margin: 0; border: 1px solid var(--rule); background: #fff; font-size: 13px; color: var(--ink); }
 .lx-body { padding: 12px 14px 14px; display: grid; gap: 12px; }
 .lx-caption { font-size: 12px; color: var(--muted); padding: 8px 14px; border-top: 1px solid var(--rule-soft); }
 .lx-caption b { font-weight: normal; color: var(--ink); }
@@ -64,3 +64,29 @@ select.lx-btn { padding-right: 4px; }
 .lx-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .lx-split > div > .lx-label { display: block; margin-bottom: 4px; }
 @media (max-width: 520px) { .lx-slider { grid-template-columns: 80px minmax(0, 1fr) 48px; gap: 6px; } }
+
+.lx-keys { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.lx-keys li {
+  display: flex; flex-direction: column; gap: 1px; padding: 5px 9px; border: 1px solid var(--rule); border-radius: 3px;
+  font-size: 12px; min-width: 92px; transition: border-color .15s, background .15s;
+}
+.lx-keys li b { font: 10px var(--mono); color: var(--muted); font-weight: normal; }
+.lx-keys li.is-on { border-color: var(--heat); background: #fdf6f2; }
+.lx-keys li.is-on b { color: var(--heat); }
+.lx-table { border-collapse: collapse; font-size: 12px; width: 100%; }
+.lx-table th { text-align: left; font-weight: normal; color: var(--text-2); padding: 3px 0; border-bottom: 1px solid var(--rule-soft); }
+.lx-table td { text-align: right; font-family: var(--mono); padding: 3px 0; border-bottom: 1px solid var(--rule-soft); }
+.lx code { font: 12px var(--mono); background: var(--chip); padding: 0 4px; border-radius: 3px; }
+.lx-ladder { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.lx-ladder li { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; align-items: center; padding: 3px 6px; border-left: 2px solid transparent; }
+.lx-ladder li.is-on { border-left-color: var(--heat); background: #fdf6f2; }
+.lx-ladder .lx-btn { width: 100%; }
+.lx-log { list-style: none; margin: 0; padding: 8px 0 0; border-top: 1px solid var(--rule-soft); font-size: 12px; color: var(--muted); display: grid; gap: 2px; }
+.lx-log .is-new { color: var(--ink); }
+.lx-keys li:has(.lx-chip) { padding: 0; }
+.lx-chip { font: 12px var(--sans); background: none; border: 0; padding: 6px 10px; cursor: pointer; color: var(--ink); text-align: left; }
+.lx-chip b { font: 10px var(--mono); color: var(--muted); margin-right: 4px; }
+.lx-edit { display: grid; gap: 6px; padding: 8px 10px; border: 1px solid var(--heat); background: #fdf6f2; }
+.lx-file summary { cursor: pointer; font-size: 12px; color: var(--link); }
+.lx-file pre { font: 11px/1.5 var(--mono); background: #fafaf8; border: 1px solid var(--rule); padding: 10px; overflow-x: auto; max-height: 260px; margin: 6px 0 0; }
+.lx .ex-warn, .lx-stats b.ex-warn { color: var(--heat); }

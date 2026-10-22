@@ -4,7 +4,8 @@ import Base from "../../layouts/Base.astro";
 import RobotViewer from "../../components/RobotViewer.astro";
 import PostList from "../../components/PostList.astro";
 import Timeline from "../../components/Timeline.astro";
-import { getPosts, getProjects, type Project } from "../../lib/content";
+import LessonList from "../../components/learn/LessonList.astro";
+import { getLessons, getPosts, getProjects, type Project } from "../../lib/content";
 import { publicFileSize } from "../../lib/file-size.mjs";
 
 export async function getStaticPaths() {
@@ -15,6 +16,7 @@ const { project } = Astro.props as { project: Project };
 const p = project.data;
 const { Content } = await render(project);
 const posts = await getPosts((e) => e.data.project.id === project.id);
+const lessons = await getLessons(project.id);
 // Newest version first.
 const versions = [...p.versions].reverse();
 
@@ -39,7 +41,7 @@ const TABS = [
   { id: "overview", label: "Overview", ready: true },
   { id: "log", label: "Log", count: posts.length, ready: true },
   { id: "resources", label: "Resources", ready: true },
-  { id: "learn", label: "Learn", ready: false },
+  { id: "learn", label: "Learn", ready: lessons.length > 0 },
 ];
 ---
 
@@ -172,6 +174,16 @@ const TABS = [
         </li>
       </ul>
     </section>
+
+    {lessons.length > 0 && (
+      <section class="panel" role="tabpanel" id="panel-learn" aria-labelledby="tab-learn" tabindex="0">
+        <h2 class="visually-hidden">Learn</h2>
+        <p class="rintro learn-intro">
+          How {p.name} works, one question at a time, with things you can watch, drag and try. No robotics background needed.
+        </p>
+        <LessonList project={project.id} />
+      </section>
+    )}
   </div>
 </Base>
 
@@ -222,6 +234,7 @@ const TABS = [
   .rhead { font-size: 20px; margin: 8px 0 12px; }
   .rhead ~ .rhead { margin-top: 40px; }
   .rintro { font-size: 13px; color: var(--quote); margin: -4px 0 12px; }
+  .learn-intro { font-size: 15px; margin: 0 0 16px; max-width: 64ch; }
   .bom li { justify-content: flex-start; padding: 12px 0; }
   .bgroup { font: 11px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 22px 0 6px; }
   .bqty { flex: none; width: 36px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }

@@ -1,0 +1,30 @@
+---
+import Base from "../../../../layouts/Base.astro";
+import LessonList from "../../../../components/learn/LessonList.astro";
+import { getLessons, getProjects, projectUrl, type Project } from "../../../../lib/content";
+
+// A Learn page for every project that has at least one lesson.
+export async function getStaticPaths() {
+  const projects = await getProjects();
+  const withLessons = await Promise.all(projects.map(async (p) => ((await getLessons(p.id)).length ? p : null)));
+  return withLessons.filter((p) => p !== null).map((project) => ({ params: { id: project.id }, props: { project } }));
+}
+
+const { project } = Astro.props as { project: Project };
+---
+
+<Base title={`Learn · ${project.data.name}`} description={`How ${project.data.name} works, explained with things you can watch and try.`}>
+  <section class="learn">
+    <span class="eyebrow"><a href={projectUrl(project.id)}>{project.data.name}</a> · Learn</span>
+    <h1>How {project.data.name} works</h1>
+    <p class="lede">Each lesson answers one question with things you can watch, drag and try. No robotics background needed.</p>
+    <LessonList project={project.id} />
+  </section>
+</Base>
+
+<style>
+  .learn { padding: 32px var(--gutter) 64px; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 14px; }
+  h1 { font-size: 48px; line-height: 1.08; }
+  .lede { font-family: var(--serif); font-style: italic; font-size: 20px; line-height: 1.45; color: var(--quote); max-width: 60ch; margin-bottom: 18px; }
+  @media (max-width: 600px) { h1 { font-size: 34px; } }
+</style>

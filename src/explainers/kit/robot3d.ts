@@ -103,10 +103,10 @@ export async function createRobotView(host: HTMLElement, initial: JointValues = 
   sun.position.set(2, 3, 2);
   scene.add(sun);
 
-  // Frame the lamp standing at its home height: centre ~0.22 m up, the arm sweeps about 0.3 m around the base.
-  const target = new THREE.Vector3(0, 0.2, 0);
+  // Frame the lamp at full stretch: it reaches about 0.5 m up and sweeps about 0.3 m around the base.
+  const target = new THREE.Vector3(0, 0.24, 0);
   const camera = new THREE.PerspectiveCamera(30, 1, 0.01, 20);
-  const distance = 1.35;
+  const distance = 1.75;
   const placeCamera = (name: keyof typeof VIEWS) => {
     const d = new THREE.Vector3(...VIEWS[name]).normalize().multiplyScalar(distance);
     camera.position.copy(target).add(d);
@@ -137,7 +137,9 @@ export async function createRobotView(host: HTMLElement, initial: JointValues = 
       canvas.width = Math.round(w * ratio);
       canvas.height = Math.round(h * ratio);
     }
-    renderer.setSize(w, h, false);
+    // Views share the renderer; resizing it reallocates its buffer, so only do that when this view's size differs.
+    const size = renderer.getSize(new THREE.Vector2());
+    if (size.x !== w || size.y !== h) renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.render(scene, camera);

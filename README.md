@@ -86,6 +86,30 @@ import RobotViewer from "../../../components/RobotViewer.astro";
 <RobotViewer model="/models/orion-v2.glb" art="/art/orion-v2-poster.png" alt="Orion V2" />
 ```
 
+## Learn lessons
+
+A project's Learn tab lists its lessons, and each lesson is a page at `/projects/<project>/learn/<lesson>/`.
+
+- `src/content/learn/<project>/<lesson>.mdx`: one lesson. The front matter's `title` is the question it answers;
+  `status: planned` lists a lesson without a page yet.
+- `src/content/concepts/<id>.md`: the shared glossary. `<Term id="servo">servos</Term>` in a lesson shows its sentence.
+- `src/components/learn/`: `<Section>` (one idea: a `##` question and text, plus an explainer in `slot="stage"`),
+  `<Term>`, `<Fact>`, `<UnderTheHood>` and `<Predict>`.
+- `src/explainers/kit/`: the reusable parts of explainers (the 3D lamp, playback and its scrubber, charts, and the
+  bridge to Orion's motion compiler). `src/explainers/orion/` holds Orion's explainers.
+
+Orion's lessons run Orion's own trajectory compiler (`orion-trajectory`) in the reader's browser, compiled to
+WebAssembly from Orion's unchanged source. After motion files or the motion code change in the Orion repository,
+refresh the compiler and the lesson data:
+
+```sh
+rustup target add wasm32-wasip1   # once
+scripts/build-motion-wasm.sh ~/dev/cardinal/orionProject/orion
+```
+
+The "asked vs actual" chart comes from a servo tracking capture:
+`node scripts/servo-tracking-sample.mjs <capture.jsonl> > src/data/orion/servo-tracking.json`.
+
 ## Hero slideshow
 
 `src/components/Hero.astro` inlines the animated drawings from `src/assets/hero/` and plays each one for exactly

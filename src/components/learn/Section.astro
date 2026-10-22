@@ -1,0 +1,14 @@
+---
+// One idea of a lesson: the question as a ## heading and a few sentences on the left, the explainer that carries the
+// idea on the right (it stays in view while the text scrolls). On narrow screens the explainer follows the text.
+//   <Section>
+//   ## Why doesn't Orion jerk?
+//   Text...
+//   <div slot="stage"><SmoothVsLinear client:visible /></div>
+//   </Section>
+---
+
+<section class="lsec">
+  <div class="lsec-text"><slot /></div>
+  {Astro.slots.has("stage") && <div class="lsec-stage"><slot name="stage" /></div>}
+</section>

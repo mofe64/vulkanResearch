@@ -1,0 +1,30 @@
+---
+// A one-tap guess before the explainer shows the answer. Nothing is scored or saved.
+//   <Predict question="What happens if..." options={["A", "B"]} answer={1}>Why B is right.</Predict>
+interface Props { question: string; options: string[]; answer: number }
+const { question, options, answer } = Astro.props;
+---
+
+<div class="predict" data-predict data-answer={answer}>
+  <p class="predict-q"><span>Guess first</span> {question}</p>
+  <div class="predict-options">
+    {options.map((o, i) => <button type="button" data-i={i}>{o}</button>)}
+  </div>
+  <div class="predict-a" hidden><slot /></div>
+</div>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-predict]").forEach((box) => {
+    const answer = Number(box.dataset.answer);
+    box.querySelectorAll<HTMLButtonElement>("button").forEach((b) =>
+      b.addEventListener("click", () => {
+        box.querySelectorAll<HTMLButtonElement>("button").forEach((x) => {
+          x.disabled = true;
+          if (Number(x.dataset.i) === answer) x.classList.add("is-right");
+        });
+        if (Number(b.dataset.i) !== answer) b.classList.add("is-wrong");
+        box.querySelector<HTMLElement>(".predict-a")!.hidden = false;
+      }),
+    );
+  });
+</script>

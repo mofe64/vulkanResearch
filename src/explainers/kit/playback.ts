@@ -24,11 +24,25 @@ export function stateAt(traj: Trajectory, t: number) {
   };
 }
 
+/** Whether an element is on screen, so off-screen explainers stop animating and leave the page responsive. */
+// Returns a ref callback for the element to watch; it follows the element if React replaces it.
+export function useOnScreen() {
+  const [el, setEl] = useState<Element | null>(null);
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setOn(e.isIntersecting), { rootMargin: "100px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [el]);
+  return [setEl, on] as const;
+}
+
 /**
  * Plays a trajectory in real time (or slowed down). Starts paused for readers who asked for reduced motion.
- * `loop` waits a moment at the end, then starts again.
+ * `loop` waits a moment at the end, then starts again. While `active` is false (off screen) time stands still.
  */
-export function usePlayback(traj: Trajectory | null, { speed = 1, loop = false, autoplay = true } = {}) {
+export function usePlayback(traj: Trajectory | null, { speed = 1, loop = false, autoplay = true, active = true } = {}) {
   const [t, setT] = useState(0);
   const [playing, setPlaying] = useState(false);
   const clock = useRef({ t: 0, last: 0, raf: 0, pauseUntil: 0 });
@@ -40,11 +54,11 @@ export function usePlayback(traj: Trajectory | null, { speed = 1, loop = false, 
   }, [traj, autoplay]);
 
   useEffect(() => {
-    if (!playing || !traj) return;
+    if (!playing || !traj || !active) return;
     const c = clock.current;
     c.last = performance.now();
     const frame = (now: number) => {
-      const dt = (now - c.last) / 1000;
+      const dt = Math.min(0.1, Math.max(0, (now - c.last) / 1000));
       c.last = now;
       if (now < c.pauseUntil) {
         c.raf = requestAnimationFrame(frame);
@@ -67,7 +81,7 @@ export function usePlayback(traj: Trajectory | null, { speed = 1, loop = false, 
     };
     c.raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(c.raf);
-  }, [playing, traj, speed, loop]);
+  }, [playing, traj, speed, loop, active]);
 
   const seek = useCallback((time: number) => {
     clock.current.t = time;
