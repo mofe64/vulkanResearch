@@ -4,6 +4,10 @@ project: orion
 order: 3
 summary: "From the sound of your voice to Orion's spoken reply: hearing its name, knowing when you've stopped, and where the waiting time goes."
 covers: ["Sound as numbers", "Hearing its name", "Knowing when you've stopped", "Your turn again"]
+recap:
+  - "Orion keeps the last 3 seconds of sound, so it never misses the start of what you say."
+  - "A fast check and a careful check confirm its name; a voice detector decides when you've finished."
+  - "It speaks while the rest of the reply is still being made, then listens for 5 seconds for your answer."
 ---
 import Section from "../../../components/learn/Section.astro";
 import Term from "../../../components/learn/Term.astro";
@@ -98,7 +102,7 @@ recording ends.
 ## Cutting the silence
 
 People pause while they think. Before the recording goes to <Term id="speech-recognition">speech recognition</Term>,
-Orion trims long pauses down. The model then has less audio to work through, so the reply comes sooner, and nothing
+Orion trims long pauses down. The <Term id="model">model</Term> then has less audio to work through, so the reply comes sooner, and nothing
 you said is lost.
 
 <Fact>Pauses longer than 600 ms become 320 ms. The speech itself is untouched and stays in order.</Fact>
@@ -141,7 +145,7 @@ Sounds and light tell you which stage it's in, so you never have to guess whethe
 
 <UnderTheHood>
 Each wake gets a fresh session ID, and a follow-up gets a new ID linked to the finished turn, so a late result from an
-old turn can't sneak into a new one. On V2 the microphone board's echo cancellation lets Orion hear "Hey Orion" while
+old turn can't sneak into a new one. On V2 the microphone board's <Term id="echo-cancellation">echo cancellation</Term> lets Orion hear "Hey Orion" while
 it's speaking, which interrupts the reply.
 </UnderTheHood>
 

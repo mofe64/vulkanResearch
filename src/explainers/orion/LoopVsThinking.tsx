@@ -10,12 +10,13 @@ const JOB_SECONDS = 1.5; // an illustrative speech recognition job: it takes on 
  */
 export default function LoopVsThinking() {
   const [inside, setInside] = useState(false);
+  const [paused, setPaused] = useState(() => reducedMotion());
   const [box, onScreen] = useOnScreen();
   const [state, setState] = useState({ t: 0, armT: 0, ticks: [] as number[], job: null as null | number });
   const sim = useRef({ t: 0, armT: 0, nextTick: 0, ticks: [] as number[], jobStart: 0.6, last: 0 });
 
   useEffect(() => {
-    if (!onScreen || reducedMotion()) return;
+    if (!onScreen || paused) return;
     const s = sim.current;
     s.last = performance.now();
     let raf = 0;
@@ -37,7 +38,7 @@ export default function LoopVsThinking() {
     };
     raf = requestAnimationFrame(frame);
     return () => cancelAnimationFrame(raf);
-  }, [inside, onScreen]);
+  }, [inside, onScreen, paused]);
 
   const X = (t: number) => 590 - (state.t - t) * 280; // the last two seconds, newest on the right
   const angle = Math.sin(state.armT * 2.2) * 35;
@@ -55,10 +56,13 @@ export default function LoopVsThinking() {
           </g>
           <text x={10} y={160} className="lx-axis">the arm, moved by each tick →</text>
         </svg>
+        <div className="lx-row">
+          <button type="button" className="lx-play" onClick={() => setPaused(!paused)} aria-label={paused ? "Play" : "Pause"}>{paused ? "▶" : "❚❚"}</button>
         <label className="lx-switch">
           <input type="checkbox" checked={inside} onChange={(e) => setInside(e.target.checked)} />
           Run speech recognition inside the motor loop
         </label>
+        </div>
       </div>
       <figcaption className="lx-caption">
         {inside

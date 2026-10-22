@@ -4,6 +4,10 @@ project: orion
 order: 4
 summary: "The engineering behind a lamp that seems alive: animation principles, idles, a simple inner state, reactions timed to its voice, and knowing when to hold back."
 covers: ["Animation principles", "Never fully still", "A simple inner state", "Curiosity on a budget"]
+recap:
+  - "Animation principles like anticipation and overshoot are just extra keyframes."
+  - "Irregular idles and a small inner state (energy, mood, activity) keep Orion alive between conversations."
+  - "Reactions land on the right word, and budgets and quiet hours keep it from overdoing anything."
 ---
 import Section from "../../../components/learn/Section.astro";
 import Term from "../../../components/learn/Term.astro";
@@ -131,7 +135,7 @@ frozen: after a few seconds it makes small thinking movements, so you know it's 
 ## Reactions on cue
 
 Codex can tag a reply with a feeling: happy, sympathy, surprised, and eight more. Each tag has a short motion with one
-marked peak, its apex, and Orion times the motion so the apex lands on the matching moment in its speech.
+marked peak, its <Term id="apex">apex</Term>, and Orion times the motion so the apex lands on the matching moment in its speech.
 
 Between reactions, the rest of Orion's speaking movement follows the sound of its own voice: bigger on loud,
 energetic phrases, calmer in quiet ones, with the head moving first and the arm following, smaller.
@@ -151,7 +155,7 @@ It plans ahead as audio streams in, without ever writing to the motors itself. S
 
 ## Curiosity on a budget
 
-With its camera, Orion can notice things: a new object on the desk, someone arriving, a person looking at it. If it
+With its camera ([How does Orion see?](/projects/orion/learn/how-orion-sees/)), Orion can notice things: a new object on the desk, someone arriving, a person looking at it. If it
 reacted to all of them it would seem twitchy. So every curious glance spends from a small budget, and things it has
 already looked at get less interesting each time.
 

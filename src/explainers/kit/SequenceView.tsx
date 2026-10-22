@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import RobotView from "./RobotView";
 import { POSES, zeros, type Motion, type Positions } from "./orion";
-import { stateAt, useOnScreen, usePlayback } from "./playback";
+import { reducedMotion, stateAt, useOnScreen, usePlayback } from "./playback";
 import { useCompiled } from "./useCompiled";
 import "./kit.css";
 
@@ -30,12 +30,13 @@ export default function SequenceView({ steps, start = POSES.home.positions, anch
   const [from, setFrom] = useState<Positions>(start);
   const [n, setN] = useState(0);
   const [box, onScreen] = useOnScreen();
+  const [paused, setPaused] = useState(() => reducedMotion());
   const step = steps[i];
   const { traj } = useCompiled(
     step.motion ? { motion: step.motion, start: { positions: from, velocities: zeros(), anchor } } : null,
     `${i}-${n}`,
   );
-  const play = usePlayback(step.motion ? traj : null, { active: onScreen });
+  const play = usePlayback(step.motion ? traj : null, { active: onScreen && !paused });
   const q = step.motion && traj ? stateAt(traj, play.t).positions : from;
 
   const advance = () => {
@@ -44,9 +45,15 @@ export default function SequenceView({ steps, start = POSES.home.positions, anch
     setI(next);
     setN((x) => x + 1);
   };
+  // Once the reader has pressed play, each new step starts by itself (even with reduced motion turned on).
+  useEffect(() => {
+    if (!paused && traj && !play.playing && play.t === 0) play.play();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [traj, paused]);
+
   // A motion step ends when its playback finishes; a pause ends after its time.
   useEffect(() => {
-    if (!onScreen) return;
+    if (!onScreen || paused) return;
     if (step.motion && traj && !play.playing && play.t >= traj.duration_seconds - 1e-3) {
       const t = setTimeout(advance, 400);
       return () => clearTimeout(t);
@@ -56,7 +63,7 @@ export default function SequenceView({ steps, start = POSES.home.positions, anch
       return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [play.playing, traj, i, n, onScreen]);
+  }, [play.playing, traj, i, n, onScreen, paused]);
 
   const light = step.light;
   return (
@@ -66,6 +73,10 @@ export default function SequenceView({ steps, start = POSES.home.positions, anch
         <RobotView joints={q} camera={camera} label={`Orion: ${step.label}`} />
       </div>
       <div className="lx-body">
+        <div className="lx-row">
+          <button type="button" className="lx-play" onClick={() => setPaused(!paused)} aria-label={paused ? "Play" : "Pause"}>{paused ? "▶" : "❚❚"}</button>
+          <span className="lx-note">{paused ? "Paused" : "Playing"}: {step.label}</span>
+        </div>
         <ol className="lx-keys" aria-label="Sequence">
           {steps.map((s, k) => (
             <li key={k} className={k === i ? "is-on" : ""}>

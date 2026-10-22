@@ -4,6 +4,10 @@ project: orion
 order: 5
 summary: "From camera pixels to a turn of the head: finding faces and hands, keeping track of who's who, following a face or your hand, and what Orion's camera never does."
 covers: ["Finding faces and hands", "Face tracking", "Hand tracking", "Camera privacy"]
+recap:
+  - "Detectors find faces, palms and objects; only finds above a score threshold count."
+  - "Every find becomes a direction from the base, joined into numbered tracks so Orion knows who's who."
+  - "Face and hand tracking turn the head first and the base after. Images stay in the lamp's memory, and the camera can't wake Orion."
 ---
 import Section from "../../../components/learn/Section.astro";
 import Term from "../../../components/learn/Term.astro";
@@ -56,7 +60,7 @@ moves with the head: turn the head and the same face lands on a different pixel.
 So Orion records exactly where the camera was pointing when each picture was taken, and turns every find into a
 <Term id="bearing">bearing</Term>: a direction from the lamp's base that doesn't change when the head moves.
 
-<Fact>The camera sees about 102° side to side. Pictures are analysed at 640 × 360 pixels.</Fact>
+<Fact>The camera's <Term id="field-of-view">field of view</Term> is about 102° side to side. Pictures are analysed at 640 × 360 pixels.</Fact>
 
 <UnderTheHood>
 Each frame carries its capture time (the middle of the exposure). The runtime supplies the camera's pose at that

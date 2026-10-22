@@ -84,6 +84,7 @@ const lessons = defineCollection({
     summary: z.string(), // one or two sentences for the lesson list
     covers: z.array(z.string()).default([]), // a few short phrases shown on the lesson's card
     status: z.enum(["ready", "planned"]).default("ready"), // planned lessons are listed but can't be opened yet
+    recap: z.array(z.string()).default([]), // three short lines shown at the end: what to remember
   }),
 });
 

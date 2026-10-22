@@ -67,6 +67,11 @@
 .predict-options button.is-wrong { border-color: var(--heat); color: var(--heat); text-decoration: line-through; }
 .predict-a { margin-top: 10px; font-size: 14px; color: #444; }
 
+.recap { margin-top: 48px; padding: 20px 24px; background: var(--paper-warm); border-left: 3px solid var(--heat); max-width: 760px; }
+.recap h2 { font-size: 22px; margin-bottom: 8px; }
+.recap ul { margin: 0; padding-left: 1.2em; font-size: 15px; line-height: 1.7; color: #444; }
+.recap li + li { margin-top: .3em; }
+.hood-body a code { color: var(--link); }
 .lfoot { margin-top: 48px; padding-top: 24px; border-top: 2px solid var(--ink); }
 .next { display: flex; flex-direction: column; gap: 4px; font: 26px var(--serif); color: var(--ink); max-width: 640px; }
 .next span { font: 11px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }

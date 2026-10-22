@@ -19,7 +19,7 @@ const next = all[index + 1];
 ---
 
 <Base title={lesson.data.title} description={lesson.data.summary}>
-  <article class="lesson">
+  <article class="lesson" data-repo={project.data.resources.source}>
     <header class="lhead">
       <span class="eyebrow">
         <a href={projectUrl(project.id)}>{project.data.name}</a> · <a href={`${projectUrl(project.id)}learn/`}>Learn</a> · Lesson {index + 1} of {all.length}
@@ -32,6 +32,13 @@ const next = all[index + 1];
     <div class="lbody">
       <Content />
     </div>
+
+    {lesson.data.recap.length > 0 && (
+      <aside class="recap" aria-labelledby="recap-title">
+        <h2 id="recap-title">In short</h2>
+        <ul>{lesson.data.recap.map((line) => <li>{line}</li>)}</ul>
+      </aside>
+    )}
 
     <footer class="lfoot">
       {next ? (
@@ -46,3 +53,21 @@ const next = all[index + 1];
     </footer>
   </article>
 </Base>
+
+<script>
+  // "Under the hood" boxes name files and folders in the project's repository; make each one a link to it there.
+  const article = document.querySelector<HTMLElement>("article.lesson");
+  const repo = article?.dataset.repo;
+  if (repo) {
+    for (const code of article!.querySelectorAll<HTMLElement>(".hood-body code")) {
+      const path = code.textContent ?? "";
+      if (code.closest("pre, a") || !/^[a-z_]+(\/[\w.-]+)+\/?$/.test(path)) continue;
+      const a = document.createElement("a");
+      a.href = `${repo}/${/\.[a-z]+$/.test(path) ? "blob" : "tree"}/main/${path.replace(/\/$/, "")}`;
+      a.target = "_blank";
+      a.rel = "noopener";
+      code.replaceWith(a);
+      a.append(code);
+    }
+  }
+</script>

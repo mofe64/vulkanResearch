@@ -10,12 +10,13 @@ interface Track { id: number; az: number; v: number; seen: number }
 /** Two people walk past; detections sometimes drop out. Tracks keep each person's number through the gaps. */
 export default function TrackKeeper() {
   const [miss, setMiss] = useState(0.3);
+  const [paused, setPaused] = useState(() => reducedMotion());
   const [box, onScreen] = useOnScreen();
   const [view, setView] = useState<{ t: number; dets: number[]; tracks: Track[] }>({ t: 0, dets: [], tracks: [] });
   const s = useRef({ t: 0, tracks: [] as Track[], next: 1, seed: 3 });
 
   useEffect(() => {
-    if (!onScreen || reducedMotion()) return;
+    if (!onScreen || paused) return;
     const dt = 0.1; // 10 detections a second
     const id = setInterval(() => {
       const st = s.current;
@@ -42,7 +43,7 @@ export default function TrackKeeper() {
       setView({ t: st.t, dets, tracks: st.tracks.map((x) => ({ ...x })) });
     }, 100);
     return () => clearInterval(id);
-  }, [miss, onScreen]);
+  }, [miss, onScreen, paused]);
 
   const X = (a: number) => 300 - a * 3.2;
   return (
@@ -64,7 +65,9 @@ export default function TrackKeeper() {
           <text x={580} y={120} textAnchor="end" className="lx-axis">Orion's left</text>
         </svg>
         <label className="lx-slider"><span>Missed detections</span><input type="range" min={0} max={0.8} step={0.05} value={miss} onChange={(e) => setMiss(Number(e.target.value))} /><output>{Math.round(miss * 100)}%</output></label>
-        <div className="lx-stats"><span>Track numbers handed out so far <b>{s.current.next - 1}</b></span></div>
+        <div className="lx-stats">
+          <button type="button" className="lx-play" onClick={() => setPaused(!paused)} aria-label={paused ? "Play" : "Pause"}>{paused ? "▶" : "❚❚"}</button>
+          <span>Track numbers handed out so far <b>{s.current.next - 1}</b></span></div>
       </div>
       <figcaption className="lx-caption">Black dots are detections this instant; orange rings are tracks. A dashed ring is predicted, not seen. A track survives 1 second unseen, and a detection within 20° of its prediction keeps its number. Push the missed detections up and watch new numbers appear.</figcaption>
     </figure>

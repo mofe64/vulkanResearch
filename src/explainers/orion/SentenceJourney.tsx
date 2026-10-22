@@ -49,7 +49,12 @@ export default function SentenceJourney() {
           onSelect={(id) => { s.pause(); s.go(STEPS.findIndex((x) => x.node === id)); }}
           label="Path of one spoken question through Orion"
         />
-        <p className="lx-card">{step.text}</p>
+        <p className="lx-card">
+          {step.text}{" "}
+          <a href={s.step >= 5 ? "/projects/orion/learn/how-orion-moves/" : "/projects/orion/learn/how-orion-holds-conversations/"}>
+            {s.step >= 5 ? "How does Orion move? →" : "How does Orion hold conversations? →"}
+          </a>
+        </p>
         <Stepper step={s.step} count={STEPS.length} playing={s.playing} onPlay={s.play} onPause={s.pause} onGo={s.go} />
       </div>
       <figcaption className="lx-caption">Tap any box to jump to it. Everything inside the grey box runs on the lamp itself.</figcaption>

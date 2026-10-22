@@ -4,6 +4,10 @@ project: orion
 order: 2
 summary: "How a named movement becomes smooth motion: five joints, poses and keyframes, curves instead of straight lines, and a loop that steers the motors 50 times a second. Every animation here runs Orion's own motion software in your browser."
 covers: ["Joints and servos", "Keyframes and smooth curves", "50 times a second", "Make your own motion"]
+recap:
+  - "A motion is a list of keyframes: poses and travel times, written in a short file."
+  - "Orion's compiler joins them with smooth curves, keeps them within speed and joint limits, and samples them 50 times a second."
+  - "Styles, anchors and priorities let the same few files produce calm, quick or interrupted movement safely."
 ---
 import Section from "../../../components/learn/Section.astro";
 import Term from "../../../components/learn/Term.astro";
@@ -67,7 +71,7 @@ moment by moment.
 <UnderTheHood>
 Orion uses Feetech STS3215 serial bus servos: all five share one cable and each has an ID from 1 to 5. Orion sets the
 zero of every joint with the lamp folded flat, its rest pose, and converts a reading to an angle with
-`(raw − 2047) × 2π / 4096` radians.
+`(raw − 2047) × 2π / 4096` <Term id="radian">radians</Term>.
 </UnderTheHood>
 
 <div slot="stage"><ServoDial client:visible /></div>
@@ -235,7 +239,7 @@ lower one waits its turn.
 
 The handover is smooth because the new movement starts from exactly where the old one was, and at the same speed.
 
-<Fact>Only the runtime ever sends angles to the motors. Everything else, including voice and Studio, has to ask it.</Fact>
+<Fact>Only the runtime ever sends angles to the motors. Everything else, including voice and Studio, has to ask it ([Meet Orion](/projects/orion/learn/meet-orion/) shows the gatekeeper).</Fact>
 
 <div slot="stage"><PriorityLadder client:visible /></div>
 </Section>
