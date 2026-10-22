@@ -348,7 +348,7 @@ sudo reboot</code></pre>
           hardware={[{ qty: 4, item: "M2 × 6 screws (gear face)" }]}>
           <p>The upper arm carries the wrist servo (ID 4) and is built the same way as the lower arm.</p>
           <ol>
-            <li>Plug the cable coming up from the elbow into the wrist servo, and a second cable into its other socket for the neck servo.</li>
+            <li>Plug the cable coming up from the elbow into the wrist servo. Leave its other socket empty: the neck servo's cable plugs into it in step 24.</li>
             <li>Lay the servo in the left half, gear face against that half, and fit the four gear-face <b>M2 × 6</b>.</li>
             <li>Bend the cables over the 2 mm rod and lay one in each channel.</li>
           </ol>
@@ -376,7 +376,7 @@ sudo reboot</code></pre>
         <Step n={19} title={t(19)} parts={["17", "servoneck"]} focus={["servoneck"]} frame="all" from={[0, 0, 70]} image={still(19)} alt="The neck servo, highlighted, sliding into its printed cartridge box from the front."
           hardware={[]}>
           <ol>
-            <li>Plug the cable that comes out of the top of the upper arm (from the wrist servo) into the neck servo. The neck servo is the last in the chain, so its second socket stays empty. Keep the head next to the lamp while you build it, so this cable can stay connected.</li>
+            <li>Plug a servo cable into the neck servo and leave its other end free. It will connect to the wrist servo in step 24, so you can build the whole head on the table. The neck servo is the last in the chain, so its second socket stays empty.</li>
             <li>Slide the servo into the cartridge (17) from the open front, <b>without its horn</b>: the box is too tight for a servo with the horn already fitted. Its output faces down, towards the round opening in the bottom of the cartridge.</li>
           </ol>
         </Step>
@@ -402,7 +402,7 @@ sudo reboot</code></pre>
         <Step n={22} title={t(22)} frame="all" parts={["17", "servoneck", "hornneck", "18", "19"]} focus={["17", "servoneck", "hornneck", "18"]} from={[0, 0, 90]} image={still(22)} alt="The cartridge with the neck servo, highlighted, fitted inside the head shell."
           hardware={[{ qty: 4, item: "M3 × 6 button-head screws" }]}>
           <ol>
-            <li>Pass the cartridge into the head shell (19) through the open front, horn first, so the horn sits over the round opening in the bottom of the shell.</li>
+            <li>Pass the cartridge into the head shell (19) through the open front, horn first, so the horn sits over the round opening in the bottom of the shell. Lead the servo cable's free end out through that opening.</li>
             <li>Line up the cartridge's four ears with the four deeper inserts and fit four <b>M3 × 6</b> from the front.</li>
           </ol>
         </Step>
@@ -411,7 +411,7 @@ sudo reboot</code></pre>
           hardware={[{ qty: 4, item: "M3 × 5 button-head screws" }]}>
           <p>The top of the pitch fork's neck post (16) screws to the horn you fitted in step 20. The four screws go in from underneath, through the deep holes in the post.</p>
           <ol>
-            <li>Lower the head onto the post so the post's top sits flat against the horn, and turn the head until the four holes line up with the horn's holes. The head should face straight forward, along the fork.</li>
+            <li>Lower the head onto the post so the post's top sits flat against the horn, and turn the head until the four holes line up with the horn's holes. The head should face straight forward, along the fork. Keep the servo cable beside the post, not trapped between the post and the horn.</li>
             <li>From underneath, fit four <b>M3 × 5</b> up through the post into the horn. A long, thin hex key or screwdriver reaches down the holes.</li>
           </ol>
           <p class="warn"><b>Screw length</b> Use M3 × 5 here, not the M3 × 4 used at the other horns. The top of the post is 2.9 mm thick, so an M3 × 4 would only reach about 1 mm into the horn's thread. An M3 × 5 reaches about 2 mm, which is what the CAD is designed for.</p>
@@ -420,7 +420,9 @@ sudo reboot</code></pre>
         <Step n={24} title={t(24)} parts={withHead} focus={[...neck, "19"]} from={[0, 80, 0]} image={still(24)} alt="The head, highlighted, attached to the wrist at the top of the upper arm."
           hardware={[{ qty: 8, item: "M3 × 8 button-head screws" }, { qty: 1, item: "Servo centre screw (supplied)" }]}>
           <ol>
+            <li>Plug the neck servo's cable into the empty socket on the wrist servo, at the top of the upper arm.</li>
             <li>Fit the pitch fork over the wrist horns and fix it with eight <b>M3 × 8</b>, four per side, then the wrist centre screw.</li>
+            <li>Turn the head left and right and tilt it up and down by hand. The cable should have enough slack for both without pulling.</li>
           </ol>
           <p class="tip"><b>Why longer screws</b> The wrist fork is wider than the other joints' parts, so its screws need to be 8 mm long to reach the horn, where the shoulder and elbow use 4 mm.</p>
         </Step>
@@ -456,7 +458,7 @@ sudo reboot</code></pre>
           <table>
             <thead><tr><th>Connection</th><th>Made in</th></tr></thead>
             <tbody>
-              <tr><td>Servo chain: servo board → base → shoulder → elbow → wrist → neck</td><td>Steps 6–19</td></tr>
+              <tr><td>Servo chain: servo board → base → shoulder → elbow → wrist → neck</td><td>Steps 6–24</td></tr>
               <tr><td>Servo board to Pi, by USB</td><td>Step 9</td></tr>
               <tr><td>Microphone array to Pi, upper USB-A socket</td><td>Steps 8–9</td></tr>
               <tr><td>6 V supply to servo board; USB-C supply to Pi</td><td>Step 10</td></tr>
