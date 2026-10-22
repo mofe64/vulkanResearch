@@ -11,11 +11,12 @@ interface Props {
   focus?: string[]; // parts added (or worked on) in this step, drawn in orange
   from?: [number, number, number]; // mm offset new parts slide in from
   view?: "front" | "back" | "below";
+  frame?: "focus" | "all"; // fit the view to the new parts (default) or to everything shown
   hardware?: Hardware[];
   image: string; // still render, used on narrow screens and when printing
   alt: string;
 }
-const { n, title, parts, focus = [], from, view, hardware = [], image, alt } = Astro.props;
+const { n, title, parts, focus = [], from, view, frame, hardware = [], image, alt } = Astro.props;
 const id = `step-${n}`;
 const hasImage = publicFileExists(image);
 ---
@@ -29,6 +30,7 @@ const hasImage = publicFileExists(image);
   data-focus={focus.join(",")}
   data-from={from?.join(",")}
   data-view={view}
+  data-frame={frame}
 >
   <header>
     <span class="num">Step {n}</span>

@@ -54,34 +54,28 @@ resources:
     - item: "Servo power supply"
       detail: "Choose 6 V 5 A, UK plug"
       url: "https://www.aliexpress.com/item/1005012289452896.html"
-    # Cables and power. Rows marked todo still need the exact product and link from the build.
+    # Cables, power and hardware are common parts with no particular shop.
     - group: "Cables and power"
       item: "Raspberry Pi 5 power supply"
       detail: "USB-C, for the Pi only"
-      todo: true
     - group: "Cables and power"
       item: "Servo board power lead"
       detail: "From the 6 V supply to the servo board"
-      todo: true
     - group: "Cables and power"
       item: "USB cable, servo board to Pi"
-      todo: true
     - group: "Cables and power"
       item: "USB cable, microphone array to Pi"
       detail: "Thin cable (about 4.5 mm); it bends tightly inside the base"
-      todo: true
     - group: "Cables and power"
       item: "LED ring wires"
       detail: "3 wires: 5 V, ground and data (GPIO12)"
-      todo: true
     - group: "Cables and power"
       item: "Speaker wires"
-      todo: true
     - group: "Cables and power"
       item: "Cable ties, 2.5 mm wide"
       qty: 2
       detail: "Strain relief for the two power leads"
-    # Screws, inserts and dowels. Counts come from the CAD and cover one lamp, without spares.
+    # Counts come from the CAD and cover one lamp, without spares.
     - group: "Screws, inserts and dowels"
       item: "M3 heat-set inserts, 4 mm long"
       qty: 40
@@ -90,11 +84,6 @@ resources:
       item: "M3 × 4 button-head screws"
       qty: 20
       detail: "Yaw horn adapter 4, shoulder horns 8, elbow horns 8"
-    - group: "Screws, inserts and dowels"
-      item: "M3 button-head screws for the wrist horns"
-      qty: 8
-      detail: "Longer than M3 × 4 because the wrist fork is wider; length to confirm"
-      todo: true
     - group: "Screws, inserts and dowels"
       item: "M3 × 5 button-head screws"
       qty: 4
@@ -105,8 +94,8 @@ resources:
       detail: "Bottom cover 6, tray 4, yaw retainer 4, shoulder 6, head cartridge 4, front cassette 4"
     - group: "Screws, inserts and dowels"
       item: "M3 × 8 button-head screws"
-      qty: 12
-      detail: "Yaw carrier 4, rear panels 8"
+      qty: 20
+      detail: "Yaw carrier 4, rear panels 8, wrist horns 8"
     - group: "Screws, inserts and dowels"
       item: "M3 × 20 screws"
       qty: 16

@@ -69,7 +69,7 @@ Orion (currently the V2.1 CAD) is built from the Fusion component STEP exports (
 CAD=~/dev/cardinal/orionProject
 # 1. tessellate every STEP part (0.15 mm) into one glTF, mm Z-up -> m Y-up, parts grouped under
 #    shoulder -> elbow -> wrist joint nodes; the optional last argument sets the pose in degrees
-$CAD/orionV2CAD/.cad-venv/bin/python scripts/step2glb.py $CAD/orionV2Build/step /tmp/orion-v2-raw.glb shoulder=-20,elbow=65,wrist=-30
+$CAD/orionV2CAD/.cad-venv/bin/python scripts/step2glb.py $CAD/orionV2Build/step /tmp/orion-v2-raw.glb shoulder=-20,elbow=65,wrist=-30 --hardware scripts/orion-hardware.json
 # 2. compress (meshopt): ~2.9 MB -> ~0.4 MB; -kn keeps the joint and part nodes
 npx gltfpack -i /tmp/orion-v2-raw.glb -o public/models/orion-v2.glb -cc -kn
 # 3. with `npm run preview` running, re-capture the poster shown while the model loads / without WebGL

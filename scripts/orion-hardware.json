@@ -1,0 +1,19 @@
+{
+  "about": "Bought parts added to Orion's 3D model by step2glb.py --hardware. Meshes are the supplier models from the CAD's motion study (orionV21CAD/simulation/meshes), in CAD coordinates (metres, Z up) at the V2 neutral pose. V2.1's upper arm is 20 mm longer, so everything from the wrist servo up is moved 20 mm higher. The base (yaw) servo has no mesh of its own there: it reuses the shoulder servo's model, turned to stand upright and placed in the servo's measured box in the yaw carrier. `grid` (mm) merges nearby vertices to slim the detailed supplier models down for the web. `joint` is the joint that carries the part.",
+  "meshDir": "~/dev/cardinal/orionProject/orionV21CAD/simulation/meshes",
+  "parts": [
+    { "name": "HW-servoyaw", "file": "common_REF_Shoulder_Feetech_STS3215_-_V1_CAD_1.stl", "joint": "base", "grid": 0.4,
+      "rotate": [[0, 1, 0], [0, 0, -1], [-1, 0, 0]], "fitMin": [-12.36, -10.11, 20.3] },
+    { "name": "HW-servoshoulder", "file": "common_REF_Shoulder_Feetech_STS3215_-_V1_CAD_1.stl", "joint": "base", "grid": 0.4 },
+    { "name": "HW-hornsshoulder", "file": "common_REF_Shoulder_horns_-_rotating_with_lower_arm_1.stl", "joint": "shoulder", "grid": 0.3 },
+    { "name": "HW-servoelbow", "file": "common_REF_Elbow_Feetech_STS3215_-_V1_CAD_1.stl", "joint": "shoulder", "grid": 0.4 },
+    { "name": "HW-hornselbow", "file": "common_REF_Elbow_horns_-_rotating_with_upper_arm_1.stl", "joint": "elbow", "grid": 0.3 },
+    { "name": "HW-servowrist", "file": "common_REF_Wrist_pitch_STS3215_-_supplier_geometry.stl", "joint": "elbow", "grid": 0.4, "offset": [0, 0, 20] },
+    { "name": "HW-hornswrist", "file": "common_REF_Wrist_pitch_horns_-_supplier_geometry.stl", "joint": "wrist", "grid": 0.3, "offset": [0, 0, 20] },
+    { "name": "HW-hornneck", "file": "common_REF_Fixed_neck_swivel_horn_-_supplier_geometry.stl", "joint": "wrist", "grid": 0.3, "offset": [0, 0, 20] },
+    { "name": "HW-servoneck", "file": "common_REF_Head_swivel_STS3215_-_supplier_geometry.stl", "joint": "wrist", "grid": 0.4, "offset": [0, 0, 20] },
+    { "name": "HW-camera", "file": "common_REF_Pi_Camera_Module_3_Wide_-_official_CAD.stl", "joint": "wrist", "grid": 0.4, "offset": [0, 0, 20] },
+    { "name": "HW-led", "file": "common_REF_LED_Adafruit_2863_-_reconstructed_from_specifications.stl", "joint": "wrist", "grid": 0.3, "offset": [0, 0, 20] },
+    { "name": "HW-speaker", "file": "common_REF_Speaker_-_V1_63x24_adapted_supplier_CAD.stl", "joint": "wrist", "grid": 0.4, "offset": [0, 0, 20] }
+  ]
+}

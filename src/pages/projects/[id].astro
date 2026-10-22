@@ -31,7 +31,6 @@ for (const b of p.resources.bom) {
   if (!g) bomGroups.push((g = { name: b.group, rows: [] }));
   g.rows.push({ ...b, shop: b.url ? shopOf(b.url) : undefined });
 }
-const bomTodo = p.resources.bom.filter((b) => b.todo).length;
 
 const cad = p.resources.cad.map((r) => ({ ...r, size: publicFileSize(r.file) as string | null }));
 
@@ -120,8 +119,8 @@ const TABS = [
         <>
           <h3 class="rhead">Bill of materials</h3>
           <p class="rintro">
-            Everything to buy for one lamp. Printed parts are under CAD files below.
-            {bomTodo > 0 && <> Rows marked “Link to come” are still being confirmed.</>}
+            Everything to buy for one lamp. Common parts such as cables, screws and inserts have no link: any shop that
+            sells them will do. Printed parts are under CAD files below.
           </p>
           {bomGroups.map((g) => (
             <>
@@ -134,9 +133,7 @@ const TABS = [
                       <span class="flabel">{b.item}</span>
                       {b.detail && <span class="fformat">{b.detail}</span>}
                     </div>
-                    {b.url
-                      ? <a href={b.url} class="buy" target="_blank" rel="noopener">Buy at {b.shop} ↗</a>
-                      : b.todo && <span class="buy todo">Link to come</span>}
+                    {b.url && <a href={b.url} class="buy" target="_blank" rel="noopener">Buy at {b.shop} ↗</a>}
                   </li>
                 ))}
               </ul>
@@ -228,7 +225,6 @@ const TABS = [
   .bom li { justify-content: flex-start; padding: 12px 0; }
   .bgroup { font: 11px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 22px 0 6px; }
   .bqty { flex: none; width: 36px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .todo { color: var(--muted); }
   .bom .finfo { flex: 1; }
   .buy { flex: none; font-size: 13px; white-space: nowrap; }
   .files { list-style: none; margin: 0; padding: 0; max-width: 860px; }
