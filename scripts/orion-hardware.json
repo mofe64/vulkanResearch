@@ -33,7 +33,7 @@
     {
       "name": "HW-servoshoulder",
       "file": "common_REF_Shoulder_Feetech_STS3215_-_V1_CAD_1.stl",
-      "joint": "base",
+      "joint": "yaw",
       "grid": 0.4
     },
     {
@@ -90,7 +90,7 @@
     {
       "name": "HW-servoneck",
       "file": "common_REF_Head_swivel_STS3215_-_supplier_geometry.stl",
-      "joint": "wrist",
+      "joint": "roll",
       "grid": 0.4,
       "offset": [
         0,
@@ -101,7 +101,7 @@
     {
       "name": "HW-camera",
       "file": "common_REF_Pi_Camera_Module_3_Wide_-_official_CAD.stl",
-      "joint": "wrist",
+      "joint": "roll",
       "grid": 0.4,
       "offset": [
         0,
@@ -112,7 +112,7 @@
     {
       "name": "HW-led",
       "file": "common_REF_LED_Adafruit_2863_-_reconstructed_from_specifications.stl",
-      "joint": "wrist",
+      "joint": "roll",
       "grid": 0.3,
       "offset": [
         0,
@@ -123,7 +123,7 @@
     {
       "name": "HW-speaker",
       "file": "common_REF_Speaker_-_V1_63x24_adapted_supplier_CAD.stl",
-      "joint": "wrist",
+      "joint": "roll",
       "grid": 0.4,
       "offset": [
         0,

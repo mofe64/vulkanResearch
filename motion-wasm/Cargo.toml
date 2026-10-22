@@ -1,0 +1,29 @@
+# Orion's own trajectory program (orion-trajectory), built for the browser.
+# scripts/build-motion-wasm.sh copies the motion sources from the Orion repository into orion-src/ and builds
+# this crate for wasm32-wasip1. src/lib.rs stands in for the parts of orion-runtime that need hardware.
+[package]
+name = "orion-motion-wasm"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-only"
+publish = false
+
+[lib]
+name = "orion_runtime"
+path = "src/lib.rs"
+
+[[bin]]
+name = "orion-trajectory"
+path = "orion-src/bin/orion-trajectory.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"

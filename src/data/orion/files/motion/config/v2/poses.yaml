@@ -1,0 +1,300 @@
+format_version: 2
+units: radians
+poses:
+  lean_reach_low:
+    description: Arm-led reach toward a desk point 28 cm ahead.
+    tags: [powered, idle_anchor, desk_reach]
+    default_lighting: warm_idle_breathe
+    idle_profile: directional
+    positions:
+      base_yaw_joint: -0.04908738521234052
+      shoulder_pitch_joint: 1.705301045214602
+      elbow_pitch_joint: -1.2820389530342435
+      head_roll_joint: 0.01380582709097077
+      head_pitch_joint: 0.028152747332353317
+  lean_reach_left:
+    description: Arm-led open-elbow reach toward a desk point 28 cm away to the left.
+    tags: [powered, idle_anchor, desk_reach]
+    default_lighting: warm_idle_breathe
+    idle_profile: directional
+    positions:
+      base_yaw_joint: -0.5990873852123406
+      shoulder_pitch_joint: 1.735301045214602
+      elbow_pitch_joint: -1.6820389530342437
+      head_roll_joint: 0.01380582709097077
+      head_pitch_joint: 0.3655897473323534
+  lean_reach_right:
+    description: Arm-led open-elbow reach toward a desk point 28 cm away to the right.
+    tags: [powered, idle_anchor, desk_reach]
+    default_lighting: warm_idle_breathe
+    idle_profile: directional
+    positions:
+      base_yaw_joint: 0.5009126147876595
+      shoulder_pitch_joint: 1.735301045214602
+      elbow_pitch_joint: -1.6820389530342437
+      head_roll_joint: 0.01380582709097077
+      head_pitch_joint: 0.3655897473323534
+  home:
+    description: V2 powered home relative to mechanical rest.
+    tags:
+    - powered
+    - idle_anchor
+    - home
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: 0.01091261478765948
+      shoulder_pitch_joint: 0.8633010452146022
+      elbow_pitch_joint: -1.1380389530342436
+      head_roll_joint: -0.007194172909029231
+      head_pitch_joint: -0.3593592526676467
+    idle_profile: home
+  attentive:
+    description: Raise the head toward a person while keeping a compact arm posture.
+    tags:
+    - powered
+    - idle_anchor
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: 0.01091261478765948
+      shoulder_pitch_joint: 0.7833010452146022
+      elbow_pitch_joint: -1.1130389530342437
+      head_roll_joint: -0.007194172909029231
+      head_pitch_joint: -0.4393592526676467
+    idle_profile: attentive
+  delight:
+    description: Lift the head and look up with an open, upright posture.
+    tags:
+    - powered
+    - idle_anchor
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: 0.01091261478765948
+      shoulder_pitch_joint: 0.7833010452146022
+      elbow_pitch_joint: -1.1780389530342437
+      head_roll_joint: -0.007194172909029231
+      head_pitch_joint: -0.5593592526676467
+  rest:
+    description: Torque-free mechanical rest; zero on every joint.
+    tags:
+    - shutdown_only
+    - mechanical_rest
+    default_lighting: 'off'
+    positions:
+      base_yaw_joint: 0.0
+      shoulder_pitch_joint: 0.0
+      elbow_pitch_joint: 0.0
+      head_roll_joint: 0.0
+      head_pitch_joint: 0.0
+  look_left:
+    description: Look left with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: -0.8377580409572782
+      shoulder_pitch_joint: 0.8183010452146021
+      elbow_pitch_joint: -1.1530389530342435
+      head_roll_joint: -0.4537856055185257
+      head_pitch_joint: -0.45935925266764666
+    idle_profile: directional
+  look_left_anticipation:
+    description: Look left anticipation with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: 0.05235987755982989
+      shoulder_pitch_joint: 0.8483010452146021
+      elbow_pitch_joint: -1.1280389530342436
+      head_roll_joint: -0.13962634015954636
+      head_pitch_joint: -0.3843592526676467
+  look_left_lean:
+    description: Look left lean with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: -0.5934119456780721
+      shoulder_pitch_joint: 0.8833010452146022
+      elbow_pitch_joint: -1.1730389530342435
+      head_roll_joint: -0.3490658503988659
+      head_pitch_joint: -0.4793592526676467
+  look_left_overshoot:
+    description: Look left overshoot with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: -0.9424777960769379
+      shoulder_pitch_joint: 0.8183010452146021
+      elbow_pitch_joint: -1.1530389530342435
+      head_roll_joint: -0.5235987755982988
+      head_pitch_joint: -0.45935925266764666
+  attention_left:
+    description: Attention left with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: -0.3490658503988659
+      shoulder_pitch_joint: 0.8183010452146021
+      elbow_pitch_joint: -1.1530389530342435
+      head_roll_joint: -0.20943951023931956
+      head_pitch_joint: -0.45935925266764666
+    idle_profile: directional
+  attention_left_anticipation:
+    description: Attention left anticipation with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: 0.03490658503988659
+      shoulder_pitch_joint: 0.8483010452146021
+      elbow_pitch_joint: -1.1280389530342436
+      head_roll_joint: -0.08726646259971647
+      head_pitch_joint: -0.3843592526676467
+  attention_left_lean:
+    description: Attention left lean with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: -0.2617993877991494
+      shoulder_pitch_joint: 0.8833010452146022
+      elbow_pitch_joint: -1.1730389530342435
+      head_roll_joint: -0.17453292519943295
+      head_pitch_joint: -0.4793592526676467
+  attention_left_overshoot:
+    description: Attention left overshoot with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: -0.4014257279586958
+      shoulder_pitch_joint: 0.8183010452146021
+      elbow_pitch_joint: -1.1530389530342435
+      head_roll_joint: -0.24434609527920614
+      head_pitch_joint: -0.45935925266764666
+  look_right:
+    description: Look right with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: 0.8377580409572782
+      shoulder_pitch_joint: 0.8183010452146021
+      elbow_pitch_joint: -1.1530389530342435
+      head_roll_joint: 0.4537856055185257
+      head_pitch_joint: -0.45935925266764666
+    idle_profile: directional
+  look_right_anticipation:
+    description: Look right anticipation with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: -0.05235987755982989
+      shoulder_pitch_joint: 0.8483010452146021
+      elbow_pitch_joint: -1.1280389530342436
+      head_roll_joint: 0.13962634015954636
+      head_pitch_joint: -0.3843592526676467
+  look_right_lean:
+    description: Look right lean with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: 0.5934119456780721
+      shoulder_pitch_joint: 0.8833010452146022
+      elbow_pitch_joint: -1.1730389530342435
+      head_roll_joint: 0.3490658503988659
+      head_pitch_joint: -0.4793592526676467
+  look_right_overshoot:
+    description: Look right overshoot with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: 0.9424777960769379
+      shoulder_pitch_joint: 0.8183010452146021
+      elbow_pitch_joint: -1.1530389530342435
+      head_roll_joint: 0.5235987755982988
+      head_pitch_joint: -0.45935925266764666
+  attention_right:
+    description: Attention right with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: 0.3490658503988659
+      shoulder_pitch_joint: 0.8183010452146021
+      elbow_pitch_joint: -1.1530389530342435
+      head_roll_joint: 0.20943951023931956
+      head_pitch_joint: -0.45935925266764666
+    idle_profile: directional
+  attention_right_anticipation:
+    description: Attention right anticipation with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: -0.03490658503988659
+      shoulder_pitch_joint: 0.8483010452146021
+      elbow_pitch_joint: -1.1280389530342436
+      head_roll_joint: 0.08726646259971647
+      head_pitch_joint: -0.3843592526676467
+  attention_right_lean:
+    description: Attention right lean with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: 0.2617993877991494
+      shoulder_pitch_joint: 0.8833010452146022
+      elbow_pitch_joint: -1.1730389530342435
+      head_roll_joint: 0.17453292519943295
+      head_pitch_joint: -0.4793592526676467
+  attention_right_overshoot:
+    description: Attention right overshoot with a raised gaze and a bounded turn.
+    tags:
+    - simulation_preview
+    default_lighting: warm_idle_breathe
+    positions:
+      base_yaw_joint: 0.4014257279586958
+      shoulder_pitch_joint: 0.8183010452146021
+      elbow_pitch_joint: -1.1530389530342435
+      head_roll_joint: 0.24434609527920614
+      head_pitch_joint: -0.45935925266764666
+  home_low:
+    description: Hold the head and arm slightly lower.
+    tags: [powered, idle_anchor]
+    default_lighting: warm_idle_breathe
+    idle_profile: home
+    positions:
+      base_yaw_joint: 0.01091261478765948
+      shoulder_pitch_joint: 0.8233010452146021
+      elbow_pitch_joint: -1.1280389530342436
+      head_roll_joint: -0.007194172909029231
+      head_pitch_joint: -0.27935925266764666
+  home_attentive:
+    description: Hold a slightly raised head and arm.
+    tags: [powered, idle_anchor]
+    default_lighting: warm_idle_breathe
+    idle_profile: attentive
+    positions:
+      base_yaw_joint: 0.01091261478765948
+      shoulder_pitch_joint: 0.8383010452146021
+      elbow_pitch_joint: -1.1480389530342436
+      head_roll_joint: -0.007194172909029231
+      head_pitch_joint: -0.4193592526676467
+  home_window:
+    description: Turn mildly to one side.
+    tags: [powered, idle_anchor]
+    default_lighting: warm_idle_breathe
+    idle_profile: directional
+    positions:
+      base_yaw_joint: 0.5345113903859583
+      shoulder_pitch_joint: 0.8633010452146022
+      elbow_pitch_joint: -1.1380389530342436
+      head_roll_joint: -0.007194172909029231
+      head_pitch_joint: -0.3593592526676467
