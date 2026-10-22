@@ -37,13 +37,19 @@ const ALL = [...withCaps, "02"];
 // The build in five stages. Step numbers run on across stages.
 const STAGES = [
   { id: "stage-prepare", title: "Prepare", steps: ["Print and clean the parts", "Open the thin screw-hole skins", "Fit the heat-set inserts", "Set up the Raspberry Pi", "Give each servo its ID"] },
-  { id: "stage-base", title: "Build the base", steps: ["Fix the base servo to its retainer", "Fit the base servo into the base", "Fit the microphone", "Build the electronics tray", "Fit the rear panels and power leads", "Fit the yaw horn adapter"] },
-  { id: "stage-arms", title: "Build the shoulder and arms", steps: ["Build the shoulder", "Put the elbow servo in the lower arm", "Close the lower arm", "Fit the lower arm to the shoulder", "Put the wrist servo in the upper arm", "Close the upper arm", "Fit the upper arm to the elbow"] },
-  { id: "stage-head", title: "Build the head", steps: ["Put the neck servo in its cartridge", "Fit the neck horn through the opening", "Fit the cartridge retainer", "Fit the cartridge into the head shell", "Fit the head onto the neck post", "Fit the head to the wrist", "Build the front cassette", "Fit the front and run its cables to the base"] },
+  { id: "stage-base", title: "Build the base", steps: ["Fix the base servo to its retainer", "Push the servo into its carrier", "Fit the carrier into the base", "Fit the microphone", "Build the electronics tray", "Fit the rear panels and power leads", "Fit the yaw horn adapter"] },
+  { id: "stage-arms", title: "Build the shoulder and arms", steps: ["Fit the shoulder housing", "Put the shoulder servo in its housing", "Fit the shoulder retainer", "Put the elbow servo in the lower arm", "Close the lower arm", "Fit the lower arm to the shoulder", "Put the wrist servo in the upper arm", "Close the upper arm", "Fit the upper arm to the elbow"] },
+  { id: "stage-head", title: "Build the head", steps: ["Put the neck servo in its cartridge", "Fit the neck horn through the opening", "Fit the cartridge retainer", "Fit the cartridge into the head shell", "Fit the head onto the neck post", "Fit the head to the wrist", "Fit the camera to the cassette", "Fit the LED ring", "Fit the speaker", "Run the head's cables to the base", "Fit the cassette into the head", "Fit the diffuser"] },
   { id: "stage-finish", title: "Finish and bring it to life", steps: ["Check the wiring", "Fit the joint caps", "Close the base", "Set the zero position and start Orion"] },
 ];
 const TITLES = STAGES.flatMap((s) => s.steps);
 const t = (n: number) => TITLES[n - 1];
+/** Step number of a title, for "see step N" references; fails the build if the title doesn't exist. */
+const at = (title: string) => {
+  const i = TITLES.indexOf(title);
+  if (i < 0) throw new Error(`No step titled "${title}"`);
+  return i + 1;
+};
 let first = 1;
 const stageInfo = STAGES.map((s, i) => {
   const info = { ...s, n: i + 1, from: first, to: first + s.steps.length - 1 };
@@ -233,7 +239,7 @@ sudo reboot</code></pre>
         </Step>
 
         <h2 class="stage" id={stage(2).id}><span>Stage 2 of 5 · steps {stage(2).from}–{stage(2).to}</span>{stage(2).title}</h2>
-        <p class="stage-note">Work with the base shell upside down on a soft cloth until step 11.</p>
+        <p class="stage-note">Work with the base shell upside down on a soft cloth until step {at("Fit the yaw horn adapter")}.</p>
 
         <Step n={6} title={t(6)} parts={["servoyaw", "04b"]} focus={["servoyaw", "04b"]} from={[0, -40, 0]} view="below" image={still(6)} alt="The base servo, standing upright, on top of its flat retainer frame."
           hardware={[{ qty: 4, item: "M2 × 6 screws" }]}>
@@ -241,21 +247,28 @@ sudo reboot</code></pre>
           <ol>
             <li>Hold the retainer with its raised pads facing up, against the servo's underside.</li>
             <li>Fit four <b>M2 × 6</b> up through the retainer into the servo. The screw heads sit just inside the retainer's underside.</li>
-            <li>Plug a servo cable into the servo now; it will run to the servo board in step 9.</li>
+            <li>Plug a servo cable into the servo now; it will run to the servo board in step {at("Build the electronics tray")}.</li>
           </ol>
         </Step>
 
-        <Step n={7} title={t(7)} parts={base} focus={["04", "04b", "servoyaw"]} from={[0, -60, 0]} view="below" image={still(7)} alt="The base servo and retainer inside the yaw carrier, highlighted, under the base shell's roof."
-          hardware={[{ qty: 4, item: "M3 × 6 button-head screws (retainer to carrier)" }, { qty: 4, item: "M3 × 8 button-head screws (carrier to shell)" }]}>
+        <Step n={7} title={t(7)} parts={["04", "04b", "servoyaw"]} focus={["04b", "servoyaw"]} frame="all" from={[0, -60, 0]} view="below" image={still(7)} alt="The base servo on its retainer, highlighted, being pushed up into the yaw carrier."
+          hardware={[{ qty: 4, item: "M3 × 6 button-head screws" }]}>
           <ol>
-            <li>Push the servo and retainer up into the carrier (04) with firm hand pressure, until the servo sits against the carrier's roof. Small ribs inside the carrier hold it without play; they may shave a little, which is expected.</li>
-            <li>Fix the retainer to the carrier with four <b>M3 × 6</b>.</li>
-            <li>With the shell upside down, lower the carrier into the middle of the shell so its flange sits on the four inserts you fitted in step 3. Fit four <b>M3 × 8</b> through the flange into the inserts.</li>
+            <li>Hold the carrier (04) upside down and push the servo and retainer into it with firm hand pressure, servo first, until the servo sits against the carrier's roof. Small ribs inside the carrier hold it without play; they may shave a little, which is expected.</li>
+            <li>Fix the retainer to the carrier with four <b>M3 × 6</b> into the carrier's inserts.</li>
           </ol>
           <p class="warn"><b>Careful</b> Never sand the servo's case to make it fit. If it is very tight, clean the carrier ribs instead.</p>
         </Step>
 
-        <Step n={8} title={t(8)} parts={withMic} focus={["mic"]} from={[0, -50, 0]} view="below" image={still(8)} alt="The microphone array, highlighted, under the base shell's roof, seen from below."
+        <Step n={8} title={t(8)} parts={base} focus={["04", "04b", "servoyaw"]} from={[0, -60, 0]} view="below" image={still(8)} alt="The yaw carrier with the base servo, highlighted, inside the upside-down base shell."
+          hardware={[{ qty: 4, item: "M3 × 8 button-head screws" }]}>
+          <ol>
+            <li>With the shell upside down, lower the carrier into the middle of the shell so its flange sits on the four inserts you fitted in step 3.</li>
+            <li>Fit four <b>M3 × 8</b> through the flange into the inserts.</li>
+          </ol>
+        </Step>
+
+        <Step n={9} title={t(9)} parts={withMic} focus={["mic"]} from={[0, -50, 0]} view="below" image={still(9)} alt="The microphone array, highlighted, under the base shell's roof, seen from below."
           hardware={[{ qty: 3, item: "M2 × 4 screws" }, { qty: 3, item: "M2 insulating washers, 0.5 mm" }]}>
           <p>The microphone array sits just under the base's roof, behind the four slotted grilles, so it can hear in every direction.</p>
           <ol>
@@ -266,7 +279,7 @@ sudo reboot</code></pre>
           <p class="tip"><b>Why the washers</b> They keep the metal screw heads off the board's circuitry and stop the short screws reaching the bottom of their holes.</p>
         </Step>
 
-        <Step n={9} title={t(9)} parts={boards} focus={["pi", "cooler", "servoboard"]} frame="all" from={[0, 50, 0]} image={still(9)} alt="The electronics tray on its own, with the Raspberry Pi, its cooler and the servo board, highlighted, mounted on top."
+        <Step n={10} title={t(10)} parts={boards} focus={["pi", "cooler", "servoboard"]} frame="all" from={[0, 50, 0]} image={still(10)} alt="The electronics tray on its own, with the Raspberry Pi, its cooler and the servo board, highlighted, mounted on top."
           hardware={[{ qty: 4, item: "M2.5 × 4 screws (Raspberry Pi)" }, { qty: 4, item: "M2 × 6 screws (servo board)" }, { qty: 4, item: "M3 × 6 button-head screws (tray to shell)" }]}>
           <ol>
             <li>Screw the Pi to the tray (03) with four <b>M2.5 × 4</b> into its 3 mm posts.</li>
@@ -277,7 +290,7 @@ sudo reboot</code></pre>
           </ol>
         </Step>
 
-        <Step n={10} title={t(10)} parts={withPanels} focus={["05", "06"]} view="back" from={[0, 0, -60]} image={still(10)} alt="The power inlet panel and USB panel, highlighted, at the back of the base."
+        <Step n={11} title={t(11)} parts={withPanels} focus={["05", "06"]} view="back" from={[0, 0, -60]} image={still(11)} alt="The power inlet panel and USB panel, highlighted, at the back of the base."
           hardware={[{ qty: 8, item: "M3 × 8 button-head screws" }, { qty: 2, item: "Cable ties, 2.5 mm" }]}>
           <p>The power panel (05) has one shared opening for both power leads: the Pi's USB-C supply and the 6 V servo supply. The other panel (06) gives access to the Pi's Ethernet and USB.</p>
           <ol>
@@ -285,10 +298,10 @@ sudo reboot</code></pre>
             <li>Tie each lead to its tie point with a <b>2.5 mm cable tie</b>. Pull it snug, not tight: the tie should stop the lead being pulled out without squashing it.</li>
             <li>Hold each panel against the shell <b>from the inside</b>, inserts facing in. From the outside, fit four <b>M3 × 8</b> through the shell into the panel.</li>
           </ol>
-          <p class="tip"><b>Why from the outside</b> The screws pass through the shell wall and pull the panel up against it, so the screw heads stay on the outside where you can reach them later. The camera's ribbon cable will come in through one of these panel openings in step 26, so don't block them.</p>
+          <p class="tip"><b>Why from the outside</b> The screws pass through the shell wall and pull the panel up against it, so the screw heads stay on the outside where you can reach them later. The camera's ribbon cable will come in through one of these panel openings in step {at("Run the head's cables to the base")}, so don't block them.</p>
         </Step>
 
-        <Step n={11} title={t(11)} parts={withYaw} focus={["07"]} image={still(11)} alt="The yaw horn adapter, highlighted, on top of the base."
+        <Step n={12} title={t(12)} parts={withYaw} focus={["07"]} image={still(12)} alt="The yaw horn adapter, highlighted, on top of the base."
           hardware={[{ qty: 4, item: "M3 × 4 button-head screws" }, { qty: 1, item: "Servo centre screw (supplied with the servo)" }]}>
           <p>Turn the base the right way up. The adapter (07) connects the base servo's horn to the shoulder above it.</p>
           <ol>
@@ -301,19 +314,33 @@ sudo reboot</code></pre>
         <h2 class="stage" id={stage(3).id}><span>Stage 3 of 5 · steps {stage(3).from}–{stage(3).to}</span>{stage(3).title}</h2>
         <p class="stage-note">Plug the servo chain together as you go. Once an arm is closed, you can't reach the cables inside it.</p>
 
-        <Step n={12} title={t(12)} parts={withShoulder} focus={["08", "09", "servoshoulder", "hornsshoulder"]} image={still(12)} alt="The shoulder housing, its retainer and the shoulder servo with its two horns, highlighted."
-          hardware={[{ qty: 4, item: "M3 × 6 button-head screws (housing to adapter)" }, { qty: 2, item: "M2 × 10 screws (shoulder servo)" }, { qty: 2, item: "M3 × 6 button-head screws (retainer)" }]}>
+        <Step n={13} title={t(13)} parts={[...withYaw, "08"]} focus={["08"]} from={[0, 60, 0]} image={still(13)} alt="The shoulder housing, highlighted, on the yaw horn adapter."
+          hardware={[{ qty: 4, item: "M3 × 6 button-head screws" }]}>
           <ol>
-            <li>Fix the shoulder housing (08) to the yaw adapter with four <b>M3 × 6</b>.</li>
-            <li>Plug the cable from the base servo into the shoulder servo (ID 2), and plug a second cable into its other socket for the elbow.</li>
-            <li>Lay the shoulder servo in the housing, its output pointing sideways as in the picture, and fit the two <b>M2 × 10</b> through the housing into the servo's gear face.</li>
-            <li>Bend the servo's wires 90° over your 2 mm rod, then route them under the small keepers and along the grooves in the housing floor.</li>
-            <li>Fit the retainer (09) with two <b>M3 × 6</b>.</li>
+            <li>Fix the shoulder housing (08) to the yaw adapter with four <b>M3 × 6</b> into the housing's inserts.</li>
           </ol>
-          <p>The servo's horns, one on each side, are what the lower arm bolts to in step 15.</p>
         </Step>
 
-        <Step n={13} title={t(13)} parts={["10a", "servoelbow", "hornselbow"]} focus={["servoelbow", "hornselbow"]} frame="all" from={[60, 0, 0]} image={still(13)} alt="One half of the lower arm, with the elbow servo, highlighted, lying in its top end."
+        <Step n={14} title={t(14)} parts={[...withYaw, "08", "servoshoulder", "hornsshoulder"]} focus={["servoshoulder", "hornsshoulder"]} from={[0, 70, 0]} image={still(14)} alt="The shoulder servo with its two horns, highlighted, lowered into the shoulder housing."
+          hardware={[{ qty: 2, item: "M2 × 10 screws" }]}>
+          <ol>
+            <li>Plug the cable from the base servo into the shoulder servo (ID 2), and plug a second cable into its other socket for the elbow.</li>
+            <li>Lower the servo into the housing from above, its output pointing sideways as in the picture, so a horn sits in each side opening.</li>
+            <li>Fit the two <b>M2 × 10</b> through the housing into the servo's gear face.</li>
+            <li>Bend the servo's wires 90° over your 2 mm rod, then route them under the small keepers and along the grooves in the housing floor.</li>
+          </ol>
+          <p>The servo's horns, one on each side, are what the lower arm bolts to in step {at("Fit the lower arm to the shoulder")}.</p>
+        </Step>
+
+        <Step n={15} title={t(15)} parts={withShoulder} focus={["09"]} from={[0, 40, 0]} image={still(15)} alt="The shoulder retainer, highlighted, closing the top of the shoulder housing."
+          hardware={[{ qty: 2, item: "M3 × 6 button-head screws" }]}>
+          <ol>
+            <li>Lay the retainer (09) across the top of the housing, over the servo.</li>
+            <li>Fit two <b>M3 × 6</b> through it into the housing's inserts. The retainer stops the servo lifting out.</li>
+          </ol>
+        </Step>
+
+        <Step n={16} title={t(16)} parts={["10a", "servoelbow", "hornselbow"]} focus={["servoelbow", "hornselbow"]} frame="all" from={[60, 0, 0]} image={still(16)} alt="One half of the lower arm, with the elbow servo, highlighted, lying in its top end."
           hardware={[{ qty: 4, item: "M2 × 6 screws (gear face)" }]}>
           <p>Each arm is printed as two halves that close around a servo, like a clamshell. Splitting it lets the arm print strongly and gives the servo cables a protected channel inside. The elbow servo (ID 3) sits at the top of the lower arm.</p>
           <ol>
@@ -324,7 +351,7 @@ sudo reboot</code></pre>
           </ol>
         </Step>
 
-        <Step n={14} title={t(14)} parts={lowerArm} focus={["10b"]} from={[70, 0, 0]} image={still(14)} alt="The other half of the lower arm, highlighted, closing over the elbow servo."
+        <Step n={17} title={t(17)} parts={lowerArm} focus={["10b"]} from={[70, 0, 0]} image={still(17)} alt="The other half of the lower arm, highlighted, closing over the elbow servo."
           hardware={[{ qty: 4, item: "Dowel pins, 3 × 6 mm" }, { qty: 12, item: "M3 × 20 screws (seam)" }, { qty: 2, item: "M2 × 6 screws (plain face)" }, { qty: 12, item: "Printed flush plugs" }]}>
           <ol>
             <li>Press the four <b>dowel pins</b> into one half. They line the halves up exactly.</li>
@@ -335,7 +362,7 @@ sudo reboot</code></pre>
           <p class="tip"><b>Why the plugs</b> They cover the seam screws so the arm looks smooth, and they are removable if you ever need to open it.</p>
         </Step>
 
-        <Step n={15} title={t(15)} parts={withLower} focus={lowerArm} from={[0, 80, 0]} image={still(15)} alt="The finished lower arm, highlighted, attached to the shoulder servo's horns."
+        <Step n={18} title={t(18)} parts={withLower} focus={lowerArm} from={[0, 80, 0]} image={still(18)} alt="The finished lower arm, highlighted, attached to the shoulder servo's horns."
           hardware={[{ qty: 8, item: "M3 × 4 button-head screws" }, { qty: 1, item: "Servo centre screw (supplied)" }]}>
           <ol>
             <li>Fit the lower arm's two cheeks over the shoulder servo's driven and passive horns. Fix each cheek with four <b>M3 × 4</b>.</li>
@@ -344,17 +371,17 @@ sudo reboot</code></pre>
           <p class="warn"><b>Check</b> These screws are deliberately short: longer ones would hit the bottom of the horn's thread before clamping. Make sure each horn is fully seated and each screw clamps the arm.</p>
         </Step>
 
-        <Step n={16} title={t(16)} parts={["13a", "servowrist", "hornswrist"]} focus={["servowrist", "hornswrist"]} frame="all" from={[60, 0, 0]} image={still(16)} alt="One half of the upper arm, with the wrist servo, highlighted, lying in its top end."
+        <Step n={19} title={t(19)} parts={["13a", "servowrist", "hornswrist"]} focus={["servowrist", "hornswrist"]} frame="all" from={[60, 0, 0]} image={still(19)} alt="One half of the upper arm, with the wrist servo, highlighted, lying in its top end."
           hardware={[{ qty: 4, item: "M2 × 6 screws (gear face)" }]}>
           <p>The upper arm carries the wrist servo (ID 4) and is built the same way as the lower arm.</p>
           <ol>
-            <li>Plug the cable coming up from the elbow into the wrist servo. Leave its other socket empty: the neck servo's cable plugs into it in step 24.</li>
+            <li>Plug the cable coming up from the elbow into the wrist servo. Leave its other socket empty: the neck servo's cable plugs into it in step {at("Fit the head to the wrist")}.</li>
             <li>Lay the servo in the left half, gear face against that half, and fit the four gear-face <b>M2 × 6</b>.</li>
             <li>Bend the cables over the 2 mm rod and lay one in each channel.</li>
           </ol>
         </Step>
 
-        <Step n={17} title={t(17)} parts={upperArm} focus={["13b"]} from={[70, 0, 0]} image={still(17)} alt="The other half of the upper arm, highlighted, closing over the wrist servo."
+        <Step n={20} title={t(20)} parts={upperArm} focus={["13b"]} from={[70, 0, 0]} image={still(20)} alt="The other half of the upper arm, highlighted, closing over the wrist servo."
           hardware={[{ qty: 4, item: "Dowel pins, 3 × 6 mm" }, { qty: 4, item: "M3 × 20 screws (seam)" }, { qty: 2, item: "M2 × 6 screws (plain face)" }, { qty: 4, item: "Printed flush plugs" }]}>
           <ol>
             <li>Fit the four <b>dowel pins</b>, close the right half, and fit the four <b>M3 × 20</b> seam screws.</li>
@@ -362,7 +389,7 @@ sudo reboot</code></pre>
           </ol>
         </Step>
 
-        <Step n={18} title={t(18)} parts={withUpper} focus={upperArm} from={[0, 80, 0]} image={still(18)} alt="The finished upper arm, highlighted, attached to the elbow servo's horns."
+        <Step n={21} title={t(21)} parts={withUpper} focus={upperArm} from={[0, 80, 0]} image={still(21)} alt="The finished upper arm, highlighted, attached to the elbow servo's horns."
           hardware={[{ qty: 8, item: "M3 × 4 button-head screws" }, { qty: 1, item: "Servo centre screw (supplied)" }]}>
           <ol>
             <li>Fix the upper arm's cheeks to the elbow horns with eight <b>M3 × 4</b>, four per side.</li>
@@ -373,15 +400,15 @@ sudo reboot</code></pre>
         <h2 class="stage" id={stage(4).id}><span>Stage 4 of 5 · steps {stage(4).from}–{stage(4).to}</span>{stage(4).title}</h2>
         <p class="stage-note">The head has two movements. The wrist tilts it up and down; the neck servo (ID 5) inside the head turns it left and right around a horn that is screwed to the top of the neck post. Build the head on the table first, then fit it to the neck post, then fit the post to the wrist.</p>
 
-        <Step n={19} title={t(19)} parts={["17", "servoneck"]} focus={["servoneck"]} frame="all" from={[0, 0, 70]} image={still(19)} alt="The neck servo, highlighted, sliding into its printed cartridge box from the front."
+        <Step n={22} title={t(22)} parts={["17", "servoneck"]} focus={["servoneck"]} frame="all" from={[0, 0, 70]} image={still(22)} alt="The neck servo, highlighted, sliding into its printed cartridge box from the front."
           hardware={[]}>
           <ol>
-            <li>Plug a servo cable into the neck servo and leave its other end free. It will connect to the wrist servo in step 24, so you can build the whole head on the table. The neck servo is the last in the chain, so its second socket stays empty.</li>
+            <li>Plug a servo cable into the neck servo and leave its other end free. It will connect to the wrist servo in step {at("Fit the head to the wrist")}, so you can build the whole head on the table. The neck servo is the last in the chain, so its second socket stays empty.</li>
             <li>Slide the servo into the cartridge (17) from the open front, <b>without its horn</b>: the box is too tight for a servo with the horn already fitted. Its output faces down, towards the round opening in the bottom of the cartridge.</li>
           </ol>
         </Step>
 
-        <Step n={20} title={t(20)} parts={["17", "servoneck", "hornneck"]} focus={["hornneck"]} frame="all" from={[0, -40, 0]} view="below" image={still(20)} alt="The neck horn, highlighted, being fitted to the servo through the opening in the bottom of the cartridge."
+        <Step n={23} title={t(23)} parts={["17", "servoneck", "hornneck"]} focus={["hornneck"]} frame="all" from={[0, -40, 0]} view="below" image={still(23)} alt="The neck horn, highlighted, being fitted to the servo through the opening in the bottom of the cartridge."
           hardware={[{ qty: 1, item: "Servo centre screw (supplied with the servo)" }]}>
           <ol>
             <li>Turn the cartridge over. Through the round opening in its bottom, press the metal horn onto the servo's output (the gear side).</li>
@@ -390,7 +417,7 @@ sudo reboot</code></pre>
           <p class="tip"><b>Why this order</b> The cartridge only has room for the bare servo. Fitting the horn through the opening afterwards is the only way to get both in.</p>
         </Step>
 
-        <Step n={21} title={t(21)} parts={["17", "servoneck", "hornneck", "18"]} focus={["18"]} frame="all" from={[0, 0, 50]} image={still(21)} alt="The narrow rectangular retainer, highlighted, closing the front of the cartridge."
+        <Step n={24} title={t(24)} parts={["17", "servoneck", "hornneck", "18"]} focus={["18"]} frame="all" from={[0, 0, 50]} image={still(24)} alt="The narrow rectangular retainer, highlighted, closing the front of the cartridge."
           hardware={[{ qty: 4, item: "M2 × 6 screws" }]}>
           <p>The retainer (18) is the narrow rectangular plate that closes the front of the cartridge and holds the servo in.</p>
           <ol>
@@ -399,7 +426,7 @@ sudo reboot</code></pre>
           </ol>
         </Step>
 
-        <Step n={22} title={t(22)} frame="all" parts={["17", "servoneck", "hornneck", "18", "19"]} focus={["17", "servoneck", "hornneck", "18"]} from={[0, 0, 90]} image={still(22)} alt="The cartridge with the neck servo, highlighted, fitted inside the head shell."
+        <Step n={25} title={t(25)} frame="all" parts={["17", "servoneck", "hornneck", "18", "19"]} focus={["17", "servoneck", "hornneck", "18"]} from={[0, 0, 90]} image={still(25)} alt="The cartridge with the neck servo, highlighted, fitted inside the head shell."
           hardware={[{ qty: 4, item: "M3 × 6 button-head screws" }]}>
           <ol>
             <li>Pass the cartridge into the head shell (19) through the open front, horn first, so the horn sits over the round opening in the bottom of the shell. Lead the servo cable's free end out through that opening.</li>
@@ -407,9 +434,9 @@ sudo reboot</code></pre>
           </ol>
         </Step>
 
-        <Step n={23} title={t(23)} parts={["16", "17", "servoneck", "hornneck", "18", "19"]} focus={["16"]} frame="all" from={[0, -60, 0]} view="below" image={still(23)} alt="The pitch fork, highlighted, whose neck post screws to the horn from below."
+        <Step n={26} title={t(26)} parts={["16", "17", "servoneck", "hornneck", "18", "19"]} focus={["16"]} frame="all" from={[0, -60, 0]} view="below" image={still(26)} alt="The pitch fork, highlighted, whose neck post screws to the horn from below."
           hardware={[{ qty: 4, item: "M3 × 5 button-head screws" }]}>
-          <p>The top of the pitch fork's neck post (16) screws to the horn you fitted in step 20. The four screws go in from underneath, through the deep holes in the post.</p>
+          <p>The top of the pitch fork's neck post (16) screws to the horn you fitted in step {at("Fit the neck horn through the opening")}. The four screws go in from underneath, through the deep holes in the post.</p>
           <ol>
             <li>Lower the head onto the post so the post's top sits flat against the horn, and turn the head until the four holes line up with the horn's holes. The head should face straight forward, along the fork. Keep the servo cable beside the post, not trapped between the post and the horn.</li>
             <li>From underneath, fit four <b>M3 × 5</b> up through the post into the horn. A long, thin hex key or screwdriver reaches down the holes.</li>
@@ -417,7 +444,7 @@ sudo reboot</code></pre>
           <p class="warn"><b>Screw length</b> Use M3 × 5 here, not the M3 × 4 used at the other horns. The top of the post is 2.9 mm thick, so an M3 × 4 would only reach about 1 mm into the horn's thread. An M3 × 5 reaches about 2 mm, which is what the CAD is designed for.</p>
         </Step>
 
-        <Step n={24} title={t(24)} parts={withHead} focus={[...neck, "19"]} from={[0, 80, 0]} image={still(24)} alt="The head, highlighted, attached to the wrist at the top of the upper arm."
+        <Step n={27} title={t(27)} parts={withHead} focus={[...neck, "19"]} from={[0, 80, 0]} image={still(27)} alt="The head, highlighted, attached to the wrist at the top of the upper arm."
           hardware={[{ qty: 8, item: "M3 × 8 button-head screws" }, { qty: 1, item: "Servo centre screw (supplied)" }]}>
           <ol>
             <li>Plug the neck servo's cable into the empty socket on the wrist servo, at the top of the upper arm.</li>
@@ -427,60 +454,91 @@ sudo reboot</code></pre>
           <p class="tip"><b>Why longer screws</b> The wrist fork is wider than the other joints' parts, so its screws need to be 8 mm long to reach the horn, where the shoulder and elbow use 4 mm.</p>
         </Step>
 
-        <Step n={25} title={t(25)} parts={cassette} focus={cassette} frame="all" view="back" from={[0, 0, -60]} image={still(25)} alt="The front cassette seen from behind, with the camera, LED ring, retaining ring and speaker, highlighted."
-          hardware={[{ qty: 4, item: "M2 × 4 screws (camera)" }, { qty: 3, item: "M2 × 4 screws (LED ring retainer)" }, { qty: 4, item: "M2.5 × 6 screws (speaker)" }]}>
+        <Step n={28} title={t(28)} parts={["20", "camera"]} focus={["camera"]} frame="all" view="back" from={[0, 0, -40]} image={still(28)} alt="The front cassette seen from behind, with the camera, highlighted, fitted at its centre."
+          hardware={[{ qty: 4, item: "M2 × 4 screws" }]}>
           <p>The camera, LED ring and speaker all mount on one removable front piece, the cassette (20). Build it on the table, not inside the head.</p>
           <ol>
-            <li><b>Solder the LED ring's wires first.</b> The ring has three pads you need: power (5 V), ground (GND) and data in (DIN; not DOUT). Solder a wire to each, long enough to run down the arm to the Pi in the base with slack at every joint. Measure along the lamp with the arm stretched out.</li>
-            <li>Fit the camera from the back with four <b>M2 × 4</b>. Check the lens is centred in its opening, and connect its ribbon cable.</li>
-            <li>Rest the LED ring on its pads and hold it with the retaining ring (24) and three <b>M2 × 4</b>. The retainer should hold the board, not press on the LEDs or the solder joints.</li>
-            <li>Fit the speaker with four <b>M2.5 × 6</b>, lining up all four holes before tightening any of them, and connect its wires.</li>
+            <li>Connect the camera's ribbon cable to the camera first, while it is easy to reach.</li>
+            <li>Place the camera on the back of the cassette, lens through the centre opening, and fit four <b>M2 × 4</b>. Check the lens is centred.</li>
           </ol>
         </Step>
 
-        <Step n={26} title={t(26)} parts={withFront} focus={[...cassette, "21"]} from={[0, 0, 80]} image={still(26)} alt="The front cassette and diffuser, highlighted, at the front of the head."
-          hardware={[{ qty: 4, item: "M3 × 6 button-head screws" }]}>
-          <p>Three sets of wires leave the head and go down to the base. Route them now, then close the front.</p>
+        <Step n={29} title={t(29)} parts={["20", "camera", "led", "24"]} focus={["led", "24"]} frame="all" from={[0, 0, 40]} image={still(29)} alt="The LED ring and its retaining ring, highlighted, on the front of the cassette."
+          hardware={[{ qty: 3, item: "M2 × 4 screws" }]}>
+          <ol>
+            <li><b>Solder the ring's wires first.</b> It has three pads you need: power (5 V), ground (GND) and data in (DIN; not DOUT). Solder a wire to each, long enough to run down the arm to the Pi in the base with slack at every joint. Measure along the lamp with the arm stretched out.</li>
+            <li>Turn the cassette over and rest the LED ring on its pads on the front, LEDs facing forward.</li>
+            <li>Lay the retaining ring (24) over it and fit three <b>M2 × 4</b>. The retainer should hold the board, not press on the LEDs or the solder joints.</li>
+          </ol>
+        </Step>
+
+        <Step n={30} title={t(30)} parts={cassette} focus={["speaker"]} frame="all" view="back" from={[0, 0, -50]} image={still(30)} alt="The speaker, highlighted, mounted on the back of the cassette behind the camera."
+          hardware={[{ qty: 4, item: "M2.5 × 6 screws" }]}>
+          <ol>
+            <li>Connect the speaker's wires.</li>
+            <li>Place the speaker on its four posts behind the camera and line up all four holes before tightening any of them.</li>
+            <li>Fit four <b>M2.5 × 6</b>.</li>
+          </ol>
+        </Step>
+
+        <Step n={31} title={t(31)} parts={withHead} image={still(31)} alt="The lamp with its head, before the front goes on. The head's cables run from here down to the base.">
+          <p>Three sets of wires leave the head and go down to the base. Route them now, with the cassette held just in front of the head.</p>
           <ol>
             <li><b>Camera:</b> lead the camera's ribbon out of the back of the head and down the outside of the lamp to the back of the base. Join it to the 500 mm Pi 5 camera cable with the cable joiner. Pass the cable in through one of the openings in the rear panels and plug it into the Pi's camera socket.</li>
             <li><b>LED ring and speaker:</b> run their wires down along the arm, then through the slot in the yaw servo carrier into the base. Connect the LED ring to the Pi's header: 5 V to pin 4, ground to pin 30, data to pin 32 (GPIO12). Connect the speaker to the microphone array's speaker output.</li>
             <li>Leave a loop of slack at the neck, wrist, elbow and shoulder, then move each joint by hand through its full range to check nothing pulls tight.</li>
-            <li>Place the cassette in the head, add the diffuser (21) and fit four <b>M3 × 6</b>, tightening opposite corners in turn.</li>
           </ol>
           <p class="warn"><b>Careful</b> Wiring the LED ring the wrong way round can damage the ring or the Pi. Check 5 V, ground and data twice.</p>
-          <p class="tip"><b>Service</b> To reach the inside of the head later, undo the four front screws and lift the front away. The camera, LEDs and speaker come with it.</p>
+        </Step>
+
+        <Step n={32} title={t(32)} parts={[...withHead, ...cassette]} focus={cassette} from={[0, 0, 80]} image={still(32)} alt="The front cassette with its camera, LED ring and speaker, highlighted, sliding into the front of the head."
+          hardware={[]}>
+          <ol>
+            <li>Tuck the cables in and slide the cassette into the front of the head, speaker first, until its rim sits on the four inserts near the head's rim.</li>
+            <li>Don't fit any screws yet: the diffuser goes on top and the same screws hold both.</li>
+          </ol>
+        </Step>
+
+        <Step n={33} title={t(33)} parts={withFront} focus={["21"]} from={[0, 0, 60]} image={still(33)} alt="The round diffuser, highlighted, covering the front of the head."
+          hardware={[{ qty: 4, item: "M3 × 6 button-head screws" }]}>
+          <p>The diffuser (21) is the thin disc in front of the LEDs that softens their light; the camera looks through the hole in its middle.</p>
+          <ol>
+            <li>Lay the diffuser over the cassette and line up its four holes with the cassette's.</li>
+            <li>Fit four <b>M3 × 6</b> through the diffuser and the cassette into the inserts, tightening opposite corners in turn. Stop when the rim is seated; overtightening bends the diffuser.</li>
+          </ol>
+          <p class="tip"><b>Service</b> To reach the inside of the head later, undo these four screws and lift the front away. The camera, LEDs and speaker come with it.</p>
         </Step>
 
         <h2 class="stage" id={stage(5).id}><span>Stage 5 of 5 · steps {stage(5).from}–{stage(5).to}</span>{stage(5).title}</h2>
 
-        <Step n={27} title={t(27)} parts={withFront} image={still(27)} alt="The assembled lamp without its joint caps or bottom cover.">
+        <Step n={34} title={t(34)} parts={withFront} image={still(34)} alt="The assembled lamp without its joint caps or bottom cover.">
           <p>Before closing anything, check every connection against this list with both supplies unplugged.</p>
           <table>
             <thead><tr><th>Connection</th><th>Made in</th></tr></thead>
             <tbody>
-              <tr><td>Servo chain: servo board → base → shoulder → elbow → wrist → neck</td><td>Steps 6–24</td></tr>
-              <tr><td>Servo board to Pi, by USB</td><td>Step 9</td></tr>
-              <tr><td>Microphone array to Pi, upper USB-A socket</td><td>Steps 8–9</td></tr>
-              <tr><td>6 V supply to servo board; USB-C supply to Pi</td><td>Step 10</td></tr>
-              <tr><td>Camera: ribbon → joiner → 500 mm Pi 5 cable → Pi camera socket</td><td>Step 26</td></tr>
-              <tr><td>LED ring to Pi pins 4 (5 V), 30 (ground), 32 (data)</td><td>Step 26</td></tr>
-              <tr><td>Speaker to the microphone array's speaker output</td><td>Step 26</td></tr>
+              <tr><td>Servo chain: servo board → base → shoulder → elbow → wrist → neck</td><td>Steps {at("Fix the base servo to its retainer")}–{at("Fit the head to the wrist")}</td></tr>
+              <tr><td>Servo board to Pi, by USB</td><td>Step {at("Build the electronics tray")}</td></tr>
+              <tr><td>Microphone array to Pi, upper USB-A socket</td><td>Steps {at("Fit the microphone")}–{at("Build the electronics tray")}</td></tr>
+              <tr><td>6 V supply to servo board; USB-C supply to Pi</td><td>Step {at("Fit the rear panels and power leads")}</td></tr>
+              <tr><td>Camera: ribbon → joiner → 500 mm Pi 5 cable → Pi camera socket</td><td>Step {at("Run the head's cables to the base")}</td></tr>
+              <tr><td>LED ring to Pi pins 4 (5 V), 30 (ground), 32 (data)</td><td>Step {at("Run the head's cables to the base")}</td></tr>
+              <tr><td>Speaker to the microphone array's speaker output</td><td>Step {at("Run the head's cables to the base")}</td></tr>
             </tbody>
           </table>
           <p>Move every joint gently by hand through its full range one more time. Nothing should pull tight or catch.</p>
         </Step>
 
-        <Step n={28} title={t(28)} parts={withCaps} focus={["22"]} from={[0, 0, 0]} image={still(28)} alt="The six joint caps, highlighted, at the shoulder, elbow and wrist."
+        <Step n={35} title={t(35)} parts={withCaps} focus={["22"]} from={[0, 0, 0]} image={still(35)} alt="The six joint caps, highlighted, at the shoulder, elbow and wrist."
           hardware={[{ qty: 18, item: "Thin removable adhesive tabs, 3 per cap" }]}>
           <p>The six caps cover the horn screws at the shoulder, elbow and wrist. Stick three thin tabs on the back of each cap, keeping them away from the screw-head recesses, and press it into place. The tabs let you peel a cap off later.</p>
         </Step>
 
-        <Step n={29} title={t(29)} parts={ALL} focus={["02"]} view="below" from={[0, -60, 0]} image={still(29)} alt="The bottom cover, highlighted, closing the base from below."
+        <Step n={36} title={t(36)} parts={ALL} focus={["02"]} view="below" from={[0, -60, 0]} image={still(36)} alt="The bottom cover, highlighted, closing the base from below."
           hardware={[{ qty: 6, item: "M3 × 6 button-head screws" }]}>
           <p>Fit the bottom cover with six <b>M3 × 6</b>, tightening them evenly a little at a time.</p>
         </Step>
 
-        <Step n={30} title={t(30)} parts={ALL} image={still(30)} alt="The finished Orion lamp.">
+        <Step n={37} title={t(37)} parts={ALL} image={still(37)} alt="The finished Orion lamp.">
           <p>Each servo stores its own zero position. Orion sets it with the lamp folded into a fixed <b>rest pose</b>, so every joint agrees with the software no matter how the horns were fitted.</p>
           <ol>
             <li>Plug in both supplies and connect to the Pi over SSH. The services are still stopped from the install; if you have started them since, stop them:
@@ -518,7 +576,7 @@ sudo reboot</code></pre>
               <tr><td>“lamp is moving; let it settle”</td><td>A joint moved during the 2-second check.</td><td>Let go of the lamp, make sure it rests on its own and nothing is touching the table, and run it again.</td></tr>
               <tr><td>“Expected one USB servo adapter”</td><td>The Pi can't see the servo board, or sees more than one.</td><td>Check the servo board's USB cable. If you really have two adapters, add <code>--port</code> with the right device.</td></tr>
               <tr><td>“… reads 1980; expected 2047 +/-8” (any joint, any number)</td><td>A servo didn't take its new zero.</td><td>Run it again. If the same joint fails twice, check its cable and that the 6 V supply is on.</td></tr>
-              <tr><td>“Servo 3 is not an STS3215”, or a timeout</td><td>A servo didn't answer: unplugged, wrong ID, or no power.</td><td>Check the chain connections and the 6 V supply. A servo with the wrong ID has to be unplugged on its own and given its ID again (step 5).</td></tr>
+              <tr><td>“Servo 3 is not an STS3215”, or a timeout</td><td>A servo didn't answer: unplugged, wrong ID, or no power.</td><td>Check the chain connections and the 6 V supply. A servo with the wrong ID has to be unplugged on its own and given its ID again (step {at("Give each servo its ID")}).</td></tr>
               <tr><td>“Offset recovery incomplete … Inspect the bus before retrying”</td><td>The old zeros couldn't all be put back, usually because a cable came loose mid-way.</td><td>Unplug the power, check every servo connection, then run zeroing again; it writes fresh zeros for every joint.</td></tr>
             </tbody>
           </table>
