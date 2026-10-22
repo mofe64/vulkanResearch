@@ -1,0 +1,10 @@
+---
+// Detail for engineers: the exact rule, the file it lives in, the code. Closed unless the reader opens it.
+interface Props { title?: string }
+const { title = "Under the hood" } = Astro.props;
+---
+
+<details class="hood">
+  <summary>{title}</summary>
+  <div class="hood-body"><slot /></div>
+</details>

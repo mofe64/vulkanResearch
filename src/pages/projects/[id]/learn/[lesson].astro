@@ -1,0 +1,73 @@
+---
+import { getCollection, getEntry, render } from "astro:content";
+import Base from "../../../../layouts/Base.astro";
+import ReadingMap from "../../../../components/ReadingMap.astro";
+import { getLessons, lessonSlug, lessonUrl, projectUrl, type Lesson } from "../../../../lib/content";
+import "../../../../components/learn/lesson.css";
+
+export async function getStaticPaths() {
+  const lessons = await getCollection("lessons", (l) => l.data.status === "ready");
+  return lessons.map((lesson) => ({ params: { id: lesson.data.project.id, lesson: lessonSlug(lesson) }, props: { lesson } }));
+}
+
+const { lesson } = Astro.props as { lesson: Lesson };
+const project = (await getEntry("projects", lesson.data.project.id))!;
+const { Content, headings } = await render(lesson);
+const all = await getLessons(project.id);
+const index = all.findIndex((l) => l.id === lesson.id);
+const next = all[index + 1];
+---
+
+<Base title={lesson.data.title} description={lesson.data.summary}>
+  <article class="lesson" data-repo={project.data.resources.source}>
+    <header class="lhead">
+      <span class="eyebrow">
+        <a href={projectUrl(project.id)}>{project.data.name}</a> · <a href={`${projectUrl(project.id)}learn/`}>Learn</a> · Lesson {index + 1} of {all.length}
+      </span>
+      <h1>{lesson.data.title}</h1>
+      <p class="lede">{lesson.data.summary}</p>
+      <div class="map-slot"><ReadingMap headings={headings} /></div>
+    </header>
+
+    <div class="lbody">
+      <Content />
+    </div>
+
+    {lesson.data.recap.length > 0 && (
+      <aside class="recap" aria-labelledby="recap-title">
+        <h2 id="recap-title">In short</h2>
+        <ul>{lesson.data.recap.map((line) => <li>{line}</li>)}</ul>
+      </aside>
+    )}
+
+    <footer class="lfoot">
+      {next ? (
+        next.data.status === "ready" ? (
+          <a class="next" href={lessonUrl(next)}><span>Next lesson</span>{next.data.title}</a>
+        ) : (
+          <div class="next off"><span>Next lesson, coming soon</span>{next.data.title}</div>
+        )
+      ) : (
+        <a class="next" href={`${projectUrl(project.id)}learn/`}><span>That was the last lesson</span>Back to all lessons</a>
+      )}
+    </footer>
+  </article>
+</Base>
+
+<script>
+  // "Under the hood" boxes name files and folders in the project's repository; make each one a link to it there.
+  const article = document.querySelector<HTMLElement>("article.lesson");
+  const repo = article?.dataset.repo;
+  if (repo) {
+    for (const code of article!.querySelectorAll<HTMLElement>(".hood-body code")) {
+      const path = code.textContent ?? "";
+      if (code.closest("pre, a") || !/^[a-z_]+(\/[\w.-]+)+\/?$/.test(path)) continue;
+      const a = document.createElement("a");
+      a.href = `${repo}/${/\.[a-z]+$/.test(path) ? "blob" : "tree"}/main/${path.replace(/\/$/, "")}`;
+      a.target = "_blank";
+      a.rel = "noopener";
+      code.replaceWith(a);
+      a.append(code);
+    }
+  }
+</script>

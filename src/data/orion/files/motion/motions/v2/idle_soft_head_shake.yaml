@@ -1,0 +1,26 @@
+format_version: 2
+motion:
+  name: idle_soft_head_shake
+  description: Turn the neck slowly left and right with a soft return.
+  space: anchor_relative
+  style: living_idle
+  return_to_anchor: true
+  keyframes:
+  - offsets:
+      base_yaw_joint: -0.03
+      head_roll_joint: -0.20943951023931956
+    duration: 0.5
+    arrival: through
+  - offsets:
+      base_yaw_joint: 0.03
+      head_roll_joint: 0.20943951023931956
+    duration: 0.55
+    arrival: through
+  - offsets:
+      base_yaw_joint: -0.01
+      head_roll_joint: -0.07330382858376185
+    duration: 0.45
+    arrival: through
+  - offsets: {}
+    duration: 0.65
+    arrival: settle

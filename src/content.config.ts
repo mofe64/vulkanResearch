@@ -73,4 +73,28 @@ const posts = defineCollection({
   }),
 });
 
-export const collections = { projects, posts };
+// Learn: lessons that each answer one question about a project, with interactive explainers.
+// One folder per project (src/content/learn/orion/); the file name is the lesson's URL.
+const lessons = defineCollection({
+  loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/learn" }),
+  schema: z.object({
+    title: z.string(), // the question the lesson answers: "How does Orion move?"
+    project: reference("projects"),
+    order: z.number(),
+    summary: z.string(), // one or two sentences for the lesson list
+    covers: z.array(z.string()).default([]), // a few short phrases shown on the lesson's card
+    status: z.enum(["ready", "planned"]).default("ready"), // planned lessons are listed but can't be opened yet
+    recap: z.array(z.string()).default([]), // three short lines shown at the end: what to remember
+  }),
+});
+
+// The shared glossary behind <Term>: one file per idea, written once and used by every project's lessons.
+const concepts = defineCollection({
+  loader: glob({ pattern: "*.md", base: "./src/content/concepts" }),
+  schema: z.object({
+    term: z.string(),
+    short: z.string(), // one plain sentence
+  }),
+});
+
+export const collections = { projects, posts, lessons, concepts };

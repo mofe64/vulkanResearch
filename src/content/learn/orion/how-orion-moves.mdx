@@ -1,0 +1,275 @@
+---
+title: "How does Orion move?"
+project: orion
+order: 2
+summary: "How a named movement becomes smooth motion: five joints, poses and keyframes, curves instead of straight lines, and a loop that steers the motors 50 times a second. Every animation here runs Orion's own motion software in your browser."
+covers: ["Joints and servos", "Keyframes and smooth curves", "50 times a second", "Make your own motion"]
+recap:
+  - "A motion is a list of keyframes: poses and travel times, written in a short file."
+  - "Orion's compiler joins them with smooth curves, keeps them within speed and joint limits, and samples them 50 times a second."
+  - "Styles, anchors and priorities let the same few files produce calm, quick or interrupted movement safely."
+---
+import Section from "../../../components/learn/Section.astro";
+import Term from "../../../components/learn/Term.astro";
+import Fact from "../../../components/learn/Fact.astro";
+import UnderTheHood from "../../../components/learn/UnderTheHood.astro";
+import Predict from "../../../components/learn/Predict.astro";
+import JointExplorer from "../../../explainers/orion/JointExplorer.tsx";
+import ServoDial from "../../../explainers/orion/ServoDial.tsx";
+import MotionPlayer from "../../../explainers/orion/MotionPlayer.tsx";
+import SmoothVsLinear from "../../../explainers/orion/SmoothVsLinear.tsx";
+import ArrivalToggle from "../../../explainers/orion/ArrivalToggle.tsx";
+import ControlLoop from "../../../explainers/orion/ControlLoop.tsx";
+import SpeedLimit from "../../../explainers/orion/SpeedLimit.tsx";
+import AnchorExplorer from "../../../explainers/orion/AnchorExplorer.tsx";
+import StyleCompare from "../../../explainers/orion/StyleCompare.tsx";
+import PriorityLadder from "../../../explainers/orion/PriorityLadder.tsx";
+import TrackingPlot from "../../../explainers/orion/TrackingPlot.tsx";
+import MotionLab from "../../../explainers/orion/MotionLab.tsx";
+
+<p class="intro">
+When Orion glances at you, nothing in it thinks "turn the head". A file says which poses to pass through and how long
+to take, a program works out a smooth path between them, and five motors follow that path one small step at a time.
+This lesson takes those pieces in order. The lamps below run the same motion software as the real Orion.
+</p>
+
+<Section>
+
+## Five joints
+
+Orion's body has five places where it can bend or turn. Each one is a <Term id="joint">joint</Term>, and each joint
+has its own motor. The base turns the whole arm left and right, the shoulder and elbow raise and fold the arm, and
+the head can nod and swivel.
+
+That's all the movement Orion has. Every gesture you'll see, from a yawn to a laugh, is these five angles changing
+together.
+
+<Fact>Each joint stops short of its full range, at a <Term id="limit">limit</Term> measured on the real lamp. The sliders stop there too.</Fact>
+
+<UnderTheHood>
+The joints are named `base_yaw_joint`, `shoulder_pitch_joint`, `elbow_pitch_joint`, `head_pitch_joint` and
+`head_roll_joint`. "Yaw" means turning around a vertical axis, "pitch" means tipping up and down, and "roll" is the
+head's swivel. Their limits live in `hardware/profiles/v2-joints.json`.
+</UnderTheHood>
+
+<div slot="stage"><JointExplorer client:visible /></div>
+</Section>
+
+<Section>
+
+## What's a servo?
+
+Orion's motors are <Term id="servo">servos</Term>. A servo isn't told "spin"; it's told an angle, and it turns there
+and holds. Inside, a <Term id="encoder">position sensor</Term> keeps measuring where the output actually is, so the
+servo can correct itself and report back.
+
+That's what makes precise movement possible: the software only has to decide which angle each joint should be at,
+moment by moment.
+
+<Fact>Orion's servos measure 4096 steps per turn, so each step is less than a tenth of a degree.</Fact>
+
+<UnderTheHood>
+Orion uses Feetech STS3215 serial bus servos: all five share one cable and each has an ID from 1 to 5. Orion sets the
+zero of every joint with the lamp folded flat, its rest pose, and converts a reading to an angle with
+`(raw − 2047) × 2π / 4096` <Term id="radian">radians</Term>.
+</UnderTheHood>
+
+<div slot="stage"><ServoDial client:visible /></div>
+</Section>
+
+<Section>
+
+## Poses and motions
+
+A <Term id="pose">pose</Term> is a named set of five angles: `home`, `rest`, `look_left`. A motion is a list of
+<Term id="keyframe">keyframes</Term>, each saying "reach this pose, taking this long".
+
+Some motions name poses directly. Others, like a nod, are small changes from wherever the lamp already is, so the same
+nod works whether Orion is looking left or right.
+
+<Fact>Orion has 26 named poses and 44 built-in motions, each a short text file.</Fact>
+
+<UnderTheHood>
+This is `look_at_left_expressive`, from `motion/motions/v2/`:
+
+```yaml
+motion:
+  name: look_at_left_expressive
+  space: absolute
+  style: expressive_turn
+  keyframes:
+  - pose: look_left_anticipation
+    duration: 0.25
+    arrival: through
+  - pose: look_left_lean
+    duration: 0.4
+    arrival: through
+  - pose: look_left_overshoot
+    duration: 0.3
+    arrival: through
+  - pose: look_left
+    duration: 0.35
+    arrival: settle
+```
+</UnderTheHood>
+
+<div slot="stage"><MotionPlayer client:visible /></div>
+</Section>
+
+<Section>
+
+## Why doesn't Orion jerk?
+
+The simplest way to get from one keyframe to the next is a straight line: move at a steady speed, then stop. But a
+straight line starts at full speed and stops dead. That instant change in speed is a jolt: it rattles the arm and makes
+the motors clunk.
+
+Orion joins its keyframes with curves instead. Each one starts gently, speeds up, and slows down before it arrives.
+
+<Predict question="The two lamps reach the same poses at the same moments. Which one goes faster at its fastest?" options={["Straight lines", "Orion's curves", "Same speed"]} answer={1}>
+Orion's. To leave and arrive gently but still be on time, a curve has to make up the time in the middle. Look at the
+peak of the black line in the speed chart.
+</Predict>
+
+<UnderTheHood>
+Each joint's path between two keyframes is a <Term id="quintic">quintic curve</Term>, a fifth-power polynomial chosen
+so the position, <Term id="velocity">speed</Term> and <Term id="acceleration">acceleration</Term> at both ends are
+exactly what was asked for. See `runtime/src/motion/trajectory.rs`.
+</UnderTheHood>
+
+<div slot="stage"><SmoothVsLinear client:visible /></div>
+</Section>
+
+<Section>
+
+## Passing through or stopping
+
+Each keyframe says how to arrive. **Settle** means stop there, with no speed left. **Through** means keep moving: the
+keyframe is a point to pass, not a place to stop.
+
+A glance left and then right reads as two separate looks when both keyframes settle, and as one sweeping look when the
+first passes through.
+
+<Fact>A motion's last keyframe must always settle, so every movement ends at rest.</Fact>
+
+<div slot="stage"><ArrivalToggle client:visible /></div>
+</Section>
+
+<Section>
+
+## 50 times a second
+
+The smooth curve is a plan. To follow it, Orion's <Term id="runtime">runtime</Term> runs a
+<Term id="control-loop">control loop</Term>: read where each motor is, work out where the plan says it should be
+right now, and send the five new angles. Then it does it again, 20 milliseconds later.
+
+Slow the glance down and you can see the separate steps that make up the smooth movement.
+
+<Fact>The loop runs 50 times a second. Slow work such as speech recognition runs elsewhere, so it can never hold the loop up.</Fact>
+
+<div slot="stage"><ControlLoop client:visible /></div>
+</Section>
+
+<Section>
+
+## Speed limits
+
+A motor can only turn so fast. If a motion asks for a big turn in very little time, it would need a speed the motor
+doesn't have.
+
+Orion's <Term id="compiler">compiler</Term>, the part that turns motion files into paths, checks every plan against
+that limit. When a move is too fast, it doesn't fail: it makes the move take longer until the speed fits.
+
+<Fact>Orion's servos top out around 312° per second (52 turns a minute).</Fact>
+
+<UnderTheHood>
+The compiler estimates each segment's peak speed by sampling its curve, stretches the segments that are too fast, and
+tries again, up to 12 times. The ceiling is `STS3215_MAX_SPEED_RAD_S`, about 5.45 radians per second.
+</UnderTheHood>
+
+<div slot="stage"><SpeedLimit client:visible /></div>
+</Section>
+
+<Section>
+
+## Moving relative to where you are
+
+Most of Orion's small gestures, such as nods, bounces and breathing, aren't written as poses. They're written as small
+changes from the current pose, the <Term id="anchor">anchor</Term>: "head up a little, then back". That's why one happy
+bounce works wherever Orion happens to be.
+
+There's one catch. Near a joint limit the full gesture might not fit. Rather than clip it, Orion shrinks the whole
+gesture evenly, so it keeps its shape.
+
+<Fact>Every relative motion has to end back at its anchor. Orion refuses one that doesn't.</Fact>
+
+<UnderTheHood>
+A relative keyframe resolves to `anchor + style amplitude × scale × offsets`. One `scale` between 0 and 1 is chosen
+for the whole motion, the largest that keeps every joint inside its limits.
+</UnderTheHood>
+
+<div slot="stage"><AnchorExplorer client:visible /></div>
+</Section>
+
+<Section>
+
+## Styles
+
+The same keyframes can be performed calmly or briskly. Every motion names one of eight styles, and the style sets how
+it moves: how fast it travels, how much it flows through keyframes, whether the joints move a little out of step, and
+how long it takes to settle.
+
+This is how a thinking gesture comes out slow and drifting while a reaction comes out quick and crisp, without
+writing every movement twice.
+
+<Predict question="Pick the thinking style. Will the glance take more time or less?" options={["More", "Less"]} answer={0}>
+More: thinking has a tempo of 0.68, so every travel time is divided by 0.68 and comes out about half as long again.
+</Predict>
+
+<div slot="stage"><StyleCompare client:visible /></div>
+</Section>
+
+<Section>
+
+## Who gets to move
+
+Many parts of Orion want to move the lamp: idle breathing, listening, speaking, a requested motion, the Stop button.
+They can't all move it at once, so movement has an order of priority. A higher priority takes over immediately; a
+lower one waits its turn.
+
+The handover is smooth because the new movement starts from exactly where the old one was, and at the same speed.
+
+<Fact>Only the runtime ever sends angles to the motors. Everything else, including voice and Studio, has to ask it ([Meet Orion](/projects/orion/learn/meet-orion/) shows the gatekeeper).</Fact>
+
+<div slot="stage"><PriorityLadder client:visible /></div>
+</Section>
+
+<Section>
+
+## Asked for vs actual
+
+The plan is what Orion asks for, not what happens. A real motor carries a real arm, so it trails the plan slightly and
+doesn't quite reach every quick peak.
+
+That's why a movement isn't "done" when its timeline ends. Orion waits until the measured joints have stayed close to
+the final pose, which it calls settling.
+
+<Fact>In this recording the head trails the plan by about 60 milliseconds. The shoulder, which carries the whole arm, trails by about 140.</Fact>
+
+<div slot="stage"><TrackingPlot client:visible /></div>
+</Section>
+
+<Section>
+
+## Make your own motion
+
+Now put it together. Pose the lamp with the sliders, add keyframes, choose a style, and press **Compile and play**.
+Your motion goes through Orion's own compiler, so the result is exactly what the real lamp would do, including the
+messages it gives when it refuses.
+
+When you like it, open "See it as Orion's motion file": that text is a motion Orion can load.
+
+<Fact>The lamp starts every motion from <code>home</code>, just as Orion does when it wakes.</Fact>
+
+<div slot="stage"><MotionLab client:visible /></div>
+</Section>

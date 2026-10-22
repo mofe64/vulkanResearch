@@ -600,6 +600,11 @@ sudo reboot</code></pre>
       <aside class="viewer-col" aria-label="3D view of the current step">
         <div class="viewer-box">
           <span class="viewer-step" data-viewer-label>Step 1</span>
+          <div class="viewer-bar" data-viewer-bar>
+            <button type="button" data-viewer-go="-1" aria-label="Previous step">←</button>
+            <button type="button" data-viewer-go="1" aria-label="Next step">→</button>
+            <button type="button" data-viewer-close>Close</button>
+          </div>
           <AssemblyViewer model={MODEL} label="3D view of Orion showing the parts for the current step" />
         </div>
       </aside>
@@ -660,6 +665,21 @@ sudo reboot</code></pre>
 
   @media (max-width: 600px) { h1 { font-size: 34px; } }
 
+  /* Narrow screens: "View in 3D" on a step opens the same viewer full screen, with step buttons and Close. */
+  .viewer-bar { display: none; }
+  .guide.is-overlay .viewer-col {
+    display: block; position: fixed; inset: 0; z-index: 50; height: 100dvh; max-height: none; background: #fff;
+  }
+  .guide.is-overlay .viewer-box { border: 0; }
+  .guide.is-overlay .viewer-bar { display: flex; position: absolute; top: 8px; right: 8px; z-index: 3; gap: 6px; }
+  .viewer-bar button {
+    min-width: 44px; min-height: 44px; padding: 0 14px; font: 14px var(--sans); color: var(--ink);
+    background: #fff; border: 1px solid var(--rule); border-radius: 3px; cursor: pointer;
+  }
+  .viewer-bar [data-viewer-close] { color: var(--link); border-color: var(--link); }
+  .guide.is-overlay .viewer-step { top: 22px; font-size: 13px; }
+  :global(html.no-scroll) { overflow: hidden; }
+
   /* ?capture renders one step at a time for the still pictures (scripts/assembly-stills.mjs). */
   :global(body.capture) .guide > .intro, :global(body.capture) .steps, :global(body.capture .site-header), :global(body.capture .site-footer) { display: none; }
   :global(body.capture) .guide { padding: 0; border: 0; }
@@ -718,4 +738,44 @@ sudo reboot</code></pre>
   };
   start();
   wide.addEventListener("change", start);
+
+  // Narrow screens: each step's "View in 3D" button opens the viewer full screen at that step.
+  const hasWebGL = (() => { try { return !!document.createElement("canvas").getContext("webgl2"); } catch { return false; } })();
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>("[data-view3d]")];
+  const closeButton = document.querySelector<HTMLButtonElement>("[data-viewer-close]")!;
+  let opener: HTMLElement | null = null;
+  const stepEl = (n: number) => steps.find((s) => Number(s.dataset.step) === n);
+
+  const openAt = (n: number, from?: HTMLElement) => {
+    const el = stepEl(n);
+    if (!el) return;
+    if (from) opener = from;
+    guide.classList.add("is-overlay");
+    document.documentElement.classList.add("no-scroll");
+    // The viewer loads the first time it's on screen; replay the step once it's ready so the new parts slide in.
+    const v = guide.querySelector<HTMLElement>("assembly-viewer")!;
+    current = null;
+    show(el);
+    if (!v.classList.contains("is-ready")) {
+      const wait = setInterval(() => { if (v.classList.contains("is-ready")) { clearInterval(wait); current = null; show(el); } }, 150);
+    }
+    closeButton.focus();
+  };
+  const close = () => {
+    guide.classList.remove("is-overlay");
+    document.documentElement.classList.remove("no-scroll");
+    opener?.focus();
+  };
+  const toggleButtons = () => buttons.forEach((b) => (b.hidden = wide.matches || !hasWebGL));
+  toggleButtons();
+  wide.addEventListener("change", () => { toggleButtons(); if (wide.matches) close(); });
+  buttons.forEach((b) => b.addEventListener("click", () => openAt(Number(b.dataset.view3d), b)));
+  closeButton.addEventListener("click", close);
+  document.querySelectorAll<HTMLButtonElement>("[data-viewer-go]").forEach((b) =>
+    b.addEventListener("click", () => {
+      const n = Number(current?.dataset.step ?? 1) + Number(b.dataset.viewerGo);
+      if (stepEl(n)) openAt(n);
+    }),
+  );
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && guide.classList.contains("is-overlay")) close(); });
 </script>

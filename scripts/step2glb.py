@@ -1,10 +1,10 @@
 """Convert Orion component STEP exports (assembly coordinates, mm, Z-up) into one binary glTF (m, Y-up).
 
-The parts are grouped under a joint hierarchy (shoulder -> elbow -> wrist), each joint a glTF node placed on its
-pitch axis, so the arm can be posed here and animated later in the browser.
+The parts are grouped under Orion's five joints (yaw -> shoulder -> elbow -> wrist -> roll), each joint a glTF node
+placed on its axis, so the lamp can be posed here and animated in the browser.
 
 usage: step2glb.py <step dir> <out.glb> [shoulder=-20,elbow=65,wrist=-30] [--hardware hardware.json]
-       (pose in degrees; + tips toward the face)
+       (pose in degrees about each node's axis; for the pitch joints + tips toward the face; yaw and roll default to 0)
 
 Parts printed as two halves (the arms) are split into one mesh per half, named with a/b after the part number
 ("OR21-10a-..." is the half on the -X side), so a guide can show a servo going into one half before the other closes.
@@ -29,19 +29,26 @@ if "--hardware" in args:
     HARDWARE = args[i + 1]
     del args[i:i + 2]
 STEP_DIR, OUT = args[0], args[1]
-POSE = {"shoulder": -20.0, "elbow": 65.0, "wrist": -30.0}
+POSE = {"yaw": 0.0, "shoulder": -20.0, "elbow": 65.0, "wrist": -30.0, "roll": 0.0}
 if len(args) > 2:
     POSE.update({k: float(v) for k, v in (kv.split("=") for kv in args[2].split(","))})
 
-# Every pitch joint turns about the X axis. Parts are matched by part number at the start of their file name,
-# with any revision prefix dropped: "OR21-10-lower-arm" and "10 lower straight bridge" are both part "10 ...".
-# The pivot heights (glTF metres, Y-up) are measured from the flush horn caps (part 22) that sit on each servo
-# axis, so a CAD change that moves a joint needs no edit here; the numbers below are only the fallback.
+# The pitch joints turn about X; the base yaw and the head roll (the neck swivel) turn about the vertical Y axis.
+# Parts are matched by part number at the start of their file name, with any revision prefix dropped:
+# "OR21-10-lower-arm" and "10 lower straight bridge" are both part "10 ...". Which parts ride on which joint follows
+# Orion's robot description (orion/description/urdf/orion-v2.urdf).
+# Pivots are glTF metres (x, y up, z). The pitch pivots' heights are measured from the flush horn caps (part 22) that
+# sit on each servo axis, so a CAD change that moves a joint needs no edit here; those numbers are only the fallback.
+# The yaw axis is the base's vertical centre line (its height doesn't matter), and the roll axis sits 49 mm above the
+# wrist pivot and 17.5 mm behind it, as in the robot description.
 JOINTS = [
-    ["shoulder", 0.123, ("10 ", "10a ", "10b ", "22 shoulder")],
-    ["elbow", 0.273, ("13 ", "13a ", "13b ", "22 elbow")],
-    ["wrist", 0.404, ("16 ", "17 ", "18 ", "19 ", "20 ", "21 ", "24 ", "22 wrist")],
+    ["yaw", [0.0, 0.07, 0.0], "y", ("07 ", "08 ", "09 ")],
+    ["shoulder", [0.0, 0.123, 0.0], "x", ("10 ", "10a ", "10b ", "22 shoulder")],
+    ["elbow", [0.0, 0.273, 0.0], "x", ("13 ", "13a ", "13b ", "22 elbow")],
+    ["wrist", [0.0, 0.404, 0.0], "x", ("16 ", "22 wrist")],
+    ["roll", [0.0, 0.453, 0.0175], "y", ("17 ", "18 ", "19 ", "20 ", "21 ", "24 ")],
 ]
+ROLL_ABOVE_WRIST, ROLL_BEHIND_WRIST = 0.049, 0.0175
 def part_key(name):
     """'OR21-22-elbow-left-elbow-cap-left' -> '22 elbow left elbow cap left'."""
     return re.sub(r"^[a-z]+\d*-", "", name.lower()).replace("-", " ")
@@ -50,7 +57,7 @@ def joint_of(name):
     if name in JOINT_OF_NAME:
         return JOINT_OF_NAME[name]
     key = part_key(name)
-    for j, (_, _, prefixes) in enumerate(JOINTS):
+    for j, (_, _, _, prefixes) in enumerate(JOINTS):
         if key.startswith(prefixes):
             return j
     return -1  # base
@@ -210,31 +217,34 @@ if HARDWARE:
         JOINT_OF_NAME[h["name"]] = joint_index[h["joint"]]
         add_part(h["name"], P, N, I, 2)
 
-# Pivot heights from the horn caps (centre height of all caps for that joint).
+# Pitch pivot heights from the horn caps (centre height of all caps for that joint); the roll pivot follows the wrist.
 for jt in JOINTS:
     caps = [cy for n, _, cy in parts if part_key(n).startswith("22 " + jt[0])]
     if caps:
-        jt[1] = round(sum(caps) / len(caps), 4)
+        jt[1][1] = round(sum(caps) / len(caps), 4)
+roll, wrist = JOINTS[4][1], JOINTS[3][1]
+roll[1], roll[2] = round(wrist[1] + ROLL_ABOVE_WRIST, 4), round(wrist[2] + ROLL_BEHIND_WRIST, 4)
 print("pivots (m):", {jt[0]: jt[1] for jt in JOINTS})
 
 # Build the hierarchy: base parts at the root; each joint node sits on its pivot (relative to the parent joint)
 # and holds its parts offset back by the pivot, so the joint's rotation turns them about the axis.
-def quat_x(deg):
+def quat(axis, deg):
     a = math.radians(deg) / 2
-    return [math.sin(a), 0.0, 0.0, math.cos(a)]
+    return [math.sin(a) if axis == "x" else 0.0, math.sin(a) if axis == "y" else 0.0, 0.0, math.cos(a)]
 
 def add_node(node):
     gltf["nodes"].append(node)
     return len(gltf["nodes"]) - 1
 
 root_children = [add_node({"name": n, "mesh": m}) for n, m, _ in parts if joint_of(n) == -1]
-parent_children, parent_y = root_children, 0.0
-for j, (jname, y, _) in enumerate(JOINTS):
-    kids = [add_node({"name": n, "mesh": m, "translation": [0, -y, 0]}) for n, m, _ in parts if joint_of(n) == j]
-    node = {"name": jname, "translation": [0, y - parent_y, 0], "rotation": quat_x(POSE[jname]), "children": kids}
+parent_children, parent_pivot = root_children, [0.0, 0.0, 0.0]
+for j, (jname, pivot, axis, _) in enumerate(JOINTS):
+    kids = [add_node({"name": n, "mesh": m, "translation": [-c for c in pivot]}) for n, m, _ in parts if joint_of(n) == j]
+    node = {"name": jname, "translation": [a - b for a, b in zip(pivot, parent_pivot)], "rotation": quat(axis, POSE[jname]),
+            "children": kids}
     idx = add_node(node)
     parent_children.append(idx)
-    parent_children, parent_y = node["children"], y
+    parent_children, parent_pivot = node["children"], pivot
 gltf["scenes"][0]["nodes"] = [add_node({"name": "Orion", "children": root_children})]
 print("pose:", POSE)
 

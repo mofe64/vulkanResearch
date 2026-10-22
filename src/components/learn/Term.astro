@@ -1,0 +1,13 @@
+---
+// A word from the shared glossary (src/content/concepts/). Readers who know it read straight past; anyone else taps it
+// for one sentence. Uses the browser's built-in popover, so it needs no JavaScript.
+//   <Term id="servo">servos</Term>
+import { getEntry } from "astro:content";
+
+interface Props { id: string }
+const concept = await getEntry("concepts", Astro.props.id);
+if (!concept) throw new Error(`<Term id="${Astro.props.id}">: no file src/content/concepts/${Astro.props.id}.md`);
+const pid = `term-${Astro.props.id}-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<button type="button" class="term" popovertarget={pid}><slot /></button><span popover id={pid} class="term-card" role="note"><b>{concept.data.term}</b> {concept.data.short}</span>

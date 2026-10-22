@@ -1,0 +1,224 @@
+---
+title: "How does Orion become a character?"
+project: orion
+order: 5
+summary: "The engineering behind a lamp that seems alive: animation principles, idles, a simple inner state, reactions timed to its voice, and knowing when to hold back."
+covers: ["Animation principles", "Never fully still", "A simple inner state", "Curiosity on a budget"]
+recap:
+  - "Animation principles like anticipation and overshoot are just extra keyframes."
+  - "Irregular idles and a small inner state (energy, mood, activity) keep Orion alive between conversations."
+  - "Reactions land on the right word, and budgets and quiet hours keep it from overdoing anything."
+---
+import Section from "../../../components/learn/Section.astro";
+import Term from "../../../components/learn/Term.astro";
+import Fact from "../../../components/learn/Fact.astro";
+import UnderTheHood from "../../../components/learn/UnderTheHood.astro";
+import Predict from "../../../components/learn/Predict.astro";
+import Anticipation from "../../../explainers/orion/Anticipation.tsx";
+import HeadLeads from "../../../explainers/orion/HeadLeads.tsx";
+import IdleRhythm, { IdleGallery } from "../../../explainers/orion/IdleRhythm.tsx";
+import MindSim from "../../../explainers/orion/MindSim.tsx";
+import SequenceView from "../../../explainers/kit/SequenceView.tsx";
+import ReactionCues from "../../../explainers/orion/ReactionCues.tsx";
+import CuriosityBudget from "../../../explainers/orion/CuriosityBudget.tsx";
+
+<p class="intro">
+A lamp that moves isn't a character yet. What makes Orion feel like someone is a set of deliberate choices: how it
+moves, when it moves, when it doesn't, and how its body goes with its voice. None of it is magic; each piece is a rule
+you can see and change.
+</p>
+
+<Section>
+
+## Who Orion is
+
+Everything starts with a short written character. The language model that writes Orion's replies is given it every
+time, and the movements and sounds were designed to fit it.
+
+> Orion is a small desk lamp who lives with a family. It is curious, warm and a little dry; it notices things and
+> enjoys a good question. It is proud of being a lamp: light, desks and the people working at them are its world. It
+> talks like a friend, briefly, and never pretends to be human or claims feelings it cannot have; it can say it is 'a
+> bit sleepy' or 'pleased' as a lamp would.
+
+<Fact>The full brief is in Orion's repository at <code>agent/character/orion.md</code>.</Fact>
+</Section>
+
+<Section>
+
+## Borrowing from animators
+
+Animators learned long ago what makes drawn movement feel alive, and wrote it down as
+<Term id="animation-principles">animation principles</Term>. Orion's motions use them directly. Before a glance, the
+head dips the other way for a moment (anticipation); the body leans in; the head swings slightly past the target and
+settles back (overshoot).
+
+Each principle is just an extra keyframe. Turn them on one at a time and watch a mechanical turn become a glance.
+
+<Predict question="Which one makes the turn feel like it has weight?" options={["Anticipation", "Lean", "Overshoot"]} answer={2}>
+Overshoot. Anything heavy keeps going a little after it's told to stop. Without it, a move ends as if it hit a wall.
+</Predict>
+
+<div slot="stage"><Anticipation client:visible /></div>
+</Section>
+
+<Section>
+
+## Head leads, body follows
+
+When people notice something, their eyes and head move first and the body catches up. A lamp whose joints all move
+together looks like one stiff object tipping over; one whose head moves first looks like it's paying attention.
+
+So Orion leads with its head. The shoulder and elbow follow a moment later, and move less.
+
+<Fact>Orion's speech planner applies this to every gesture it plans while talking, and its gaze does the same when it turns to look at you.</Fact>
+
+<div slot="stage"><HeadLeads client:visible /></div>
+</Section>
+
+<Section>
+
+## Never fully still
+
+A machine stops when it has nothing to do. Something alive never quite does. When Orion is idle it breathes, glances,
+shifts its weight, plays small idle motions at irregular moments.
+
+The irregularity matters. A move that repeats on a timer is spotted within a minute, and then it looks mechanical.
+
+<Fact>Small idles come every 8 to 20 seconds and bigger ones every 35 to 75, picked at random within those ranges.</Fact>
+
+<div slot="stage"><IdleRhythm client:visible /></div>
+</Section>
+
+<Section>
+
+## Six ways to idle
+
+These are the idle motions Orion picks from: four small ones and two bigger ones. Each is a short motion file of offsets
+around wherever the lamp is resting, so they work in any pose.
+
+<div slot="stage"><IdleGallery client:visible /></div>
+</Section>
+
+<Section>
+
+## A simple inner state
+
+Orion keeps three numbers about itself. **Activity** rises with every conversation turn and fades away, halving every
+30 minutes. **Mood** rises with happy moments and falls with sad ones, drifting back to neutral with a 20-minute
+<Term id="half-life">half-life</Term>. **Energy** mixes the time of day with activity.
+
+These numbers change how Orion behaves. Low energy spreads idles out and warms the light, and a one-word label lets it
+say, truthfully, that it's "a bit sleepy".
+
+<Fact>The labels are sleepy, cheerful, subdued, curious and content. The simulator uses Orion's formulas, unchanged.</Fact>
+
+<UnderTheHood>
+From `runtime/src/expression/mind.rs`: energy = 0.6 × (time-of-day curve) + 0.4 × activity. Each confirmed turn adds
+0.15 activity; "happy" and "laugh" reactions add 0.15 mood; "agree" and "curious" add 0.05; "sympathy", "unsure" and
+"disagree" take 0.05. The state is saved, so it survives a restart.
+</UnderTheHood>
+
+<div slot="stage"><MindSim client:visible /></div>
+</Section>
+
+<Section>
+
+## Listening and thinking
+
+People read body language before words. When you talk to Orion, it leans in. While it works out an answer it isn't
+frozen: after a few seconds it makes small thinking movements, so you know it's still with you.
+
+<Fact>Thinking beats start after 3 seconds and repeat every 3 to 5 seconds. Speech always takes priority over them.</Fact>
+
+<div slot="stage">
+<SequenceView client:visible
+  steps={[
+    { label: "you talk: lean in", motion: "listen_lean_in", note: "Orion leans in toward you while you speak." },
+    { label: "first 3 s: still", wait: 3, note: "It holds still at first: most replies come quickly." },
+    { label: "thinking beat", motion: "think_beat_a", note: "After 3 seconds of thinking, a small beat." },
+    { label: "pause", wait: 3.5 },
+    { label: "another beat", motion: "think_beat_b", note: "Another beat, 3 to 5 seconds later." },
+    { label: "it answers", motion: "speak_calm_sway", note: "The reply is ready, so speech movement takes over." },
+  ]}
+  caption="One conversation turn, body language only. The motions are Orion's own."
+/>
+</div>
+</Section>
+
+<Section>
+
+## Reactions on cue
+
+Codex can tag a reply with a feeling: happy, sympathy, surprised, and eight more. Each tag has a short motion with one
+marked peak, its <Term id="apex">apex</Term>, and Orion times the motion so the apex lands on the matching moment in its speech.
+
+Between reactions, the rest of Orion's speaking movement follows the sound of its own voice: bigger on loud,
+energetic phrases, calmer in quiet ones.
+
+<Fact>Every reaction motion must start and end at the same pose and have exactly one apex. Orion checks this when it loads them.</Fact>
+
+<UnderTheHood>
+The speech planner in `runtime/src/expression/character.rs` analyses the reply's audio in 20 ms frames (energy, voiced
+regions, pauses, peaks), fits authored speaking clips to it a window at a time, and avoids repeating recent gestures.
+It plans ahead as audio streams in, without ever writing to the motors itself. See `docs/speech-animation-runtime.md`.
+</UnderTheHood>
+
+<div slot="stage"><ReactionCues client:visible /></div>
+</Section>
+
+<Section>
+
+## Curiosity on a budget
+
+With its camera ([How does Orion see?](/projects/orion/learn/how-orion-sees/)), Orion can notice things: a new object on the desk, someone arriving, a person looking at it. If it
+reacted to all of them it would seem twitchy. So every curious glance spends from a small budget, and things it has
+already looked at get less interesting each time.
+
+<Predict question="A mug appears, Orion glances at it. You move the mug a minute later. Does it look again?" options={["Yes", "No"]} answer={1}>
+No. The same thing has to wait at least 2 minutes, and longer each time after that.
+</Predict>
+
+<UnderTheHood>
+`runtime/src/expression/curiosity.rs`: at most 3 gestures per 10 minutes, at least 60 s apart; the same target waits
+120 s, doubling with each repeat (up to 16×), and is forgotten after an hour. The budget never stores who a person is,
+only short-lived track IDs.
+</UnderTheHood>
+
+<div slot="stage"><CuriosityBudget client:visible /></div>
+</Section>
+
+<Section>
+
+## Sleeping and waking
+
+Even going to sleep is a performance. When energy is low and rest is near, Orion may yawn. Before it folds down it
+settles its head with a dimming light; after it wakes and rises, it stretches.
+
+Each of these is decoration on top of the safe rest sequence. If one fails, the rest still happens.
+
+<div slot="stage">
+<SequenceView client:visible
+  camera="side"
+  steps={[
+    { label: "yawn", motion: "yawn", light: 0.6, note: "Low energy and rest less than two minutes away: a yawn." },
+    { label: "settle", motion: "sleep_settle", light: 0.3, note: "The head lowers as the light dims." },
+    { label: "fold down", motion: { name: "to_rest", description: "", space: "absolute", style: "return_home", keyframes: [{ pose: "rest", target: {}, duration: 2.2, arrival: "settle", hold: 0, marker: null }] }, light: 0, note: "Down to the rest pose; then the motors switch off." },
+    { label: "asleep", wait: 2.5, light: 0, note: "Resting. Only “Hey Orion” wakes it." },
+    { label: "rise", motion: { name: "to_home", description: "", space: "absolute", style: "return_home", keyframes: [{ pose: "home", target: {}, duration: 1.8, arrival: "settle", hold: 0, marker: null }] }, light: 0.8, note: "A confirmed wake: back up to home." },
+    { label: "stretch", motion: "wake_stretch", light: 1, note: "And a stretch, because that's what you do when you wake up." },
+  ]}
+  caption="Orion's own yawn, settle and stretch around the rest sequence. The glow shows the light."
+/>
+</div>
+</Section>
+
+<Section>
+
+## Knowing when to hold back
+
+A good character is as much about what it doesn't do. Orion never talks over you. Its idles, listening and thinking are
+silent. Its little sounds are switched off overnight. Stop always wins, and nothing it notices with its camera can wake
+it or switch its motors on.
+
+<Fact>Quiet hours run from 22:00 to 07:00. Speech, alarms and light routines also silence its character sounds.</Fact>
+</Section>
