@@ -95,3 +95,52 @@ export function usePlayback(traj: Trajectory | null, { speed = 1, loop = false, 
 
   return { t, playing, play, pause, seek };
 }
+
+/**
+ * Steps through a fixed sequence (a pipeline, a story), `seconds` per step, with `at` running 0 to 1 within the
+ * step. Paused for readers who asked for reduced motion, and while off screen.
+ */
+export function useSteps(count: number, seconds = 1.6, { loop = true, active = true } = {}) {
+  const [step, setStep] = useState(0);
+  const [at, setAt] = useState(0);
+  const [playing, setPlaying] = useState(() => !reducedMotion());
+  const clock = useRef({ step: 0, at: 0, raf: 0, last: 0 });
+
+  useEffect(() => {
+    if (!playing || !active) return;
+    const c = clock.current;
+    c.last = performance.now();
+    const frame = (now: number) => {
+      c.at += Math.min(0.1, (now - c.last) / 1000) / seconds;
+      c.last = now;
+      if (c.at >= 1) {
+        c.at = 0;
+        c.step += 1;
+        if (c.step >= count) {
+          if (!loop) {
+            c.step = count - 1;
+            c.at = 1;
+            setStep(c.step);
+            setAt(1);
+            setPlaying(false);
+            return;
+          }
+          c.step = 0;
+        }
+        setStep(c.step);
+      }
+      setAt(c.at);
+      c.raf = requestAnimationFrame(frame);
+    };
+    c.raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(c.raf);
+  }, [playing, active, count, seconds, loop]);
+
+  const go = useCallback((n: number) => {
+    clock.current.step = Math.max(0, Math.min(count - 1, n));
+    clock.current.at = 0;
+    setStep(clock.current.step);
+    setAt(0);
+  }, [count]);
+  return { step, at, playing, play: () => setPlaying(true), pause: () => setPlaying(false), go };
+}

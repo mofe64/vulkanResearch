@@ -1,0 +1,161 @@
+---
+title: "How does Orion hold conversations?"
+project: orion
+order: 3
+summary: "From the sound of your voice to Orion's spoken reply: hearing its name, knowing when you've stopped, and where the waiting time goes."
+covers: ["Sound as numbers", "Hearing its name", "Knowing when you've stopped", "Your turn again"]
+---
+import Section from "../../../components/learn/Section.astro";
+import Term from "../../../components/learn/Term.astro";
+import Fact from "../../../components/learn/Fact.astro";
+import UnderTheHood from "../../../components/learn/UnderTheHood.astro";
+import Predict from "../../../components/learn/Predict.astro";
+import MicScope from "../../../explainers/orion/MicScope.tsx";
+import PreRoll from "../../../explainers/orion/PreRoll.tsx";
+import WakeCheck from "../../../explainers/orion/WakeCheck.tsx";
+import VadThresholds from "../../../explainers/orion/VadThresholds.tsx";
+import PauseShortener from "../../../explainers/orion/PauseShortener.tsx";
+import ReplyStreaming from "../../../explainers/orion/ReplyStreaming.tsx";
+import FollowUp from "../../../explainers/orion/FollowUp.tsx";
+import DataBoundary from "../../../explainers/orion/DataBoundary.tsx";
+
+<p class="intro">
+Talking to Orion feels simple: you say its name, ask something, and it answers. Underneath, it has to solve a run of
+small problems in order. Was that its name? When have you finished? How can it answer quickly? This lesson takes them
+one at a time.
+</p>
+
+<Section>
+
+## Sound is numbers
+
+A microphone measures air pressure thousands of times a second. Each measurement is one number, a
+<Term id="sample">sample</Term>, and the list of them is the recording. Everything Orion does with your voice, it does
+to that list of numbers.
+
+<Fact>Orion's microphone board does some of the work itself: it cleans up your voice and removes the sound of Orion's own speaker.</Fact>
+
+<div slot="stage"><MicScope client:visible /></div>
+</Section>
+
+<Section>
+
+## Never missing the start
+
+Orion only reacts after it's sure it heard its name, and by then you've already said it. If it only started
+recording at that point, it would cut off the start of your sentence.
+
+So it always keeps the last few seconds of sound in memory, overwriting the oldest as it goes. When the
+<Term id="wake-word">wake word</Term> is recognised, the moments just before it are still there to use.
+
+<Fact>Orion keeps 3 seconds in memory and adds the 2 seconds before the wake word to the recording.</Fact>
+
+<div slot="stage"><PreRoll client:visible /></div>
+</Section>
+
+<Section>
+
+## Hearing its name, twice
+
+Listening for "Hey Orion" all day has to be cheap, so the first check is a small, fast detector that compares sound
+patterns. It catches the real thing, but also things that merely sound similar.
+
+So anything it flags gets a second check: <Term id="speech-recognition">speech recognition</Term> writes down the first
+words, and Orion checks whether they actually say "Hey Orion". Only then does it light up and listen.
+
+<Predict question="Why not use only the second, more accurate check?" options={["It's slower and heavier to run all day", "It can't hear quiet voices"]} answer={0}>
+Right. Turning speech into text costs far more computing than matching a sound pattern. The cheap check runs all the
+time; the expensive one runs only when there's a reason to.
+</Predict>
+
+<UnderTheHood>
+The first stage is Rustpotter, trained on recordings of "Hey Orion". The second stage asks Qwen to transcribe a short
+prefix of the candidate audio. While it does, the full command keeps recording, so the check costs no time. A rejected
+candidate leaves the rolling memory and detector history untouched. See `docs/voice-architecture.md`.
+</UnderTheHood>
+
+<div slot="stage"><WakeCheck client:visible /></div>
+</Section>
+
+<Section>
+
+## When have you stopped talking?
+
+Orion has to decide when you're done. A <Term id="vad">voice activity detector</Term> scores each moment from 0 to 1:
+how much it sounds like speech. Orion counts speech when the score goes above one line, and silence only when it drops
+below a lower one.
+
+The gap between the two lines stops tiny wobbles from flipping it back and forth. After a stretch of silence, the
+recording ends.
+
+<Fact>Orion starts counting speech above 0.5, stops below 0.35, and ends the recording after 1.2 seconds of silence.</Fact>
+
+<div slot="stage"><VadThresholds client:visible /></div>
+</Section>
+
+<Section>
+
+## Cutting the silence
+
+People pause while they think. Before the recording goes to <Term id="speech-recognition">speech recognition</Term>,
+Orion trims long pauses down. The model then has less audio to work through, so the reply comes sooner, and nothing
+you said is lost.
+
+<Fact>Pauses longer than 600 ms become 320 ms. The speech itself is untouched and stays in order.</Fact>
+
+<div slot="stage"><PauseShortener client:visible /></div>
+</Section>
+
+<Section>
+
+## Words, a reply, and a voice
+
+Three programs do the main work. Qwen turns the recording into text on the lamp. Codex, an online
+<Term id="language-model">language model</Term>, reads it and writes a reply. Piper,
+<Term id="speech-synthesis">speech synthesis</Term> on the lamp, turns the reply into Orion's voice.
+
+To cut the wait, Orion doesn't wait for the whole voice. It starts speaking as soon as the first piece is ready and
+keeps making the rest while it talks.
+
+<Fact>If the voice is being made slower than it's spoken, Orion switches to waiting for all of it, so it never stops mid-sentence.</Fact>
+
+<UnderTheHood>
+The coordinator splits the reply text into bounded synthesis jobs. Piper returns numbered audio chunks with an end
+marker, which the coordinator checks before uploading them to the runtime for playback. Once a reply has switched to
+complete buffering, it stays that way even if later chunks come faster.
+</UnderTheHood>
+
+<div slot="stage"><ReplyStreaming client:visible /></div>
+</Section>
+
+<Section>
+
+## Your turn again
+
+A conversation isn't one question. After Orion finishes speaking, it waits for the room to go quiet, then listens for a
+few seconds without needing its name, so you can just reply.
+
+Sounds and light tell you which stage it's in, so you never have to guess whether it's listening.
+
+<Fact>The follow-up window lasts 5 seconds and shows as a teal pulse on the light.</Fact>
+
+<UnderTheHood>
+Each wake gets a fresh session ID, and a follow-up gets a new ID linked to the finished turn, so a late result from an
+old turn can't sneak into a new one. On V2 the microphone board's echo cancellation lets Orion hear "Hey Orion" while
+it's speaking, which interrupts the reply.
+</UnderTheHood>
+
+<div slot="stage"><FollowUp client:visible /></div>
+</Section>
+
+<Section>
+
+## What stays on the lamp
+
+Your voice is turned into text on the lamp itself. What goes online is the text Codex needs to write a reply, and a
+photo only when you ask Orion to look at something.
+
+<Fact>Orion's behaviour journal records what it did, but never camera pixels or microphone audio.</Fact>
+
+<div slot="stage"><DataBoundary client:visible /></div>
+</Section>

@@ -32,7 +32,14 @@ interface Shared {
   OrbitControls: typeof import("three/addons/controls/OrbitControls.js").OrbitControls;
   renderer: THREE_NS.WebGLRenderer;
   model: THREE_NS.Object3D;
-  materials: { surface: THREE_NS.Material; heat: THREE_NS.Material };
+  materials: {
+    surface: THREE_NS.Material;
+    heat: THREE_NS.Material;
+    ghost: THREE_NS.Material;
+    picked: THREE_NS.Material;
+    line: THREE_NS.Material;
+    faintLine: THREE_NS.Material;
+  };
 }
 
 let shared: Promise<Shared> | null = null;
@@ -51,8 +58,13 @@ function loadShared(): Promise<Shared> {
     const materials = {
       surface: new THREE.MeshLambertMaterial({ color: 0xffffff, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }),
       heat: new THREE.MeshLambertMaterial({ color: 0xf6d2c2, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }),
+      // See-through for the shell when the parts inside are being pointed out.
+      ghost: new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.08, depthWrite: false }),
+      picked: new THREE.MeshLambertMaterial({ color: 0xe0753f, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 }),
+      line: new THREE.LineBasicMaterial({ color: INK }),
+      faintLine: new THREE.LineBasicMaterial({ color: INK, transparent: true, opacity: 0.07, depthWrite: false }),
     };
-    const line = new THREE.LineBasicMaterial({ color: INK });
+    const line = materials.line;
     model.traverse((o) => {
       const mesh = o as THREE_NS.Mesh;
       if (mesh.isMesh) {
@@ -79,6 +91,11 @@ export interface RobotView {
   setJoints(values: JointValues): void;
   /** Tint the parts that a joint moves (the joint and everything it carries), or nothing. */
   highlight(joint: string | null): void;
+  /**
+   * Tint named parts (mesh names start with these, such as "HW-pi" or "OR21-19"). With `xray`, every other part turns
+   * see-through so parts inside the base and head show. An empty list clears it.
+   */
+  highlightParts(prefixes: string[], xray?: boolean): void;
   /** Look from the front, the side or the usual three-quarter view. */
   view(name: "three-quarter" | "front" | "side"): void;
   dispose(): void;
@@ -177,6 +194,19 @@ export async function createRobotView(host: HTMLElement, initial: JointValues = 
         let carried = false;
         for (let p: THREE_NS.Object3D | null = mesh; p; p = p.parent) if (p === lit) carried = true;
         mesh.material = carried ? materials.heat : materials.surface;
+      });
+      invalidate();
+    },
+    highlightParts(prefixes, xray = false) {
+      model.traverse((o) => {
+        const mesh = o as THREE_NS.Mesh;
+        if (!mesh.isMesh) return;
+        // The part's name may sit on the mesh or on the node that holds it, depending on how the model was packed.
+        const names = [mesh.name, mesh.parent?.name ?? ""];
+        const lit = prefixes.some((p) => names.some((n) => n.startsWith(p)));
+        const ghost = xray && prefixes.length > 0 && !lit;
+        mesh.material = lit ? (xray ? materials.picked : materials.heat) : ghost ? materials.ghost : materials.surface;
+        for (const child of mesh.children) (child as THREE_NS.LineSegments).material = ghost ? materials.faintLine : materials.line;
       });
       invalidate();
     },

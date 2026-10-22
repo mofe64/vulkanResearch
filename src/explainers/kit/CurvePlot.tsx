@@ -66,14 +66,14 @@ export default function CurvePlot({ series, duration, range, cursor, lines = [],
           <text x={W - PAD.r} y={y(l.y) - 4} textAnchor="end" className="lx-axis lx-limit-text">{l.label}</text>
         </g>
       ))}
-      {series.map((s) =>
+      {series.map((s, i) =>
         s.dots ? (
-          <g key={s.label} className={`lx-dots lx-${s.tone ?? "ink"}`}>
+          <g key={i} className={`lx-dots lx-${s.tone ?? "ink"}`}>
             {s.points.map(([t, v], i) => <circle key={i} cx={x(t)} cy={y(v)} r={2.2} />)}
           </g>
         ) : (
           <polyline
-            key={s.label}
+            key={i}
             className={`lx-line lx-${s.tone ?? "ink"} ${s.dashed ? "is-dashed" : ""}`}
             points={s.points.map(([t, v]) => `${x(t).toFixed(1)},${y(v).toFixed(1)}`).join(" ")}
           />

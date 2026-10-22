@@ -1,0 +1,137 @@
+---
+title: "Meet Orion"
+project: orion
+order: 1
+summary: "What Orion is made of, what each part does, and the path one spoken sentence takes through the lamp."
+covers: ["The parts inside the lamp", "One sentence, end to end", "Who moves the motors", "What needs the internet"]
+---
+import Section from "../../../components/learn/Section.astro";
+import Term from "../../../components/learn/Term.astro";
+import Fact from "../../../components/learn/Fact.astro";
+import UnderTheHood from "../../../components/learn/UnderTheHood.astro";
+import Predict from "../../../components/learn/Predict.astro";
+import PartsTour from "../../../explainers/orion/PartsTour.tsx";
+import SentenceJourney from "../../../explainers/orion/SentenceJourney.tsx";
+import MotorGate from "../../../explainers/orion/MotorGate.tsx";
+import LoopVsThinking from "../../../explainers/orion/LoopVsThinking.tsx";
+import OfflineSwitch from "../../../explainers/orion/OfflineSwitch.tsx";
+import RestStates from "../../../explainers/orion/RestStates.tsx";
+
+<p class="intro">
+Orion is a desk lamp that listens, talks and moves like a character. This lesson is the map: what's inside it, how
+the pieces pass work to each other, and which rules keep it safe. The other lessons zoom in on each part.
+</p>
+
+<Section>
+
+## What's inside the lamp
+
+Orion is a small computer with senses and muscles, shaped like a lamp. A <Term id="raspberry-pi">Raspberry Pi</Term>
+in the base is the brain. Microphones are its ears, a camera in the head is its eyes, a speaker is its voice, five
+motors are its muscles, and a ring of LEDs is both its lamp and its way of signalling.
+
+<Fact>Every part is something you can buy; the full list is on the Resources tab.</Fact>
+
+<div slot="stage"><PartsTour client:visible /></div>
+</Section>
+
+<Section>
+
+## One sentence, end to end
+
+Ask Orion a question and it passes through a chain of programs, each doing one job and handing its result to the
+next: hear the <Term id="wake-word">wake word</Term>, turn speech into text, write a reply, turn the reply into a voice,
+then speak and move.
+
+Most of the chain runs on the lamp. Only the reply itself is written by an online <Term id="language-model">language model</Term>.
+
+<Fact>The lesson "How does Orion hold conversations?" follows this chain step by step.</Fact>
+
+<UnderTheHood>
+The programs are separate services on the Pi: `orion-listener` (microphone and wake word), `orion-voice-stack`
+(coordinator, Qwen and Piper workers, and the agent that talks to Codex), `orion-vision` (camera) and `oriond`
+(motors, light and speaker). They talk over local sockets. See `docs/system-architecture.md`.
+</UnderTheHood>
+
+<div slot="stage"><SentenceJourney client:visible /></div>
+</Section>
+
+<Section>
+
+## Only one part moves the motors
+
+Many parts of Orion have reasons to move it: voice wants it to turn toward you, the camera wants to follow your hand,
+Studio wants to play a scene. None of them drive the motors. They all ask one program, the
+<Term id="runtime">runtime</Term>, which checks every request first.
+
+Having one gatekeeper is a safety rule. It means one place decides about limits, rest and Stop, and nothing can sneak
+around it.
+
+<Predict question="Orion is resting and the camera sees your hand. Will it wake up to follow it?" options={["Yes", "No"]} answer={1}>
+No. A hand in view can't wake a resting lamp; only a confirmed “Hey Orion” can. Try it on the map.
+</Predict>
+
+<div slot="stage"><MotorGate client:visible /></div>
+</Section>
+
+<Section>
+
+## Fast loop, slow thinking
+
+The runtime steers the motors 50 times a second. Recognising speech or writing a reply takes seconds. If the motors
+had to wait for that thinking, Orion would freeze mid-gesture every time it listened.
+
+So the slow work runs in separate programs. The fast loop never waits for them; it just picks up their results when
+they're ready.
+
+<Fact>Model inference and network waits always run outside the 50-a-second movement loop.</Fact>
+
+<div slot="stage"><LoopVsThinking client:visible /></div>
+</Section>
+
+<Section>
+
+## What needs the internet
+
+Orion does most of its work on the lamp: hearing, understanding speech, speaking, moving, the light, alarms and the
+camera. Only two things go online: the <Term id="language-model">language model</Term> that writes its replies, and
+web search.
+
+That keeps it quick and private. Your voice is turned into text on the lamp; what goes online is the text.
+
+<Fact>Camera images stay in the Pi's memory. One goes online only when you ask Orion to look at something.</Fact>
+
+<div slot="stage"><OfflineSwitch client:visible /></div>
+</Section>
+
+<Section>
+
+## Awake, resting, waking
+
+When nobody has talked to it for a while, Orion folds down and switches its motors off. Saying "Hey Orion" brings it
+back. In between, it's always in exactly one of a few named states, and only certain events can move it from one to
+the next.
+
+Describing it as a <Term id="state-machine">state machine</Term> is what makes it dependable: there's no state where
+it's half asleep.
+
+<UnderTheHood>
+Status reports `disabled`, `awake`, `going_to_rest`, `resting`, `waking` or `fault`. Torque is released only after the
+motors measure that the rest pose was reached. A failed sleep step tries a direct rest once; if that also fails, Orion
+returns home and keeps its light on. See "Automatic rest and waking" in `docs/system-architecture.md`.
+</UnderTheHood>
+
+<div slot="stage"><RestStates client:visible /></div>
+</Section>
+
+<Section>
+
+## Studio
+
+Studio is a desktop app for controlling Orion from your computer. It pairs with the lamp over your home network, and
+lets you move it, edit poses and scenes, change settings and watch what it's doing.
+
+Studio is a remote control, not the brain. Closing it leaves Orion running exactly as before.
+
+<Fact>Studio reaches the lamp through one authenticated gateway, which only accepts a fixed list of requests.</Fact>
+</Section>
