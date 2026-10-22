@@ -18,7 +18,7 @@ const d = post.data;
 const showMap = headings.filter((h) => h.depth === 2 || h.depth === 3).length >= 3;
 ---
 
-<Base title={d.title} description={d.summary}>
+<Base title={d.title} description={d.summary} type="article">
   <article class="post">
     <header>
       <span class="eyebrow">

@@ -5,7 +5,7 @@ import react from "@astrojs/react";
 import remarkObsidian from "./src/lib/remark-obsidian.mjs";
 
 export default defineConfig({
-  // site: "https://vulkan.research",  // set the real domain before deploying (used for canonical URLs)
+  site: "https://vulkanresearch.com", // used for canonical URLs and absolute social-preview links
   integrations: [mdx(), react()],
   vite: {
     // three.js is one ~740 KB (≈180 KB gzipped) chunk, but it is lazy-loaded only where a model appears.
