@@ -20,7 +20,9 @@ const cassette = ["20", "camera", "led", "24", "speaker"];
 
 // What is in place after each stage of the build. Each step shows one of these, highlighting what it adds.
 const base = ["01", "04", "04b", "servoyaw"];
-const withTray = [...base, "03"];
+const withMic = [...base, "mic"];
+const boards = ["03", "pi", "cooler", "servoboard"];
+const withTray = [...withMic, ...boards];
 const withPanels = [...withTray, "05", "06"];
 const withYaw = [...withPanels, "07"];
 const withShoulder = [...withYaw, "08", "09", "servoshoulder", "hornsshoulder"];
@@ -62,8 +64,8 @@ const headings = [
       </p>
       <p class="note">
         On a wide screen, the 3D view beside the steps follows along as you scroll. Parts added in the current step are
-        orange, printed parts are white and bought parts such as servos are grey. Drag the view to turn it. The circuit
-        boards and cables aren't in the 3D model; the text says where they go.
+        orange, printed parts are white and bought parts such as servos and boards are grey. Drag the view to turn it.
+        Cables aren't in the 3D model; the text says where they go.
       </p>
     </header>
 
@@ -206,7 +208,7 @@ const headings = [
           <p class="warn"><b>Careful</b> Never sand the servo's case to make it fit. If it is very tight, clean the carrier ribs instead.</p>
         </Step>
 
-        <Step n={7} title={t(7)} parts={base} focus={["01"]} view="below" image={still(7)} alt="The base shell, highlighted, seen from below, with the four microphone grilles in its roof."
+        <Step n={7} title={t(7)} parts={withMic} focus={["mic"]} from={[0, -50, 0]} view="below" image={still(7)} alt="The microphone array, highlighted, under the base shell's roof, seen from below."
           hardware={[{ qty: 3, item: "M2 × 4 screws" }, { qty: 3, item: "M2 insulating washers, 0.5 mm" }]}>
           <p>The microphone array sits just under the base's roof, behind the four slotted grilles, so it can hear in every direction.</p>
           <ol>
@@ -217,7 +219,7 @@ const headings = [
           <p>Because the microphone's position sets how Orion works out where a voice comes from, redo the sound-direction calibration in the Orion software after the build.</p>
         </Step>
 
-        <Step n={8} title={t(8)} parts={withTray} focus={["03"]} view="below" from={[0, -80, 0]} image={still(8)} alt="The electronics tray, highlighted, inside the base."
+        <Step n={8} title={t(8)} parts={boards} focus={["pi", "cooler", "servoboard"]} frame="all" from={[0, 50, 0]} image={still(8)} alt="The electronics tray on its own, with the Raspberry Pi, its cooler and the servo board, highlighted, mounted on top."
           hardware={[{ qty: 4, item: "M2.5 × 4 screws (Raspberry Pi)" }, { qty: 4, item: "M2 × 6 screws (servo board)" }, { qty: 4, item: "M3 × 6 button-head screws (tray to shell)" }]}>
           <ol>
             <li>Fit the Active Cooler to the Raspberry Pi first, following its instructions.</li>

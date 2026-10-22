@@ -79,8 +79,9 @@ def solids_of(shape):
         out.append(e.Current()); e.Next()
     return out
 
-def mesh_shape(shape):
-    BRepMesh_IncrementalMesh(shape, LIN, False, ANG, True)
+def mesh_shape(shape, lin=LIN, raw=False):
+    """Tessellate a shape. raw=True returns CAD-frame millimetres (P, N, I) instead of glTF-ready arrays."""
+    BRepMesh_IncrementalMesh(shape, lin, False, ANG, True)
     P, N, I = [], [], []
     base = 0
     exp = TopExp_Explorer(shape, TopAbs_FACE)
@@ -105,6 +106,8 @@ def mesh_shape(shape):
         P.append(pts); N.append(vn); I.append(tris + base)
         base += len(pts)
     P, N, I = np.concatenate(P), np.concatenate(N), np.concatenate(I)
+    if raw:
+        return P, N, I
     return to_gltf(P * 0.001, N, I)
 
 def to_gltf(P, N, I):
@@ -181,14 +184,27 @@ for f in files:
 # Bought parts: STL meshes in the CAD frame (metres, Z up), each assigned to the joint that carries it.
 if HARDWARE:
     spec = json.load(open(HARDWARE))
-    mesh_dir = os.path.join(os.path.dirname(os.path.abspath(HARDWARE)), os.path.expanduser(spec["meshDir"]))
     joint_index = {"base": -1, **{jt[0]: j for j, jt in enumerate(JOINTS)}}
     for h in spec["parts"]:
-        T = read_stl(os.path.join(mesh_dir, h["file"]))
+        path = os.path.join(os.path.dirname(os.path.abspath(HARDWARE)), os.path.expanduser(h.get("dir", spec["meshDir"])), h["file"])
+        if path.lower().endswith((".step", ".stp")):
+            # Supplier boards come as STEP in their own local frame; a coarser tessellation is plenty here.
+            P, _, I = mesh_shape(read_step(path), lin=h.get("deflection", 0.4), raw=True)
+            T = P[I] * 0.001
+        else:
+            T = read_stl(path)
         if "rotate" in h:  # rows of a 3x3 rotation, applied about the origin
             T = T @ np.array(h["rotate"], dtype=np.float64).T
+        if "rotateZ" in h:  # degrees about the vertical axis, applied about the origin
+            a = math.radians(h["rotateZ"])
+            T = T @ np.array([[math.cos(a), -math.sin(a), 0], [math.sin(a), math.cos(a), 0], [0, 0, 1]]).T
         if "fitMin" in h:  # move so the bounding box's minimum corner lands here (mm)
             T = T - T.reshape(-1, 3).min(0) + np.array(h["fitMin"]) * 0.001
+        if "center" in h:  # move so the bounding box's centre lands here (mm); "top" sets the highest point's height
+            lo, hi = T.reshape(-1, 3).min(0), T.reshape(-1, 3).max(0)
+            T = T - (lo + hi) / 2 + np.array(h["center"]) * 0.001
+            if "top" in h:
+                T = T + np.array([0, 0, h["top"] * 0.001 - T.reshape(-1, 3)[:, 2].max()])
         T = T + np.array(h.get("offset", [0, 0, 0])) * 0.001
         P, N, I = mesh_triangles(T, h.get("grid", 0.5) * 0.001)
         JOINT_OF_NAME[h["name"]] = joint_index[h["joint"]]
