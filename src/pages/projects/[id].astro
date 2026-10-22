@@ -24,7 +24,13 @@ const shopOf = (url: string) => {
   const host = new URL(url).hostname.replace(/^www\./, "");
   return SHOPS[host] ?? host;
 };
-const bom = p.resources.bom.map((b) => ({ ...b, shop: shopOf(b.url) }));
+// Rows grouped by their `group`, groups and rows kept in file order.
+const bomGroups: { name: string; rows: (Project["data"]["resources"]["bom"][number] & { shop?: string })[] }[] = [];
+for (const b of p.resources.bom) {
+  let g = bomGroups.find((x) => x.name === b.group);
+  if (!g) bomGroups.push((g = { name: b.group, rows: [] }));
+  g.rows.push({ ...b, shop: b.url ? shopOf(b.url) : undefined });
+}
 
 const cad = p.resources.cad.map((r) => ({ ...r, size: publicFileSize(r.file) as string | null }));
 
@@ -94,22 +100,45 @@ const TABS = [
 
     <section class="panel" role="tabpanel" id="panel-resources" aria-labelledby="tab-resources" tabindex="0">
       <h2 class="visually-hidden">Resources</h2>
-      {bom.length > 0 && (
+      {p.resources.guide && (
+        <>
+          <h3 class="rhead">Assembly guide</h3>
+          <ul class="files">
+            <li>
+              <div class="finfo">
+                <span class="flabel">Build {p.name}, step by step</span>
+                <span class="fnote">Every step with its screws, a 3D view of where the parts go, and why it's done that way.</span>
+              </div>
+              <a href={p.resources.guide} class="btn-outline">Open the guide</a>
+            </li>
+          </ul>
+        </>
+      )}
+
+      {bomGroups.length > 0 && (
         <>
           <h3 class="rhead">Bill of materials</h3>
-          <p class="rintro">The parts to buy. Printed parts are under CAD files below.</p>
-          <ol class="files bom">
-            {bom.map((b, i) => (
-              <li>
-                <span class="bnum">{String(i + 1).padStart(2, "0")}</span>
-                <div class="finfo">
-                  <span class="flabel">{b.item}</span>
-                  {b.detail && <span class="fformat">{b.detail}</span>}
-                </div>
-                <a href={b.url} class="buy" target="_blank" rel="noopener">Buy at {b.shop} ↗</a>
-              </li>
-            ))}
-          </ol>
+          <p class="rintro">
+            Everything to buy for one lamp. Common parts such as cables, screws and inserts have no link: any shop that
+            sells them will do. Printed parts are under CAD files below.
+          </p>
+          {bomGroups.map((g) => (
+            <>
+              <h4 class="bgroup">{g.name}</h4>
+              <ul class="files bom">
+                {g.rows.map((b) => (
+                  <li>
+                    <span class="bqty" aria-label={`Quantity ${b.qty ?? 1}`}>{b.qty ?? 1}×</span>
+                    <div class="finfo">
+                      <span class="flabel">{b.item}</span>
+                      {b.detail && <span class="fformat">{b.detail}</span>}
+                    </div>
+                    {b.url && <a href={b.url} class="buy" target="_blank" rel="noopener">Buy at {b.shop} ↗</a>}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ))}
         </>
       )}
 
@@ -194,7 +223,8 @@ const TABS = [
   .rhead ~ .rhead { margin-top: 40px; }
   .rintro { font-size: 13px; color: var(--quote); margin: -4px 0 12px; }
   .bom li { justify-content: flex-start; padding: 12px 0; }
-  .bnum { flex: none; width: 28px; font-size: 11px; color: var(--muted); }
+  .bgroup { font: 11px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 22px 0 6px; }
+  .bqty { flex: none; width: 36px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .bom .finfo { flex: 1; }
   .buy { flex: none; font-size: 13px; white-space: nowrap; }
   .files { list-style: none; margin: 0; padding: 0; max-width: 860px; }
@@ -221,7 +251,7 @@ const TABS = [
   @media (max-width: 560px) {
     .files li { flex-direction: column; align-items: flex-start; }
     /* Parts list: number in its own column, the buy link under the part name. */
-    .bom li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 4px 0; }
+    .bom li { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 4px 0; }
     .bom .buy { grid-column: 2; padding: 6px 0; }
   }
 </style>

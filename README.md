@@ -69,7 +69,7 @@ Orion (currently the V2.1 CAD) is built from the Fusion component STEP exports (
 CAD=~/dev/cardinal/orionProject
 # 1. tessellate every STEP part (0.15 mm) into one glTF, mm Z-up -> m Y-up, parts grouped under
 #    shoulder -> elbow -> wrist joint nodes; the optional last argument sets the pose in degrees
-$CAD/orionV2CAD/.cad-venv/bin/python scripts/step2glb.py $CAD/orionV2Build/step /tmp/orion-v2-raw.glb shoulder=-20,elbow=65,wrist=-30
+$CAD/orionV2CAD/.cad-venv/bin/python scripts/step2glb.py $CAD/orionV2Build/step /tmp/orion-v2-raw.glb shoulder=-20,elbow=65,wrist=-30 --hardware scripts/orion-hardware.json
 # 2. compress (meshopt): ~2.9 MB -> ~0.4 MB; -kn keeps the joint and part nodes
 npx gltfpack -i /tmp/orion-v2-raw.glb -o public/models/orion-v2.glb -cc -kn
 # 3. with `npm run preview` running, re-capture the poster shown while the model loads / without WebGL
@@ -114,3 +114,15 @@ everyone else (WCAG 2.2.2: anything moving for more than 5 s needs a way to paus
 - `scripts/` — hero animation, STEP → glTF conversion, model poster capture
 - `../vulkan-research-hero-illustration/` — the original Claude Design handoff, for reference
 # vulkanResearch
+
+## Assembly guides
+
+`src/pages/projects/orion/assembly.astro` is Orion's build guide. Each `<AssemblyStep>` lists the printed parts in
+place by the end of that step (`parts`) and the ones it adds (`focus`, drawn orange). Parts are named by their CAD
+part number (`"01"`, `"04b"`, `"22"`). On wide screens a sticky 3D view (`AssemblyViewer.astro`) follows the step
+being read; on phones each step shows a still picture instead. After changing the model or a step's parts, re-render
+the stills with `npm run dev` running:
+
+```sh
+node scripts/assembly-stills.mjs http://localhost:4321/projects/orion/assembly/ public/guides/orion
+```

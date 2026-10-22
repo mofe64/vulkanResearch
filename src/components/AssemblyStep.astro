@@ -1,0 +1,92 @@
+---
+// One numbered step of an assembly guide: title, the hardware it uses, a picture, and the instructions (slot).
+// The data-* attributes tell the page's 3D viewer what to show while this step is being read.
+import { publicFileExists } from "../lib/file-size.mjs";
+
+export interface Hardware { qty: number | string; item: string }
+interface Props {
+  n: number;
+  title: string;
+  parts: string[]; // printed parts in place by the end of this step
+  focus?: string[]; // parts added (or worked on) in this step, drawn in orange
+  from?: [number, number, number]; // mm offset new parts slide in from
+  view?: "front" | "back" | "below";
+  frame?: "focus" | "all"; // fit the view to the new parts (default) or to everything shown
+  hardware?: Hardware[];
+  image: string; // still render, used on narrow screens and when printing
+  alt: string;
+}
+const { n, title, parts, focus = [], from, view, frame, hardware = [], image, alt } = Astro.props;
+const id = `step-${n}`;
+const hasImage = publicFileExists(image);
+---
+
+<section
+  class="step"
+  id={id}
+  aria-labelledby={`${id}-title`}
+  data-step={n}
+  data-parts={parts.join(",")}
+  data-focus={focus.join(",")}
+  data-from={from?.join(",")}
+  data-view={view}
+  data-frame={frame}
+>
+  <header>
+    <span class="num">Step {n}</span>
+    <h2 id={`${id}-title`}>{title}</h2>
+  </header>
+
+  {hasImage && (
+    <figure class="still">
+      <img src={image} alt={alt} width="1200" height="900" loading="lazy" decoding="async" />
+    </figure>
+  )}
+
+  {hardware.length > 0 && (
+    <div class="hw">
+      <span class="hw-title">You need</span>
+      <ul>
+        {hardware.map((h) => <li><b>{h.qty}×</b> {h.item}</li>)}
+      </ul>
+    </div>
+  )}
+
+  <div class="body"><slot /></div>
+</section>
+
+<style>
+  .step { padding: 40px 0 44px; border-top: 1px solid var(--rule); scroll-margin-top: 16px; }
+  header { display: flex; flex-direction: column; gap: 4px; margin-bottom: 16px; }
+  .num { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--heat); }
+  h2 { font-size: 26px; line-height: 1.2; }
+
+  .still { margin: 0 0 18px; border: 1px solid var(--rule); }
+  .still img { display: block; width: 100%; height: auto; }
+
+  .hw { margin: 0 0 18px; padding: 12px 16px; background: var(--paper-warm); border-left: 3px solid var(--ink); font-size: 13px; }
+  .hw-title { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .hw ul { margin: 0; padding: 0; list-style: none; }
+  .hw li { padding: 2px 0; }
+  .hw b { font-weight: normal; color: var(--heat); font-variant-numeric: tabular-nums; }
+
+  .body { font-size: 15px; line-height: 1.7; color: #444; }
+  .body :global(> * + *) { margin-top: .9em; }
+  .body :global(ol), .body :global(ul) { padding-left: 1.3em; }
+  .body :global(li + li) { margin-top: .45em; }
+  .body :global(.tip), .body :global(.warn) {
+    padding: 10px 14px; font-size: 14px; border: 1px solid var(--rule); border-left: 3px solid var(--link); background: #fafaf8;
+  }
+  .body :global(.warn) { border-left-color: var(--heat); }
+  .body :global(.tip b:first-child), .body :global(.warn b:first-child) { font-weight: normal; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+  .body :global(code) { font: 13px var(--mono); background: var(--chip); padding: 1px 5px; border-radius: 3px; }
+  .body :global(pre) { padding: 12px 14px; border: 1px solid var(--rule); border-radius: 3px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+  .body :global(pre code) { background: none; padding: 0; }
+  .body :global(table) { border-collapse: collapse; font-size: 13px; width: 100%; }
+  .body :global(th), .body :global(td) { border-bottom: 1px solid var(--rule); padding: 6px 10px 6px 0; text-align: left; vertical-align: top; }
+  .body :global(th) { font-weight: normal; color: var(--muted); }
+
+  /* With the 3D viewer beside the steps, the still picture would repeat it. */
+  :global(.guide.has-viewer) .still { display: none; }
+  @media print { :global(.guide.has-viewer) .still { display: block; } }
+</style>

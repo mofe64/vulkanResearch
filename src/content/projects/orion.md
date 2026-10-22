@@ -24,6 +24,7 @@ resources:
       format: "STL · 26 files · Orion V2.1"
       note: "Every printed part of Orion V2.1, ready for your slicer. Print notes are in the README inside the zip."
   source: "https://github.com/mofe64/orion"
+  guide: "/projects/orion/assembly/"
   bom:
     - item: "Raspberry Pi 5"
       detail: "8GB"
@@ -48,11 +49,89 @@ resources:
       detail: "Cool white 6000K"
       url: "https://thepihut.com/products/neopixel-ring-24-x-5050-rgbw-leds-w-integrated-drivers-cool-white-6000k?variant=27740166865"
     - item: "Feetech STS3215 serial bus servos"
-      detail: "Pack of 6"
+      detail: "Pack of 6; Orion uses 5"
       url: "https://www.aliexpress.com/item/1005009034555581.html"
-    - item: "Power supply"
+    - item: "Servo power supply"
       detail: "Choose 6 V 5 A, UK plug"
       url: "https://www.aliexpress.com/item/1005012289452896.html"
+    # Cables, power and hardware are common parts with no particular shop.
+    - group: "Cables and power"
+      item: "Raspberry Pi 5 power supply"
+      detail: "USB-C, for the Pi only"
+    - group: "Cables and power"
+      item: "Servo board power lead"
+      detail: "From the 6 V supply to the servo board"
+    - group: "Cables and power"
+      item: "USB cable, servo board to Pi"
+    - group: "Cables and power"
+      item: "USB cable, microphone array to Pi"
+      detail: "Thin cable (about 4.5 mm); it bends tightly inside the base"
+    - group: "Cables and power"
+      item: "LED ring wires"
+      detail: "3 wires: 5 V, ground and data (GPIO12)"
+    - group: "Cables and power"
+      item: "Speaker wires"
+    - group: "Cables and power"
+      item: "Cable ties, 2.5 mm wide"
+      qty: 2
+      detail: "Strain relief for the two power leads"
+    # Counts come from the CAD and cover one lamp, without spares.
+    - group: "Screws, inserts and dowels"
+      item: "M3 heat-set inserts, 4 mm long"
+      qty: 40
+      detail: "Base shell 14, yaw carrier 4, rear panels 8, shoulder housing 6, head shell 8"
+    - group: "Screws, inserts and dowels"
+      item: "M3 × 4 button-head screws"
+      qty: 20
+      detail: "Yaw horn adapter 4, shoulder horns 8, elbow horns 8"
+    - group: "Screws, inserts and dowels"
+      item: "M3 × 5 button-head screws"
+      qty: 4
+      detail: "Neck horn to the pitch fork"
+    - group: "Screws, inserts and dowels"
+      item: "M3 × 6 button-head screws"
+      qty: 28
+      detail: "Bottom cover 6, tray 4, yaw retainer 4, shoulder 6, head cartridge 4, front cassette 4"
+    - group: "Screws, inserts and dowels"
+      item: "M3 × 8 button-head screws"
+      qty: 20
+      detail: "Yaw carrier 4, rear panels 8, wrist horns 8"
+    - group: "Screws, inserts and dowels"
+      item: "M3 × 20 screws"
+      qty: 16
+      detail: "Arm seams: lower arm 12, upper arm 4"
+    - group: "Screws, inserts and dowels"
+      item: "Dowel pins, 3 mm × 6 mm"
+      qty: 8
+      detail: "4 per arm, to line up the two halves"
+    - group: "Screws, inserts and dowels"
+      item: "M2 × 4 pan-head screws"
+      qty: 10
+      detail: "Camera 4, LED ring retainer 3, microphone 3"
+    - group: "Screws, inserts and dowels"
+      item: "M2 × 6 pan-head screws"
+      qty: 24
+      detail: "Elbow and wrist servos 12, yaw servo 4, servo board 4, neck servo retainer 4"
+    - group: "Screws, inserts and dowels"
+      item: "M2 × 10 pan-head screws"
+      qty: 2
+      detail: "Shoulder servo"
+    - group: "Screws, inserts and dowels"
+      item: "M2.5 × 4 screws"
+      qty: 4
+      detail: "Raspberry Pi 5"
+    - group: "Screws, inserts and dowels"
+      item: "M2.5 × 6 screws"
+      qty: 4
+      detail: "Speaker"
+    - group: "Screws, inserts and dowels"
+      item: "M2 insulating washers, 0.5 mm thick"
+      qty: 3
+      detail: "Under the microphone board screws"
+    - group: "Screws, inserts and dowels"
+      item: "Thin removable adhesive tabs"
+      qty: 18
+      detail: "3 per decorative joint cap"
 ---
 
 Orion is a home robot in the form of a desk lamp, built to assist and interact in a warm, playful, expressive way. Its onboard computer runs microphone processing, wake detection, speech recognition, speech synthesis and the motion runtime.

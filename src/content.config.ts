@@ -39,13 +39,16 @@ const projects = defineCollection({
           )
           .default([]),
         source: z.string().optional(), // repository URL; the Source code entry stays disabled until this is set
+        guide: z.string().optional(), // path of the project's assembly guide page
         // Bill of materials: the bought parts, each with a link to buy it.
         bom: z
           .array(
             z.object({
+              group: z.string().default("Electronics"), // rows are listed under their group, in file order
               item: z.string(), // "Raspberry Pi Camera Module 3"
-              detail: z.string().optional(), // the option to pick on the shop page, or a quantity
-              url: z.url(),
+              qty: z.number().optional(), // how many one lamp needs
+              detail: z.string().optional(), // the option to pick on the shop page, or where the part is used
+              url: z.url().optional(), // buy link; common parts (screws, cables) go without one
             }),
           )
           .default([]),

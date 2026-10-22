@@ -10,3 +10,8 @@ export function publicFileSize(href) {
   const bytes = fs.statSync(file).size;
   return bytes >= 1e6 ? `${(bytes / 1e6).toFixed(1)} MB` : `${Math.round(bytes / 1e3)} KB`;
 }
+
+/** Whether "/guides/x.webp" exists under public/ (so a page can leave out a picture that hasn't been rendered). */
+export function publicFileExists(href) {
+  return fs.existsSync(path.join(process.cwd(), "public", href));
+}

@@ -1,0 +1,637 @@
+---
+// Orion V2.1 assembly guide. Step order, hardware counts and procedures come from the V2.1 CAD release notes
+// (orionV21CAD/ASSEMBLY.txt and DEVELOPMENT.txt, plus the V2 manual they extend); servo set-up comes from
+// the Orion software's docs/hardware-versions.md. Each <AssemblyStep> lists the parts the 3D view shows.
+import Base from "../../../layouts/Base.astro";
+import AssemblyViewer from "../../../components/AssemblyViewer.astro";
+import Step from "../../../components/AssemblyStep.astro";
+import ReadingMap from "../../../components/ReadingMap.astro";
+import { projectUrl } from "../../../lib/content";
+
+const MODEL = "/models/orion-v2.glb";
+const QUICKSTART = "https://github.com/mofe64/orion/blob/main/docs/quickstart.md";
+const still = (n: number) => `/guides/orion/step-${String(n).padStart(2, "0")}.webp`;
+
+// Part names: CAD part numbers for prints ("10a"/"10b" are the two arm halves) and model names for bought parts.
+const SERVOS = ["servoyaw", "servoshoulder", "servoelbow", "servowrist", "servoneck"];
+const lowerArm = ["10a", "10b", "servoelbow", "hornselbow"];
+const upperArm = ["13a", "13b", "servowrist", "hornswrist"];
+const neck = ["16", "hornneck", "servoneck", "17", "18"];
+const cassette = ["20", "camera", "led", "24", "speaker"];
+
+// What is in place after each stage of the build. Each step shows one of these, highlighting what it adds.
+const base = ["01", "04", "04b", "servoyaw"];
+const withMic = [...base, "mic"];
+const boards = ["03", "pi", "cooler", "servoboard"];
+const withTray = [...withMic, ...boards];
+const withPanels = [...withTray, "05", "06"];
+const withYaw = [...withPanels, "07"];
+const withShoulder = [...withYaw, "08", "09", "servoshoulder", "hornsshoulder"];
+const withLower = [...withShoulder, ...lowerArm];
+const withUpper = [...withLower, ...upperArm];
+const withHead = [...withUpper, ...neck, "19"];
+const withFront = [...withHead, ...cassette, "21"];
+const withCaps = [...withFront, "22"];
+const ALL = [...withCaps, "02"];
+
+// The build in five stages. Step numbers run on across stages.
+const STAGES = [
+  { id: "stage-prepare", title: "Prepare", steps: ["Print and clean the parts", "Open the thin screw-hole skins", "Fit the heat-set inserts", "Set up the Raspberry Pi", "Give each servo its ID"] },
+  { id: "stage-base", title: "Build the base", steps: ["Fix the base servo to its retainer", "Fit the base servo into the base", "Fit the microphone", "Build the electronics tray", "Fit the rear panels and power leads", "Fit the yaw horn adapter"] },
+  { id: "stage-arms", title: "Build the shoulder and arms", steps: ["Build the shoulder", "Put the elbow servo in the lower arm", "Close the lower arm", "Fit the lower arm to the shoulder", "Put the wrist servo in the upper arm", "Close the upper arm", "Fit the upper arm to the elbow"] },
+  { id: "stage-head", title: "Build the head", steps: ["Mount the neck servo", "Fit the head shell", "Fit the head to the wrist", "Build the front cassette", "Fit the front and run its cables to the base"] },
+  { id: "stage-finish", title: "Finish and bring it to life", steps: ["Check the wiring", "Fit the joint caps", "Close the base", "Set the zero position and start Orion"] },
+];
+const TITLES = STAGES.flatMap((s) => s.steps);
+const t = (n: number) => TITLES[n - 1];
+let first = 1;
+const stageInfo = STAGES.map((s, i) => {
+  const info = { ...s, n: i + 1, from: first, to: first + s.steps.length - 1 };
+  first += s.steps.length;
+  return info;
+});
+const stage = (n: number) => stageInfo[n - 1];
+
+const headings = [
+  { depth: 2, slug: "before-you-start", text: "Before you start" },
+  { depth: 2, slug: "ideas", text: "Ideas and words used in this guide" },
+  ...stageInfo.flatMap((s) => [
+    { depth: 2, slug: s.id, text: `Stage ${s.n}: ${s.title}` },
+    ...s.steps.map((text, i) => ({ depth: 3, slug: `step-${s.from + i}`, text: `${s.from + i}. ${text}` })),
+  ]),
+  { depth: 2, slug: "if-zeroing-fails", text: "If zeroing fails" },
+  { depth: 2, slug: "final-checks", text: "Final checks" },
+];
+---
+
+<Base title="Build Orion" description="Step-by-step assembly guide for the Orion V2.1 desk-lamp robot, with a 3D view of every step.">
+  <article class="guide" data-guide>
+    <header class="intro">
+      <span class="eyebrow"><a href={projectUrl("orion")}>Orion</a> · Assembly guide · V2.1</span>
+      <h1>Build Orion, step by step</h1>
+      <p class="lede">
+        This guide takes you from a pile of printed parts to a lamp that moves, listens and lights up. Every step says
+        which screws to use, shows where the new parts go, and explains why it is done that way.
+      </p>
+      <p class="note">
+        On a wide screen, the 3D view beside the steps follows along as you scroll. Parts added in the current step are
+        orange, printed parts are white and bought parts such as servos and boards are grey. Drag the view to turn it.
+        Cables aren't in the 3D model; the text says where they go.
+      </p>
+    </header>
+
+    <div class="layout">
+      <div class="steps">
+        <div class="map-slot"><ReadingMap headings={headings} /></div>
+
+        <section class="prep" id="before-you-start" aria-labelledby="before-title">
+          <h2 id="before-title">Before you start</h2>
+          <p>
+            The build has five stages: prepare the parts and software, build the base, build the shoulder and arms, build
+            the head, then wire it up and bring it to life. Printing takes a few days of printer time; the assembly itself
+            is a few evenings of screwing, plugging and a little soldering. You don't need to have built a robot before.
+          </p>
+          <h3>What you need</h3>
+          <ul>
+            <li><b>Printed parts:</b> every file in the <a href={`${projectUrl("orion")}#resources`}>STL download</a>, with the flush plug printed 16 times.</li>
+            <li><b>Electronics, cables and screws:</b> the <a href={`${projectUrl("orion")}#resources`}>bill of materials</a>. Sort the screws into labelled pots by size before you begin; it saves a lot of hunting.</li>
+            <li><b>A computer</b> to prepare the Raspberry Pi's memory card and connect to it over the network (step 4).</li>
+          </ul>
+          <h3>Tools</h3>
+          <ul>
+            <li>Soldering iron with an M3 heat-set insert tip, plus solder for the LED ring wires</li>
+            <li>2 mm hex key for the M3 button-head screws</li>
+            <li>Small screwdrivers to suit your M2 and M2.5 screws and the servos' centre screws</li>
+            <li>3.4 mm and 2.4 mm drill bits, turned by hand (a pin vice is ideal)</li>
+            <li>Flush cutters or small pliers for removing supports</li>
+            <li>A 2 mm rod, such as the smooth end of a drill bit, for bending servo wires</li>
+          </ul>
+          <p class="warn"><b>Safety</b> Unplug both power supplies before connecting or disconnecting anything. Once powered, the joints are strong enough to pinch fingers.</p>
+        </section>
+
+        <section class="prep" id="ideas" aria-labelledby="ideas-title">
+          <h2 id="ideas-title">Ideas and words used in this guide</h2>
+          <dl class="ideas">
+            <div>
+              <dt>Reading a screw size</dt>
+              <dd>“M3 × 6” means a 3 mm thread that is 6 mm long, measured from under the head to the tip. Orion uses button-head screws for the M3 joints: they have a low, rounded head and take a 2 mm hex key.</dd>
+            </div>
+            <div>
+              <dt>Heat-set inserts</dt>
+              <dd>Plastic threads wear out quickly. A heat-set insert is a small brass sleeve with a metal thread inside. You press it into a printed hole with a hot soldering iron; the plastic melts around its knurled outside and grips it as it cools. Screws then thread into metal, so you can take the robot apart again and again.</dd>
+            </div>
+            <div>
+              <dt>Receiving holes</dt>
+              <dd>The small M2 and M2.5 screws don't need inserts. They go into slightly undersized holes (1.9 mm for M2, 2.2 mm for M2.5) and cut their own thread in the plastic. Turn them in by hand and stop as soon as they are snug; overtightening strips the thread.</dd>
+            </div>
+            <div>
+              <dt>Servo horns and faces</dt>
+              <dd>A horn is the round metal plate on a servo's output. The <b>driven horn</b> turns with the motor and is held on by a centre screw that comes with the servo; the <b>passive horn</b> on the opposite side just carries load. Arm parts bolt to both, so each joint is supported from two sides. The servo's <b>gear face</b> is the side with the copper-coloured gear horn; the <b>plain face</b> is the opposite side.</dd>
+            </div>
+            <div>
+              <dt>Serial bus servos</dt>
+              <dd>Orion's five STS3215 servos share one cable, like beads on a string: each servo has two sockets, one for the cable coming in and one for the cable going on to the next servo. Each servo also has an ID number, and the controller addresses them by that number. That is why the servos get their IDs in step 5, before they are built into the lamp, and why you plug the chain together as each servo goes in.</dd>
+            </div>
+            <div>
+              <dt>Other words</dt>
+              <dd>A <b>boss</b> is a raised round post that a screw or insert goes into. A <b>counterbore</b> is a wider, shallow step at the top of a hole that lets a screw head sit below the surface. A <b>flange</b> is a flat rim around a part that it is screwed down by. A <b>ribbon cable</b> is the flat, wide cable the camera uses.</dd>
+            </div>
+          </dl>
+          <table class="joints">
+            <thead><tr><th>Servo ID</th><th>Joint</th><th>What it moves</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Base yaw</td><td>Turns the whole lamp</td></tr>
+              <tr><td>2</td><td>Shoulder</td><td>Tilts the lower arm</td></tr>
+              <tr><td>3</td><td>Elbow</td><td>Tilts the upper arm</td></tr>
+              <tr><td>4</td><td>Wrist</td><td>Tilts the head up and down</td></tr>
+              <tr><td>5</td><td>Neck</td><td>Turns the head left and right</td></tr>
+            </tbody>
+          </table>
+          <p class="small">In this guide the <b>lower arm</b> is the arm on the shoulder and the <b>upper arm</b> is the one on the elbow, as in the CAD files.</p>
+        </section>
+
+        <h2 class="stage" id={stage(1).id}><span>Stage 1 of 5 · steps {stage(1).from}–{stage(1).to}</span>{stage(1).title}</h2>
+
+        <Step n={1} title={t(1)} parts={ALL} image={still(1)} alt="The whole lamp: printed parts in white, servos and boards in grey.">
+          <p>Print every file in the STL download in PLA, keeping each file's orientation. The settings below are the ones the CAD's print plates use; the arms need the most strength, so don't skimp on their walls.</p>
+          <table>
+            <thead><tr><th>Parts</th><th>Walls</th><th>Infill</th><th>Supports</th></tr></thead>
+            <tbody>
+              <tr><td>Arm halves (10, 13) and plugs</td><td>5</td><td>25% gyroid</td><td>From the build plate only</td></tr>
+              <tr><td>Base shell (01)</td><td>4</td><td>20% gyroid</td><td>Tree supports, 5 mm brim</td></tr>
+              <tr><td>Bottom cover (02), tray (03)</td><td>4</td><td>20% gyroid</td><td>None</td></tr>
+              <tr><td>Base fittings (04, 04b, 05, 06, 07)</td><td>5</td><td>35% gyroid</td><td>Tree supports</td></tr>
+              <tr><td>Shoulder (08, 09)</td><td>5</td><td>40% gyroid</td><td>Tree supports, 5 mm brim</td></tr>
+              <tr><td>Head shell, fork, cartridge (16, 17, 19)</td><td>5</td><td>30% gyroid</td><td>Tree supports, 5 mm brim</td></tr>
+              <tr><td>Front parts and caps (18, 20, 22, 24)</td><td>4</td><td>20% gyroid</td><td>Tree supports where needed</td></tr>
+              <tr><td>Diffuser (21)</td><td>4</td><td>20% gyroid</td><td>None; use a light-coloured filament that lets light through</td></tr>
+            </tbody>
+          </table>
+          <p class="small">All parts: 0.2 mm layers, 0.4 mm nozzle.</p>
+          <p>Once a part has cooled, remove all support material and brim, paying most attention to the places other parts have to fit: insert holes and screw recesses, the round horn seats, the cable channels inside the arm halves, and the camera opening.</p>
+          <p class="warn"><b>Careful</b> Don't drill out the small 1.9 mm and 2.2 mm screw holes to "clean" them. They are undersized on purpose so the screws can grip.</p>
+        </Step>
+
+        <Step n={2} title={t(2)} parts={["10a", "10b", "13a", "13b", "04b"]} focus={["10a", "10b", "13a", "13b", "04b"]} image={still(2)} alt="The four arm halves and the yaw servo retainer, highlighted."
+          hardware={[{ qty: 1, item: "3.4 mm drill bit" }, { qty: 1, item: "2.4 mm drill bit" }]}>
+          <p>Some screw holes are printed with a 0.2 mm skin across them. The skin lets the printer bridge cleanly over the hole; you open it afterwards by hand.</p>
+          <ol>
+            <li>In the four arm halves, open all <b>16</b> counterbore skins with the <b>3.4 mm</b> bit. These are the holes for the M3 seam screws.</li>
+            <li>In the yaw servo retainer (part 04b), open the <b>4</b> counterbore skins with the <b>2.4 mm</b> bit.</li>
+          </ol>
+          <p class="tip"><b>Tip</b> Turn the bit slowly between your fingers. A power drill grabs the thin skin and can crack the part.</p>
+        </Step>
+
+        <Step n={3} title={t(3)} parts={["01", "04", "05", "06", "08", "19"]} focus={["01", "04", "05", "06", "08", "19"]} image={still(3)} alt="The six printed parts that take heat-set inserts, highlighted."
+          hardware={[{ qty: 40, item: "M3 heat-set inserts, 4 mm long" }]}>
+          <p>Fit every insert now, while the parts are empty. Heat from the iron can damage electronics, and the holes are easier to reach.</p>
+          <table>
+            <thead><tr><th>Part</th><th>Inserts</th><th>How</th></tr></thead>
+            <tbody>
+              <tr><td>Base shell (01)</td><td>14</td><td>6 for the bottom cover, 4 for the tray, 4 for the yaw carrier. Put the carrier inserts in from inside the shell with the shell upside down, flush with their bosses. Leave the small gap below them; don't push them onto the floor.</td></tr>
+              <tr><td>Yaw servo carrier (04)</td><td>4</td><td>For the retainer screws.</td></tr>
+              <tr><td>Power panel (05) and USB panel (06)</td><td>4 each</td><td>From the inside face, into the four raised bosses.</td></tr>
+              <tr><td>Shoulder housing (08)</td><td>6</td><td>Four for the yaw adapter, two for the retainer.</td></tr>
+              <tr><td>Head shell (19)</td><td>8</td><td>Through the open front. Do the four deeper ones first, then the four near the rim.</td></tr>
+            </tbody>
+          </table>
+          <ol>
+            <li>Set the iron to the temperature your insert maker recommends.</li>
+            <li>Sit the insert on its hole, then lower the hot tip into it and let it sink under its own weight with light pressure. Keep the iron square to the surface.</li>
+            <li>Stop when the top of the insert is flush with the plastic, lift the iron straight out, and let the part cool before fitting any screws.</li>
+          </ol>
+          <p class="warn"><b>Check</b> Insert holes are 4 mm across; plain screw holes are 3.4 mm. If an insert won't start, you may be on a screw hole. If an insert spins when you turn a screw, or the boss cracks, reprint the part rather than gluing the insert.</p>
+        </Step>
+
+        <Step n={4} title={t(4)} parts={["pi", "cooler"]} focus={["pi", "cooler"]} frame="all" image={still(4)} alt="The Raspberry Pi 5 with its Active Cooler, highlighted.">
+          <p>The Orion software runs on the Raspberry Pi. Install it now, on the table, so you can set up the servos in the next step. The <a href={QUICKSTART}>Orion quickstart</a> has the full details.</p>
+          <ol>
+            <li>Fit the Active Cooler to the Pi, following its instructions.</li>
+            <li>On your computer, use Raspberry Pi Imager to write <b>Raspberry Pi OS Lite (64-bit)</b> to the Pi's memory card. In Imager's settings, set a hostname, a user, your Wi-Fi and an SSH key.</li>
+            <li>Put the card in the Pi, power it with its USB-C supply, and connect from your computer:
+              <pre><code>ssh USER@HOST.local</code></pre>
+            </li>
+            <li>Install Orion, then restart the Pi:
+              <pre><code>curl -fsSL https://raw.githubusercontent.com/mofe64/orion/main/scripts/install.sh | bash
+sudo reboot</code></pre>
+            </li>
+          </ol>
+          <p class="tip"><b>Good to know</b> On a first install the Orion services are left stopped, so nothing moves while you set up the servos.</p>
+        </Step>
+
+        <Step n={5} title={t(5)} parts={SERVOS} focus={SERVOS} image={still(5)} alt="The five servos on their own, in the positions they take in the lamp: base, shoulder, elbow, wrist and neck.">
+          <p>The picture shows where the five servos end up. New servos all share the same ID, so the controller can't tell them apart. Give each one its own ID while you can still plug them in one at a time. This also tests every servo before it goes into the lamp.</p>
+          <ol>
+            <li>Connect the servo board to the Pi with its USB cable, and plug the <b>6 V supply</b> into the servo board. The servos are powered from the board, not from the Pi.</li>
+            <li>Plug in <b>one</b> servo and give it its joint. For example, for the shoulder:
+              <pre><code>oriond servo set-id --joint shoulder_pitch_joint</code></pre>
+              It answers with the old and new ID, for example <code>servo ID 1 -&gt; 2; verified</code>.
+            </li>
+            <li>Unplug the servo, label it with tape (“2 shoulder”), and repeat for the other four. The joint names are <code>base_yaw_joint</code>, <code>shoulder_pitch_joint</code>, <code>elbow_pitch_joint</code>, <code>head_pitch_joint</code> (wrist) and <code>head_roll_joint</code> (neck).</li>
+          </ol>
+          <p class="warn"><b>One at a time</b> If it says “Expected exactly one servo”, more than one servo is plugged in, or none is (check the 6 V supply). If it says “Expected one USB servo adapter”, the servo board's USB cable isn't connected.</p>
+        </Step>
+
+        <h2 class="stage" id={stage(2).id}><span>Stage 2 of 5 · steps {stage(2).from}–{stage(2).to}</span>{stage(2).title}</h2>
+        <p class="stage-note">Work with the base shell upside down on a soft cloth until step 11.</p>
+
+        <Step n={6} title={t(6)} parts={["servoyaw", "04b"]} focus={["servoyaw", "04b"]} from={[0, -40, 0]} view="below" image={still(6)} alt="The base servo, standing upright, on top of its flat retainer frame."
+          hardware={[{ qty: 4, item: "M2 × 6 screws" }]}>
+          <p>The base servo (ID 1) turns the whole lamp. It stands upright with its output facing up, and a flat retainer frame (04b) is screwed to its underside.</p>
+          <ol>
+            <li>Hold the retainer with its raised pads facing up, against the servo's underside.</li>
+            <li>Fit four <b>M2 × 6</b> up through the retainer into the servo. The screw heads sit just inside the retainer's underside.</li>
+            <li>Plug a servo cable into the servo now; it will run to the servo board in step 9.</li>
+          </ol>
+        </Step>
+
+        <Step n={7} title={t(7)} parts={base} focus={["04", "04b", "servoyaw"]} from={[0, -60, 0]} view="below" image={still(7)} alt="The base servo and retainer inside the yaw carrier, highlighted, under the base shell's roof."
+          hardware={[{ qty: 4, item: "M3 × 6 button-head screws (retainer to carrier)" }, { qty: 4, item: "M3 × 8 button-head screws (carrier to shell)" }]}>
+          <ol>
+            <li>Push the servo and retainer up into the carrier (04) with firm hand pressure, until the servo sits against the carrier's roof. Small ribs inside the carrier hold it without play; they may shave a little, which is expected.</li>
+            <li>Fix the retainer to the carrier with four <b>M3 × 6</b>.</li>
+            <li>With the shell upside down, lower the carrier into the middle of the shell so its flange sits on the four inserts you fitted in step 3. Fit four <b>M3 × 8</b> through the flange into the inserts.</li>
+          </ol>
+          <p class="warn"><b>Careful</b> Never sand the servo's case to make it fit. If it is very tight, clean the carrier ribs instead.</p>
+        </Step>
+
+        <Step n={8} title={t(8)} parts={withMic} focus={["mic"]} from={[0, -50, 0]} view="below" image={still(8)} alt="The microphone array, highlighted, under the base shell's roof, seen from below."
+          hardware={[{ qty: 3, item: "M2 × 4 screws" }, { qty: 3, item: "M2 insulating washers, 0.5 mm" }]}>
+          <p>The microphone array sits just under the base's roof, behind the four slotted grilles, so it can hear in every direction.</p>
+          <ol>
+            <li>Turn the board so its USB socket faces the front-left of the base, then rest it on its three 7 mm spacers.</li>
+            <li>Fit three <b>M2 × 4</b>, each with a <b>0.5 mm insulating washer</b> under its head, and tighten gently.</li>
+            <li>Plug its USB cable into the board.</li>
+          </ol>
+          <p class="tip"><b>Why the washers</b> They keep the metal screw heads off the board's circuitry and stop the short screws reaching the bottom of their holes.</p>
+        </Step>
+
+        <Step n={9} title={t(9)} parts={boards} focus={["pi", "cooler", "servoboard"]} frame="all" from={[0, 50, 0]} image={still(9)} alt="The electronics tray on its own, with the Raspberry Pi, its cooler and the servo board, highlighted, mounted on top."
+          hardware={[{ qty: 4, item: "M2.5 × 4 screws (Raspberry Pi)" }, { qty: 4, item: "M2 × 6 screws (servo board)" }, { qty: 4, item: "M3 × 6 button-head screws (tray to shell)" }]}>
+          <ol>
+            <li>Screw the Pi to the tray (03) with four <b>M2.5 × 4</b> into its 3 mm posts.</li>
+            <li>Screw the servo board to the tray with four <b>M2 × 6</b> into its 6 mm posts. Keep both boards flat; don't let a screw bend them.</li>
+            <li>Connect the servo board to the Pi with its USB cable, and plug the base servo's cable into the servo board.</li>
+            <li>Plug the microphone's USB cable into the Pi's upper USB-A socket. It bends tightly here, so lead it round in gentle curves rather than folding it.</li>
+            <li>Lower the tray into the base and check that the cooler, plugs and cables sit without being pressed. Then fit four <b>M3 × 6</b> through the tray's recessed holes.</li>
+          </ol>
+        </Step>
+
+        <Step n={10} title={t(10)} parts={withPanels} focus={["05", "06"]} view="back" from={[0, 0, -60]} image={still(10)} alt="The power inlet panel and USB panel, highlighted, at the back of the base."
+          hardware={[{ qty: 8, item: "M3 × 8 button-head screws" }, { qty: 2, item: "Cable ties, 2.5 mm" }]}>
+          <p>The power panel (05) has one shared opening for both power leads: the Pi's USB-C supply and the 6 V servo supply. The other panel (06) gives access to the Pi's Ethernet and USB.</p>
+          <ol>
+            <li>Pass both power leads through the shared opening and connect them: USB-C to the Pi, the 6 V lead to the servo board.</li>
+            <li>Tie each lead to its tie point with a <b>2.5 mm cable tie</b>. Pull it snug, not tight: the tie should stop the lead being pulled out without squashing it.</li>
+            <li>Hold each panel against the shell <b>from the inside</b>, inserts facing in. From the outside, fit four <b>M3 × 8</b> through the shell into the panel.</li>
+          </ol>
+          <p class="tip"><b>Why from the outside</b> The screws pass through the shell wall and pull the panel up against it, so the screw heads stay on the outside where you can reach them later. The camera's ribbon cable will come in through one of these panel openings in step 23, so don't block them.</p>
+        </Step>
+
+        <Step n={11} title={t(11)} parts={withYaw} focus={["07"]} image={still(11)} alt="The yaw horn adapter, highlighted, on top of the base."
+          hardware={[{ qty: 4, item: "M3 × 4 button-head screws" }, { qty: 1, item: "Servo centre screw (supplied with the servo)" }]}>
+          <p>Turn the base the right way up. The adapter (07) connects the base servo's horn to the shoulder above it.</p>
+          <ol>
+            <li>Fix the adapter to the metal horn with four <b>M3 × 4</b>, then secure the horn with its centre screw.</li>
+            <li>Make sure no wires are trapped between the adapter and the shell.</li>
+          </ol>
+          <p class="tip"><b>No need to centre the servos</b> You can fit horns and arms at whatever angle the servo happens to be in. In the last step, Orion records each joint's position with the lamp folded and uses that as its zero.</p>
+        </Step>
+
+        <h2 class="stage" id={stage(3).id}><span>Stage 3 of 5 · steps {stage(3).from}–{stage(3).to}</span>{stage(3).title}</h2>
+        <p class="stage-note">Plug the servo chain together as you go. Once an arm is closed, you can't reach the cables inside it.</p>
+
+        <Step n={12} title={t(12)} parts={withShoulder} focus={["08", "09", "servoshoulder", "hornsshoulder"]} image={still(12)} alt="The shoulder housing, its retainer and the shoulder servo with its two horns, highlighted."
+          hardware={[{ qty: 4, item: "M3 × 6 button-head screws (housing to adapter)" }, { qty: 2, item: "M2 × 10 screws (shoulder servo)" }, { qty: 2, item: "M3 × 6 button-head screws (retainer)" }]}>
+          <ol>
+            <li>Fix the shoulder housing (08) to the yaw adapter with four <b>M3 × 6</b>.</li>
+            <li>Plug the cable from the base servo into the shoulder servo (ID 2), and plug a second cable into its other socket for the elbow.</li>
+            <li>Lay the shoulder servo in the housing, its output pointing sideways as in the picture, and fit the two <b>M2 × 10</b> through the housing into the servo's gear face.</li>
+            <li>Bend the servo's wires 90° over your 2 mm rod, then route them under the small keepers and along the grooves in the housing floor.</li>
+            <li>Fit the retainer (09) with two <b>M3 × 6</b>.</li>
+          </ol>
+          <p>The servo's horns, one on each side, are what the lower arm bolts to in step 15.</p>
+        </Step>
+
+        <Step n={13} title={t(13)} parts={["10a", "servoelbow", "hornselbow"]} focus={["servoelbow", "hornselbow"]} frame="all" from={[60, 0, 0]} image={still(13)} alt="One half of the lower arm, with the elbow servo, highlighted, lying in its top end."
+          hardware={[{ qty: 4, item: "M2 × 6 screws (gear face)" }]}>
+          <p>Each arm is printed as two halves that close around a servo, like a clamshell. Splitting it lets the arm print strongly and gives the servo cables a protected channel inside. The elbow servo (ID 3) sits at the top of the lower arm.</p>
+          <ol>
+            <li>Plug the cable coming up from the shoulder into the elbow servo, and plug a second cable into its other socket for the wrist.</li>
+            <li>Lay the servo in the left half, in the pocket at its top end, with its gear face against that half.</li>
+            <li>Fit the four gear-face <b>M2 × 6</b> through the left half into the servo.</li>
+            <li>Bend each cable 90° over the 2 mm rod and lay one in each channel. No glue.</li>
+          </ol>
+        </Step>
+
+        <Step n={14} title={t(14)} parts={lowerArm} focus={["10b"]} from={[70, 0, 0]} image={still(14)} alt="The other half of the lower arm, highlighted, closing over the elbow servo."
+          hardware={[{ qty: 4, item: "Dowel pins, 3 × 6 mm" }, { qty: 12, item: "M3 × 20 screws (seam)" }, { qty: 2, item: "M2 × 6 screws (plain face)" }, { qty: 12, item: "Printed flush plugs" }]}>
+          <ol>
+            <li>Press the four <b>dowel pins</b> into one half. They line the halves up exactly.</li>
+            <li>Close the right half over the servo and cables, checking that no wire is pinched, and fit the twelve <b>M3 × 20</b> seam screws.</li>
+            <li>Fit the last two <b>M2 × 6</b> through the right half into the servo's plain face.</li>
+            <li>Press the twelve <b>flush plugs</b> into the screw counterbores.</li>
+          </ol>
+          <p class="tip"><b>Why the plugs</b> They cover the seam screws so the arm looks smooth, and they are removable if you ever need to open it.</p>
+        </Step>
+
+        <Step n={15} title={t(15)} parts={withLower} focus={lowerArm} from={[0, 80, 0]} image={still(15)} alt="The finished lower arm, highlighted, attached to the shoulder servo's horns."
+          hardware={[{ qty: 8, item: "M3 × 4 button-head screws" }, { qty: 1, item: "Servo centre screw (supplied)" }]}>
+          <ol>
+            <li>Fit the lower arm's two cheeks over the shoulder servo's driven and passive horns. Fix each cheek with four <b>M3 × 4</b>.</li>
+            <li>Fit the driven horn's centre screw.</li>
+          </ol>
+          <p class="warn"><b>Check</b> These screws are deliberately short: longer ones would hit the bottom of the horn's thread before clamping. Make sure each horn is fully seated and each screw clamps the arm.</p>
+        </Step>
+
+        <Step n={16} title={t(16)} parts={["13a", "servowrist", "hornswrist"]} focus={["servowrist", "hornswrist"]} frame="all" from={[60, 0, 0]} image={still(16)} alt="One half of the upper arm, with the wrist servo, highlighted, lying in its top end."
+          hardware={[{ qty: 4, item: "M2 × 6 screws (gear face)" }]}>
+          <p>The upper arm carries the wrist servo (ID 4) and is built the same way as the lower arm.</p>
+          <ol>
+            <li>Plug the cable coming up from the elbow into the wrist servo, and a second cable into its other socket for the neck servo.</li>
+            <li>Lay the servo in the left half, gear face against that half, and fit the four gear-face <b>M2 × 6</b>.</li>
+            <li>Bend the cables over the 2 mm rod and lay one in each channel.</li>
+          </ol>
+        </Step>
+
+        <Step n={17} title={t(17)} parts={upperArm} focus={["13b"]} from={[70, 0, 0]} image={still(17)} alt="The other half of the upper arm, highlighted, closing over the wrist servo."
+          hardware={[{ qty: 4, item: "Dowel pins, 3 × 6 mm" }, { qty: 4, item: "M3 × 20 screws (seam)" }, { qty: 2, item: "M2 × 6 screws (plain face)" }, { qty: 4, item: "Printed flush plugs" }]}>
+          <ol>
+            <li>Fit the four <b>dowel pins</b>, close the right half, and fit the four <b>M3 × 20</b> seam screws.</li>
+            <li>Fit the two plain-face <b>M2 × 6</b>, then press in the four <b>plugs</b>.</li>
+          </ol>
+        </Step>
+
+        <Step n={18} title={t(18)} parts={withUpper} focus={upperArm} from={[0, 80, 0]} image={still(18)} alt="The finished upper arm, highlighted, attached to the elbow servo's horns."
+          hardware={[{ qty: 8, item: "M3 × 4 button-head screws" }, { qty: 1, item: "Servo centre screw (supplied)" }]}>
+          <ol>
+            <li>Fix the upper arm's cheeks to the elbow horns with eight <b>M3 × 4</b>, four per side.</li>
+            <li>Fit the elbow's driven-horn centre screw.</li>
+          </ol>
+        </Step>
+
+        <h2 class="stage" id={stage(4).id}><span>Stage 4 of 5 · steps {stage(4).from}–{stage(4).to}</span>{stage(4).title}</h2>
+
+        <Step n={19} title={t(19)} parts={neck} focus={neck} from={[0, 60, 0]} image={still(19)} alt="The pitch fork with its fixed neck horn, the neck servo, its cartridge and retainer, highlighted."
+          hardware={[{ qty: 4, item: "M3 × 5 button-head screws (neck horn)" }, { qty: 1, item: "Servo centre screw (supplied)" }, { qty: 4, item: "M2 × 6 screws (cartridge retainer)" }]}>
+          <p>The head has two movements. The wrist tilts it up and down; the neck servo (ID 5) inside the head turns it left and right around a horn that stays still. Build this on the table.</p>
+          <ol>
+            <li>Fix the neck's metal horn to the pitch fork (16) with four <b>M3 × 5</b>, from underneath.</li>
+            <li>Seat the neck servo on that horn and fit its centre screw through the access hole in the middle.</li>
+            <li>Slide the cartridge (17) around the servo and fit the retainer (18) with four <b>M2 × 6</b>. The retainer clamps the servo against its back stop.</li>
+            <li>Plug the cable from the wrist servo into the neck servo. The neck servo is the last in the chain, so its second socket stays empty.</li>
+          </ol>
+          <p class="tip"><b>Why on the bench</b> The neck's centre screw is only reachable before the fork is fixed to the arm.</p>
+        </Step>
+
+        <Step n={20} title={t(20)} parts={[...neck, "19"]} focus={["19"]} from={[0, 0, 90]} image={still(20)} alt="The head shell, highlighted, over the neck servo cartridge."
+          hardware={[{ qty: 4, item: "M3 × 6 button-head screws" }]}>
+          <ol>
+            <li>Fit the head shell (19) over the cartridge and line up its four inner mounting ears.</li>
+            <li>Fit four <b>M3 × 6</b> from the open front into the deeper inserts.</li>
+            <li>Check the shell turns clear of the fixed post.</li>
+          </ol>
+        </Step>
+
+        <Step n={21} title={t(21)} parts={withHead} focus={[...neck, "19"]} from={[0, 80, 0]} image={still(21)} alt="The head, highlighted, attached to the wrist at the top of the upper arm."
+          hardware={[{ qty: 8, item: "M3 × 8 button-head screws" }, { qty: 1, item: "Servo centre screw (supplied)" }]}>
+          <ol>
+            <li>Fit the pitch fork over the wrist horns and fix it with eight <b>M3 × 8</b>, four per side, then the wrist centre screw.</li>
+          </ol>
+          <p class="tip"><b>Why longer screws</b> The wrist fork is wider than the other joints' parts, so its screws need to be 8 mm long to reach the horn, where the shoulder and elbow use 4 mm.</p>
+        </Step>
+
+        <Step n={22} title={t(22)} parts={cassette} focus={cassette} frame="all" view="back" from={[0, 0, -60]} image={still(22)} alt="The front cassette seen from behind, with the camera, LED ring, retaining ring and speaker, highlighted."
+          hardware={[{ qty: 4, item: "M2 × 4 screws (camera)" }, { qty: 3, item: "M2 × 4 screws (LED ring retainer)" }, { qty: 4, item: "M2.5 × 6 screws (speaker)" }]}>
+          <p>The camera, LED ring and speaker all mount on one removable front piece, the cassette (20). Build it on the table, not inside the head.</p>
+          <ol>
+            <li><b>Solder the LED ring's wires first.</b> The ring has three pads you need: power (5 V), ground (GND) and data in (DIN; not DOUT). Solder a wire to each, long enough to run down the arm to the Pi in the base with slack at every joint. Measure along the lamp with the arm stretched out.</li>
+            <li>Fit the camera from the back with four <b>M2 × 4</b>. Check the lens is centred in its opening, and connect its ribbon cable.</li>
+            <li>Rest the LED ring on its pads and hold it with the retaining ring (24) and three <b>M2 × 4</b>. The retainer should hold the board, not press on the LEDs or the solder joints.</li>
+            <li>Fit the speaker with four <b>M2.5 × 6</b>, lining up all four holes before tightening any of them, and connect its wires.</li>
+          </ol>
+        </Step>
+
+        <Step n={23} title={t(23)} parts={withFront} focus={[...cassette, "21"]} from={[0, 0, 80]} image={still(23)} alt="The front cassette and diffuser, highlighted, at the front of the head."
+          hardware={[{ qty: 4, item: "M3 × 6 button-head screws" }]}>
+          <p>Three sets of wires leave the head and go down to the base. Route them now, then close the front.</p>
+          <ol>
+            <li><b>Camera:</b> lead the camera's ribbon out of the back of the head and down the outside of the lamp to the back of the base. Join it to the 500 mm Pi 5 camera cable with the cable joiner. Pass the cable in through one of the openings in the rear panels and plug it into the Pi's camera socket.</li>
+            <li><b>LED ring and speaker:</b> run their wires down along the arm, then through the slot in the yaw servo carrier into the base. Connect the LED ring to the Pi's header: 5 V to pin 4, ground to pin 30, data to pin 32 (GPIO12). Connect the speaker to the microphone array's speaker output.</li>
+            <li>Leave a loop of slack at the wrist, elbow and shoulder, then move each joint by hand through its full range to check nothing pulls tight.</li>
+            <li>Place the cassette in the head, add the diffuser (21) and fit four <b>M3 × 6</b>, tightening opposite corners in turn.</li>
+          </ol>
+          <p class="warn"><b>Careful</b> Wiring the LED ring the wrong way round can damage the ring or the Pi. Check 5 V, ground and data twice.</p>
+          <p class="tip"><b>Service</b> To reach the inside of the head later, undo the four front screws and lift the front away. The camera, LEDs and speaker come with it.</p>
+        </Step>
+
+        <h2 class="stage" id={stage(5).id}><span>Stage 5 of 5 · steps {stage(5).from}–{stage(5).to}</span>{stage(5).title}</h2>
+
+        <Step n={24} title={t(24)} parts={withFront} image={still(24)} alt="The assembled lamp without its joint caps or bottom cover.">
+          <p>Before closing anything, check every connection against this list with both supplies unplugged.</p>
+          <table>
+            <thead><tr><th>Connection</th><th>Made in</th></tr></thead>
+            <tbody>
+              <tr><td>Servo chain: servo board → base → shoulder → elbow → wrist → neck</td><td>Steps 6–19</td></tr>
+              <tr><td>Servo board to Pi, by USB</td><td>Step 9</td></tr>
+              <tr><td>Microphone array to Pi, upper USB-A socket</td><td>Steps 8–9</td></tr>
+              <tr><td>6 V supply to servo board; USB-C supply to Pi</td><td>Step 10</td></tr>
+              <tr><td>Camera: ribbon → joiner → 500 mm Pi 5 cable → Pi camera socket</td><td>Step 23</td></tr>
+              <tr><td>LED ring to Pi pins 4 (5 V), 30 (ground), 32 (data)</td><td>Step 23</td></tr>
+              <tr><td>Speaker to the microphone array's speaker output</td><td>Step 23</td></tr>
+            </tbody>
+          </table>
+          <p>Move every joint gently by hand through its full range one more time. Nothing should pull tight or catch.</p>
+        </Step>
+
+        <Step n={25} title={t(25)} parts={withCaps} focus={["22"]} from={[0, 0, 0]} image={still(25)} alt="The six joint caps, highlighted, at the shoulder, elbow and wrist."
+          hardware={[{ qty: 18, item: "Thin removable adhesive tabs, 3 per cap" }]}>
+          <p>The six caps cover the horn screws at the shoulder, elbow and wrist. Stick three thin tabs on the back of each cap, keeping them away from the screw-head recesses, and press it into place. The tabs let you peel a cap off later.</p>
+        </Step>
+
+        <Step n={26} title={t(26)} parts={ALL} focus={["02"]} view="below" from={[0, -60, 0]} image={still(26)} alt="The bottom cover, highlighted, closing the base from below."
+          hardware={[{ qty: 6, item: "M3 × 6 button-head screws" }]}>
+          <p>Fit the bottom cover with six <b>M3 × 6</b>, tightening them evenly a little at a time.</p>
+        </Step>
+
+        <Step n={27} title={t(27)} parts={ALL} image={still(27)} alt="The finished Orion lamp.">
+          <p>Each servo stores its own zero position. Orion sets it with the lamp folded into a fixed <b>rest pose</b>, so every joint agrees with the software no matter how the horns were fitted.</p>
+          <ol>
+            <li>Plug in both supplies and connect to the Pi over SSH. The services are still stopped from the install; if you have started them since, stop them:
+              <pre><code>sudo systemctl stop orion-voice-stack orion-vision orion-studio-gateway orion-listener oriond</code></pre>
+            </li>
+            <li>Fold the lamp into its rest pose, as in the pictures: the <b>lower arm</b> lies back along the base, the <b>upper arm</b> folds forward over it, the head rests down on the shoulder housing, and the head and base both face forward.
+              <div class="rest">
+                <figure><img src="/guides/orion/rest-side.png" alt="Rest pose from the side: lower arm lying back along the base, upper arm folded forward over it, head resting at the front." width="650" height="740" loading="lazy" /><figcaption>Side</figcaption></figure>
+                <figure><img src="/guides/orion/rest-front.png" alt="Rest pose from the front: head and base facing forward." width="650" height="740" loading="lazy" /><figcaption>Front</figcaption></figure>
+              </div>
+            </li>
+            <li>Let go, keep the table still, and write the zero positions. It watches the joints for 2 seconds first:
+              <pre><code>oriond servo zero</code></pre>
+              Each joint should print a line ending in <code>(rest 2047); verified</code>.
+            </li>
+            <li>Read the joints back. All five should be close to 0:
+              <pre><code>oriond --check</code></pre>
+            </li>
+            <li>Clear the space around the lamp and start Orion. It rises slowly to its home pose:
+              <pre><code>sudo systemctl start oriond orion-listener orion-studio-gateway orion-voice-stack orion-vision</code></pre>
+            </li>
+            <li>Run the installer's check, which reads every servo and service in one go:
+              <pre><code>curl -fsSL https://raw.githubusercontent.com/mofe64/orion/main/scripts/install.sh | bash -s -- --check</code></pre>
+            </li>
+          </ol>
+          <p class="warn"><b>Careful</b> Get the rest pose right before zeroing. A wrong fold gives the joints the wrong zero and can strain them when Orion moves. If you're unsure, compare with the pictures again.</p>
+        </Step>
+
+        <section class="prep" id="if-zeroing-fails" aria-labelledby="zerofail-title">
+          <h2 id="zerofail-title">If zeroing fails</h2>
+          <p>Zeroing checks its own work. If something goes wrong, Orion puts back the old zero positions and leaves the motors switched off, so you can fix the cause and run <code>oriond servo zero</code> again. The message tells you what went wrong:</p>
+          <table>
+            <thead><tr><th>If it says</th><th>It means</th><th>Do this</th></tr></thead>
+            <tbody>
+              <tr><td>“lamp is moving; let it settle”</td><td>A joint moved during the 2-second check.</td><td>Let go of the lamp, make sure it rests on its own and nothing is touching the table, and run it again.</td></tr>
+              <tr><td>“Expected one USB servo adapter”</td><td>The Pi can't see the servo board, or sees more than one.</td><td>Check the servo board's USB cable. If you really have two adapters, add <code>--port</code> with the right device.</td></tr>
+              <tr><td>“… reads 1980; expected 2047 +/-8” (any joint, any number)</td><td>A servo didn't take its new zero.</td><td>Run it again. If the same joint fails twice, check its cable and that the 6 V supply is on.</td></tr>
+              <tr><td>“Servo 3 is not an STS3215”, or a timeout</td><td>A servo didn't answer: unplugged, wrong ID, or no power.</td><td>Check the chain connections and the 6 V supply. A servo with the wrong ID has to be unplugged on its own and given its ID again (step 5).</td></tr>
+              <tr><td>“Offset recovery incomplete … Inspect the bus before retrying”</td><td>The old zeros couldn't all be put back, usually because a cable came loose mid-way.</td><td>Unplug the power, check every servo connection, then run zeroing again; it writes fresh zeros for every joint.</td></tr>
+            </tbody>
+          </table>
+          <p>After a successful zero, <code>oriond --check</code> should show all five joints close to 0. If one is far off, the lamp probably wasn't in the rest pose: fold it again and repeat.</p>
+        </section>
+
+        <section class="prep" id="final-checks" aria-labelledby="checks-title">
+          <h2 id="checks-title">Final checks</h2>
+          <ul class="checks">
+            <li>Every insert is flush and firm, and no boss has split.</li>
+            <li>Small screws grip without spinning, and every board sits flat.</li>
+            <li>No loose support scraps or filament strands are left inside the head or base.</li>
+            <li>Every horn is seated and no servo rocks in its holder.</li>
+            <li>Cables have slack at every joint and nothing catches when the lamp moves.</li>
+            <li>The front of the head comes off for service.</li>
+          </ul>
+          <p>Something unclear or wrong? <a href="https://github.com/mofe64/orion/issues">Open an issue on GitHub</a> so the next builder benefits.</p>
+        </section>
+      </div>
+
+      <aside class="viewer-col" aria-label="3D view of the current step">
+        <div class="viewer-box">
+          <span class="viewer-step" data-viewer-label>Step 1</span>
+          <AssemblyViewer model={MODEL} label="3D view of Orion showing the parts for the current step" />
+        </div>
+      </aside>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .guide { padding: 32px var(--gutter) 64px; border-top: 1px solid var(--rule); }
+  .intro { display: flex; flex-direction: column; gap: 14px; max-width: 760px; margin-bottom: 32px; }
+  h1 { font-size: 48px; line-height: 1.08; letter-spacing: -.01em; }
+  .lede { font-family: var(--serif); font-style: italic; font-size: 20px; line-height: 1.45; color: var(--quote); }
+  .note { font-size: 13px; color: var(--muted); max-width: 64ch; }
+
+  .layout { display: block; }
+  .viewer-col { display: none; }
+  .steps { max-width: 68ch; }
+
+  .prep { padding: 32px 0; border-top: 1px solid var(--rule); font-size: 15px; line-height: 1.7; color: #444; }
+  .prep h2 { font-size: 30px; margin-bottom: 14px; color: var(--ink); }
+  .prep h3 { font-size: 19px; margin: 20px 0 8px; color: var(--ink); }
+  .prep ul { padding-left: 1.3em; margin: 0; }
+  .prep li + li { margin-top: .4em; }
+  .prep b { font-weight: normal; color: var(--ink); }
+  .ideas { margin: 0; display: grid; gap: 18px; }
+  .ideas dt { font-family: var(--serif); font-size: 18px; color: var(--ink); }
+  .ideas dd { margin: 4px 0 0; }
+  .joints { margin-top: 24px; border-collapse: collapse; width: 100%; font-size: 13px; }
+  .joints th, .joints td { text-align: left; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--rule); }
+  .joints th { font-weight: normal; color: var(--muted); }
+  .small { font-size: 13px; color: var(--muted); }
+  .prep .warn, .prep .tip { margin-top: 16px; padding: 10px 14px; font-size: 14px; border: 1px solid var(--rule); border-left: 3px solid var(--heat); background: #fafaf8; }
+  .prep .tip { border-left-color: var(--link); }
+  .prep .warn b:first-child, .prep .tip b:first-child { font-weight: normal; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+  .stage { margin-top: 24px; padding: 28px 0 6px; border-top: 2px solid var(--ink); font-size: 32px; line-height: 1.15; }
+  .stage span { display: block; font: 11px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .stage-note { font-size: 14px; color: var(--quote); margin: 4px 0 8px; }
+  .rest { display: flex; gap: 12px; margin-top: 10px; }
+  .rest figure { margin: 0; flex: 1; border: 1px solid var(--rule); }
+  .rest img { display: block; width: 100%; height: auto; }
+  .rest figcaption { font-size: 11px; color: var(--muted); padding: 4px 8px; }
+  #if-zeroing-fails table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 12px; }
+  #if-zeroing-fails th, #if-zeroing-fails td { text-align: left; vertical-align: top; padding: 8px 10px 8px 0; border-bottom: 1px solid var(--rule); }
+  #if-zeroing-fails th { font-weight: normal; color: var(--muted); }
+  #if-zeroing-fails code { font: 12px var(--mono); background: var(--chip); padding: 1px 4px; border-radius: 3px; }
+  .checks { list-style: none; padding: 0 !important; }
+  .checks li { padding-left: 26px; position: relative; }
+  .checks li::before { content: "☐"; position: absolute; left: 0; color: var(--muted); }
+
+  /* Wide screens: steps on the left, a sticky 3D view on the right that follows the step being read. */
+  @media (min-width: 1000px) {
+    .guide.has-viewer .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 46%); gap: 48px; align-items: start; }
+    .guide.has-viewer .viewer-col { display: block; position: sticky; top: 16px; height: calc(100vh - 32px); max-height: 760px; }
+    .guide.has-viewer .map-slot { display: none; }
+  }
+  .viewer-box { position: relative; height: 100%; border: 1px solid var(--rule); }
+  .viewer-step { position: absolute; left: 12px; top: 10px; z-index: 2; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--heat); }
+
+  @media (max-width: 600px) { h1 { font-size: 34px; } }
+
+  /* ?capture renders one step at a time for the still pictures (scripts/assembly-stills.mjs). */
+  :global(body.capture) .guide > .intro, :global(body.capture) .steps, :global(body.capture .site-header), :global(body.capture .site-footer) { display: none; }
+  :global(body.capture) .guide { padding: 0; border: 0; }
+  :global(body.capture) .guide .viewer-col, :global(body.capture) .guide.has-viewer .viewer-col { display: block; position: fixed; inset: 0; width: 100vw; height: 100vh; max-height: none; }
+  :global(body.capture) .viewer-box { border: 0; }
+  :global(body.capture) .viewer-step, :global(body.capture .av-hint), :global(body.capture astro-dev-toolbar) { display: none; }
+</style>
+
+<script>
+  // Tells the 3D view which step is being read. On narrow screens the view isn't shown or loaded:
+  // each step has its own still picture instead.
+  const guide = document.querySelector<HTMLElement>("[data-guide]")!;
+  const capture = new URLSearchParams(location.search).has("capture");
+  const wide = matchMedia("(min-width: 1000px)");
+  const steps = [...document.querySelectorAll<HTMLElement>("[data-step]")];
+  const label = document.querySelector<HTMLElement>("[data-viewer-label]")!;
+  const list = (s?: string) => (s ? s.split(",").filter(Boolean) : []);
+  const stateOf = (el: HTMLElement) => ({
+    parts: list(el.dataset.parts),
+    focus: list(el.dataset.focus),
+    from: el.dataset.from ? (el.dataset.from.split(",").map(Number) as [number, number, number]) : undefined,
+    view: el.dataset.view as "front" | "back" | "below" | undefined,
+    frame: el.dataset.frame as "focus" | "all" | undefined,
+  });
+
+  if (capture) {
+    document.body.classList.add("capture");
+    (window as unknown as { guideSteps: unknown }).guideSteps = steps.map(stateOf);
+  }
+
+  let viewer: HTMLElement | null = null;
+  let current: HTMLElement | null = null;
+  const show = (el: HTMLElement) => {
+    if (el === current) return;
+    current = el;
+    label.textContent = `Step ${el.dataset.step}`;
+    document.dispatchEvent(new CustomEvent("assembly-step", { detail: stateOf(el) }));
+  };
+
+  // The step being read is the last one whose top has passed 40% of the way down the screen.
+  const update = () => {
+    const line = innerHeight * 0.4;
+    let active = steps[0];
+    for (const s of steps) if (s.getBoundingClientRect().top <= line) active = s;
+    show(active);
+  };
+
+  const start = () => {
+    if (viewer || !(wide.matches || capture)) return;
+    try { if (!document.createElement("canvas").getContext("webgl2")) return; } catch { return; }
+    guide.classList.add("has-viewer");
+    viewer = guide.querySelector("assembly-viewer");
+    let ticking = false;
+    addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; update(); }); } }, { passive: true });
+    if (!capture) update();
+  };
+  start();
+  wide.addEventListener("change", start);
+</script>
