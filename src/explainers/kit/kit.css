@@ -141,3 +141,12 @@ select.lx-btn { padding-right: 4px; }
 .lx-token { width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--heat); }
 .lx-token.is-on { background: var(--heat); }
 .lx-axis-lg { font-size: 13px; }
+.lx-pad { cursor: crosshair; max-width: 420px; margin: 0 auto; }
+.lx-strip { position: relative; height: 56px; background: #f2f2f2; border: 1px solid var(--rule); display: flex; align-items: center; justify-content: center; }
+.lx-face { position: absolute; top: 50%; transform: translate(-50%, -50%); font-size: 28px; }
+.lx-faces { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.lx-facecard { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 6px; border: 1px solid var(--rule); border-radius: 4px; min-height: 190px; justify-content: flex-end; }
+.lx-facecard.is-on { border-color: var(--heat); background: #fdf6f2; }
+.lx-facecard.is-next { border-style: dashed; border-color: var(--heat); }
+.lx-facecard b { font-weight: normal; font-size: 13px; }
+.lx-facecard .lx-switch { font-size: 11px; }

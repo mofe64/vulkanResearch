@@ -1,0 +1,184 @@
+---
+title: "How does Orion see?"
+project: orion
+order: 5
+summary: "From camera pixels to a turn of the head: finding faces and hands, keeping track of who's who, following a face or your hand, and what Orion's camera never does."
+covers: ["Finding faces and hands", "Face tracking", "Hand tracking", "Camera privacy"]
+---
+import Section from "../../../components/learn/Section.astro";
+import Term from "../../../components/learn/Term.astro";
+import Fact from "../../../components/learn/Fact.astro";
+import UnderTheHood from "../../../components/learn/UnderTheHood.astro";
+import Predict from "../../../components/learn/Predict.astro";
+import DetectorDemo from "../../../explainers/orion/DetectorDemo.tsx";
+import PixelToBearing from "../../../explainers/orion/PixelToBearing.tsx";
+import TrackKeeper from "../../../explainers/orion/TrackKeeper.tsx";
+import TargetChooser from "../../../explainers/orion/TargetChooser.tsx";
+import { FaceFollow, HandFollow } from "../../../explainers/orion/GazeFollow.tsx";
+import SpeakerPick from "../../../explainers/orion/SpeakerPick.tsx";
+import ObjectAim from "../../../explainers/orion/ObjectAim.tsx";
+import VisionModes from "../../../explainers/orion/VisionModes.tsx";
+
+<p class="intro">
+Orion has one wide-angle camera in its head. On its own, a camera only produces a grid of coloured dots. This lesson
+follows those dots until they become something Orion can act on: "a person is over there, talking to me", or "your
+hand just moved left".
+</p>
+
+<Section>
+
+## Finding faces, hands and things
+
+Orion runs three <Term id="detector">detectors</Term> on the camera picture: one for faces, one for palms and one for
+everyday objects. Each marks what it finds with a box and a <Term id="confidence">score</Term>. Orion keeps only the
+finds that score above a threshold.
+
+Picking that threshold is a trade-off: too strict and it misses people, too loose and it sees faces that aren't there.
+
+<Fact>On the Pi alone, faces are checked 10 times a second. An optional <Term id="accelerator">AI accelerator</Term> raises that to 15.</Fact>
+
+<UnderTheHood>
+The CPU detectors are YuNet (faces), MediaPipe palm detection and YOLO11n (objects); with a Raspberry Pi AI HAT+,
+SCRFD, a palm model and YOLOv11n run on the Hailo chip. One worker schedules all three and always uses the latest
+frame, dropping older work. Thresholds and rates are in `vision/orion_vision/detector_policy.py`.
+</UnderTheHood>
+
+<div slot="stage"><DetectorDemo client:visible /></div>
+</Section>
+
+<Section>
+
+## From a pixel to a direction
+
+A box in the picture only says "this face is at pixel 412". That's no use for turning toward it, because the camera
+moves with the head: turn the head and the same face lands on a different pixel.
+
+So Orion records exactly where the camera was pointing when each picture was taken, and turns every find into a
+<Term id="bearing">bearing</Term>: a direction from the lamp's base that doesn't change when the head moves.
+
+<Fact>The camera sees about 102° side to side. Pictures are analysed at 640 × 360 pixels.</Fact>
+
+<UnderTheHood>
+Each frame carries its capture time (the middle of the exposure). The runtime supplies the camera's pose at that
+instant, worked out from the joint angles and the robot description, so a picture taken mid-turn is still placed
+correctly. Detection works in pixels; everything after it works in bearings.
+</UnderTheHood>
+
+<div slot="stage"><PixelToBearing client:visible /></div>
+</Section>
+
+<Section>
+
+## Keeping track of who's who
+
+A detector looks at each picture on its own. It doesn't know that the face in this picture is the same person as the
+face in the last one. And sometimes it misses a face for a frame or two.
+
+A tracker joins the finds into numbered <Term id="track">tracks</Term>. It predicts where each person will be next, and
+a new find close to that prediction keeps the same number. A short miss doesn't lose anyone.
+
+<Fact>A track survives one second without being seen. Finds within 20° of a prediction count as the same person.</Fact>
+
+<UnderTheHood>
+`vision/orion_vision/tracker.py` keeps a constant-velocity Kalman filter per track, in bearings rather than pixels:
+each track has a direction and a speed, and every new find nudges both. Track numbers never restart, even after the
+camera is switched off and on.
+</UnderTheHood>
+
+<div slot="stage"><TrackKeeper client:visible /></div>
+</Section>
+
+<Section>
+
+## Face tracking: choosing whom to look at
+
+With several people in view, Orion has to pick one to look at, and then not flit between them. It sticks with its
+current target. It only switches to someone else who is looking at it and is clearly closer, and only once that's been
+true for a moment.
+
+<Predict question="Ben steps much closer but is looking at his phone. Does Orion switch to him?" options={["Yes", "No"]} answer={1}>
+No. Orion only switches to someone looking at it. Untick "looking at Orion" for a face to see.
+</Predict>
+
+<div slot="stage"><TargetChooser client:visible /></div>
+</Section>
+
+<Section>
+
+## Face tracking: turning to look
+
+Knowing where to look, Orion turns the way people do: the head moves first, because it's light and quick. A moment
+later the base starts turning too, slowly, and the head turns back toward the middle as the base takes over. The arm
+holds its pose throughout.
+
+Tiny movements are ignored, so Orion doesn't twitch every time someone shifts in their seat.
+
+<Fact>Orion plans a new look every 0.1 seconds. The base joins after 0.2 seconds, and anything within 4° counts as already looking.</Fact>
+
+<UnderTheHood>
+`runtime/src/expression/gaze.rs` solves the head angles against the robot description so the camera points along the
+bearing, caps the head's step per update, and compiles each look as a short anchor-relative motion: aim, hold for 1.1
+seconds, then return to the anchor. The next update replaces it from the current commanded state, so the movement
+stays smooth.
+</UnderTheHood>
+
+<div slot="stage"><FaceFollow client:visible /></div>
+</Section>
+
+<Section>
+
+## Face tracking: who's talking?
+
+When you say "Hey Orion" in a room with other people, Orion turns to you, not to whoever happens to be closest. It
+works out who spoke by watching mouths: the face detector also marks points on each mouth, and Orion compares how much
+each one moved while the wake word was said.
+
+If it can't tell, it doesn't guess. It would rather not turn than turn to the wrong person.
+
+<Fact>The chosen speaker can stay Orion's target between replies. If they leave, Orion won't swap in a bystander.</Fact>
+
+<div slot="stage"><SpeakerPick client:visible /></div>
+</Section>
+
+<Section>
+
+## Hand tracking
+
+In Hands mode, Orion looks for your palm instead of faces, and follows it. Move your hand left and the head follows,
+like a torch you can steer: handy for pointing its light where you're working.
+
+It uses exactly the same turning rules as faces: head first, base after, small movements ignored. When your hand
+leaves the picture, Orion holds still for a moment in case it comes back, then returns to its pose.
+
+<Fact>A hand can't wake a resting lamp or switch the motors on. Only a confirmed “Hey Orion” can wake it.</Fact>
+
+<div slot="stage"><HandFollow client:visible /></div>
+</Section>
+
+<Section>
+
+## Finding something on request
+
+You can also ask: "look at the mug". Orion runs the object detector, finds the mug, and points its head at it. There
+are four possible answers, and Orion is honest about each: it found it; it found it but can't turn that far; it found
+several and needs you to choose; or it can't find one.
+
+<Fact>Answers to “look at …” are exactly <code>aimed</code>, <code>clamped</code>, <code>ambiguous</code> or <code>not_found</code>.</Fact>
+
+<div slot="stage"><ObjectAim client:visible /></div>
+</Section>
+
+<Section>
+
+## Tracking modes and privacy
+
+You decide how much Orion uses its camera. Four tracking modes go from "nothing in the background" to "always follow
+faces" or "follow my hand". Separately, a privacy switch turns the camera off completely.
+
+Pictures only ever live in the Pi's memory. They're not saved, and none goes online unless you ask Orion to look at
+something.
+
+<Fact>Switching the camera off closes it and clears the images in memory, in every mode.</Fact>
+
+<div slot="stage"><VisionModes client:visible /></div>
+</Section>
