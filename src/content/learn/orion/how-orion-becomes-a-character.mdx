@@ -1,7 +1,7 @@
 ---
 title: "How does Orion become a character?"
 project: orion
-order: 4
+order: 5
 summary: "The engineering behind a lamp that seems alive: animation principles, idles, a simple inner state, reactions timed to its voice, and knowing when to hold back."
 covers: ["Animation principles", "Never fully still", "A simple inner state", "Curiosity on a budget"]
 recap:
@@ -15,6 +15,7 @@ import Fact from "../../../components/learn/Fact.astro";
 import UnderTheHood from "../../../components/learn/UnderTheHood.astro";
 import Predict from "../../../components/learn/Predict.astro";
 import Anticipation from "../../../explainers/orion/Anticipation.tsx";
+import HeadLeads from "../../../explainers/orion/HeadLeads.tsx";
 import IdleRhythm, { IdleGallery } from "../../../explainers/orion/IdleRhythm.tsx";
 import MindSim from "../../../explainers/orion/MindSim.tsx";
 import SequenceView from "../../../explainers/kit/SequenceView.tsx";
@@ -58,6 +59,20 @@ Overshoot. Anything heavy keeps going a little after it's told to stop. Without 
 </Predict>
 
 <div slot="stage"><Anticipation client:visible /></div>
+</Section>
+
+<Section>
+
+## Head leads, body follows
+
+When people notice something, their eyes and head move first and the body catches up. A lamp whose joints all move
+together looks like one stiff object tipping over; one whose head moves first looks like it's paying attention.
+
+So Orion leads with its head. The shoulder and elbow follow a moment later, and move less.
+
+<Fact>Orion's speech planner applies this to every gesture it plans while talking, and its gaze does the same when it turns to look at you.</Fact>
+
+<div slot="stage"><HeadLeads client:visible /></div>
 </Section>
 
 <Section>
@@ -138,7 +153,7 @@ Codex can tag a reply with a feeling: happy, sympathy, surprised, and eight more
 marked peak, its <Term id="apex">apex</Term>, and Orion times the motion so the apex lands on the matching moment in its speech.
 
 Between reactions, the rest of Orion's speaking movement follows the sound of its own voice: bigger on loud,
-energetic phrases, calmer in quiet ones, with the head moving first and the arm following, smaller.
+energetic phrases, calmer in quiet ones.
 
 <Fact>Every reaction motion must start and end at the same pose and have exactly one apex. Orion checks this when it loads them.</Fact>
 

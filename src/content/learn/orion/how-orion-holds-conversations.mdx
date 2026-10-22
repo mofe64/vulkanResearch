@@ -1,7 +1,7 @@
 ---
 title: "How does Orion hold conversations?"
 project: orion
-order: 3
+order: 4
 summary: "From the sound of your voice to Orion's spoken reply: hearing its name, knowing when you've stopped, and where the waiting time goes."
 covers: ["Sound as numbers", "Hearing its name", "Knowing when you've stopped", "Your turn again"]
 recap:
@@ -22,6 +22,7 @@ import PauseShortener from "../../../explainers/orion/PauseShortener.tsx";
 import ReplyStreaming from "../../../explainers/orion/ReplyStreaming.tsx";
 import FollowUp from "../../../explainers/orion/FollowUp.tsx";
 import DataBoundary from "../../../explainers/orion/DataBoundary.tsx";
+import Interrupting from "../../../explainers/orion/Interrupting.tsx";
 
 <p class="intro">
 Talking to Orion feels simple: you say its name, ask something, and it answers. Underneath, it has to solve a run of
@@ -145,11 +146,31 @@ Sounds and light tell you which stage it's in, so you never have to guess whethe
 
 <UnderTheHood>
 Each wake gets a fresh session ID, and a follow-up gets a new ID linked to the finished turn, so a late result from an
-old turn can't sneak into a new one. On V2 the microphone board's <Term id="echo-cancellation">echo cancellation</Term> lets Orion hear "Hey Orion" while
-it's speaking, which interrupts the reply.
+old turn can't sneak into a new one.
 </UnderTheHood>
 
 <div slot="stage"><FollowUp client:visible /></div>
+</Section>
+
+<Section>
+
+## Interrupting Orion
+
+Sometimes you want to cut in. But while Orion talks, its microphones hear its own voice loudest, which would drown
+out yours. Orion's microphone board removes its own voice from what it hears, which is called
+<Term id="echo-cancellation">echo cancellation</Term>, so a "Hey Orion" said over the reply still gets through.
+
+The wake checks still apply. A sound that merely resembles its name doesn't stop the reply; a confirmed one does.
+
+<Fact>A confirmed interruption ends the old reply and starts a fresh conversation, keeping the words you said just before.</Fact>
+
+<UnderTheHood>
+Orion only listens for its name during playback when its acoustic verifier is healthy; the speech-recognition check
+alone isn't trusted to interrupt. Interruptions also skip the usual turn toward the speaker, and an alarm being
+dismissed takes priority over a new conversation. See "Wake-phrase interruption" in `docs/voice-architecture.md`.
+</UnderTheHood>
+
+<div slot="stage"><Interrupting client:visible /></div>
 </Section>
 
 <Section>
