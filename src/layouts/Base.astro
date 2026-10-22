@@ -35,12 +35,15 @@ const imageUrl = new URL(image, Astro.site ?? SITE.url).href;
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={imageUrl} />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
   </head>
   <body>
     <div class="page">
       <header class="site-header">
-        <a href="/" class="wordmark">{SITE.name}</a>
+        <a href="/" class="wordmark"><img src="/logo-mark.svg" alt="" width="57" height="34" />{SITE.name}</a>
         <nav aria-label="Main">
           <a href="/#workbench">Projects</a>
           <a href="/log/">Log</a>
@@ -63,7 +66,8 @@ const imageUrl = new URL(image, Astro.site ?? SITE.url).href;
     display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
     padding: 26px var(--gutter);
   }
-  .wordmark { font-family: var(--serif); font-size: 22px; color: var(--ink); }
+  .wordmark { display: inline-flex; align-items: center; gap: 12px; font-family: var(--serif); font-size: 22px; color: var(--ink); }
+  .wordmark img { display: block; flex: none; }
   .wordmark:hover { text-decoration: none; }
   nav { display: flex; gap: 26px; font-size: 13px; align-items: center; flex-wrap: wrap; }
   .gh { padding: 5px 14px; border: 1px solid var(--ink); border-radius: 3px; color: var(--ink); white-space: nowrap; }
