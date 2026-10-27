@@ -30,11 +30,11 @@ export default function WakeCheck() {
         </div>
         <ol className="lx-checks">
           <li className={ex.first ? "is-pass" : "is-fail"}>
-            <b>1. Sounds like it?</b> Rustpotter compares the sound's pattern with recordings of “Hey Orion”. Fast and always
-            on, but easily fooled. <span>{ex.first ? "Maybe: check further" : "No: ignored"}</span>
+            <b>1. Sounds like it?</b> openWakeWord scores every 20 ms of sound against “Hey Orion”. Fast and always
+            on, but it can be fooled. <span>{ex.first ? "Maybe: check further" : "No: ignored"}</span>
           </li>
           <li className={second === null ? "is-skip" : second ? "is-pass" : "is-fail"}>
-            <b>2. Says it?</b> Qwen writes down the first words and Orion checks the text.
+            <b>2. Says it?</b> Qwen writes down the last few seconds and Orion checks the first words for the phrase.
             {second !== null && <> Heard: <q>{ex.heard}</q>.</>}
             <span>{second === null ? "Not needed" : second ? "Yes: Orion wakes" : "No: thrown away"}</span>
           </li>

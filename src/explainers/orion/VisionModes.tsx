@@ -6,7 +6,7 @@ const MODES = {
   Off: { runs: "Nothing in the background", follows: "Nothing", note: "You can still view the camera in Studio." },
   Idle: { runs: "Face detection for Orion's own behaviours", follows: "The person talking to it, during a conversation", note: "The default: Orion notices, but doesn't stare." },
   Faces: { runs: "Face detection", follows: "Faces, all the time", note: "Ambient following: Orion keeps looking at whoever is there." },
-  Hands: { runs: "Palm detection instead of faces", follows: "Your hand", note: "Move your hand and the head follows it, like a torch you can steer." },
+  Hands: { runs: "Palm detection instead of faces", follows: "Your hand", note: "Move your hand and the head follows it, like a torch you can steer. Saying “follow my hand” switches to this mode, and “stop following” switches back." },
 } as const;
 type Mode = keyof typeof MODES;
 
@@ -26,7 +26,7 @@ export default function VisionModes() {
         <ul className="lx-list">
           <li className={!camera ? "is-off" : ""}><span>●</span><span>Detects: {m.runs}</span><span className="lx-where">on the Pi</span></li>
           <li className={!camera ? "is-off" : ""}><span>●</span><span>Follows: {m.follows}</span><span className="lx-where">via the runtime</span></li>
-          <li className={!camera ? "is-off" : ""}><span>●</span><span>Viewing in Studio, with a cyan band on the light while it's on</span><span className="lx-where">needs permission</span></li>
+          <li className={!camera ? "is-off" : ""}><span>●</span><span>Viewing in Studio, with one cyan light on the ring while it's on</span><span className="lx-where">needs permission</span></li>
         </ul>
         <p className="lx-card">{camera ? m.note : "Capture is closed and the images in memory are cleared. Nothing is detected or followed, in any mode."}</p>
       </div>

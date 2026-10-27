@@ -53,7 +53,7 @@ recording at that point, it would cut off the start of your sentence.
 So it always keeps the last few seconds of sound in memory, overwriting the oldest as it goes. When the
 <Term id="wake-word">wake word</Term> is recognised, the moments just before it are still there to use.
 
-<Fact>Orion keeps 3 seconds in memory and adds the 2 seconds before the wake word to the recording.</Fact>
+<Fact>Orion keeps 3 seconds in memory, and all 3 go into the recording.</Fact>
 
 <div slot="stage"><PreRoll client:visible /></div>
 </Section>
@@ -74,9 +74,10 @@ time; the expensive one runs only when there's a reason to.
 </Predict>
 
 <UnderTheHood>
-The first stage is Rustpotter, trained on recordings of "Hey Orion". The second stage asks Qwen to transcribe a short
-prefix of the candidate audio. While it does, the full command keeps recording, so the check costs no time. A rejected
-candidate leaves the rolling memory and detector history untouched. See `docs/voice-architecture.md`.
+The first stage is openWakeWord, which scores every 20 ms of sound against "Hey Orion", all the time, even while
+Orion is talking. The second stage asks Qwen to transcribe the 3 seconds before the detection plus the next 300 ms, and
+looks for the phrase in the first eight words. While it does, the full command keeps recording, so the check costs no
+time. A rejection cancels only that turn. See `docs/voice-architecture.md`.
 </UnderTheHood>
 
 <div slot="stage"><WakeCheck client:visible /></div>
@@ -160,14 +161,15 @@ Sometimes you want to cut in. But while Orion talks, its microphones hear its ow
 out yours. Orion's microphone board removes its own voice from what it hears, which is called
 <Term id="echo-cancellation">echo cancellation</Term>, so a "Hey Orion" said over the reply still gets through.
 
-The wake checks still apply. A sound that merely resembles its name doesn't stop the reply; a confirmed one does.
+Because the detector listens all the time, hearing its name stops the reply straight away. Then the usual check
+decides: a real "Hey Orion" starts a fresh turn; a false alarm is thrown away.
 
-<Fact>A confirmed interruption ends the old reply and starts a fresh conversation, keeping the words you said just before.</Fact>
+<Fact>"Hey Orion, stop" just stops Orion talking. Any other request after its name starts a new conversation.</Fact>
 
 <UnderTheHood>
-Orion only listens for its name during playback when its acoustic verifier is healthy; the speech-recognition check
-alone isn't trusted to interrupt. Interruptions also skip the usual turn toward the speaker, and an alarm being
-dismissed takes priority over a new conversation. See "Wake-phrase interruption" in `docs/voice-architecture.md`.
+A detection while Orion is speaking or still working on a reply interrupts that turn, and the old reply stops before
+the new command runs. Interruptions skip the usual turn toward the speaker, and an alarm being dismissed takes priority
+over a new conversation. See "Wake-phrase interruption" in `docs/voice-architecture.md`.
 </UnderTheHood>
 
 <div slot="stage"><Interrupting client:visible /></div>
@@ -178,7 +180,7 @@ dismissed takes priority over a new conversation. See "Wake-phrase interruption"
 ## What stays on the lamp
 
 Your voice is turned into text on the lamp itself. What goes online is the text Codex needs to write a reply, and a
-photo only when you ask Orion to look at something.
+photo when you ask Orion to look at something (in Demo mode, also one with each remark Orion makes).
 
 <Fact>Orion's behaviour journal records what it did, but never camera pixels or microphone audio.</Fact>
 

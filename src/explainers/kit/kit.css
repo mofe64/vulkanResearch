@@ -150,3 +150,7 @@ select.lx-btn { padding-right: 4px; }
 .lx-facecard.is-next { border-style: dashed; border-color: var(--heat); }
 .lx-facecard b { font-weight: normal; font-size: 13px; }
 .lx-facecard .lx-switch { font-size: 11px; }
+.lx-days { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 4px; }
+.lx-day { font: 12px var(--sans); padding: 8px 0; border: 1px solid var(--rule); background: #fff; border-radius: 3px; cursor: pointer; color: var(--ink); }
+.lx-day.is-window { background: #fdf0e9; }
+.lx-day.is-on { border-color: var(--heat); color: var(--heat); }
