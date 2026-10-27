@@ -175,12 +175,14 @@ reacted to all of them it would seem twitchy. So every curious glance spends fro
 already looked at get less interesting each time.
 
 <Predict question="A mug appears, Orion glances at it. You move the mug a minute later. Does it look again?" options={["Yes", "No"]} answer={1}>
-No. The same thing has to wait at least 2 minutes, and longer each time after that.
+No, on a normal lamp. The same thing has to wait at least 2 minutes, and longer each time after that. A nosy lamp
+waits only 1 minute.
 </Predict>
 
 <UnderTheHood>
-`runtime/src/expression/curiosity.rs`: at most 3 gestures per 10 minutes, at least 60 s apart; the same target waits
-120 s, doubling with each repeat (up to 16×), and is forgotten after an hour. The budget never stores who a person is,
+`runtime/src/expression/curiosity.rs`: a normal lamp allows 3 gestures per 10 minutes, at least 60 s apart; the same
+target waits 120 s, doubling with each repeat (up to 16×), and is forgotten after an hour. A shy lamp allows 2, 120 s
+apart, waiting 240 s; a nosy one 5, 30 s apart, waiting 60 s. Demo mode allows 20, 12 s apart. The budget never stores who a person is,
 only short-lived track IDs.
 </UnderTheHood>
 
@@ -220,5 +222,8 @@ A good character is as much about what it doesn't do. Orion never talks over you
 silent. Its little sounds are switched off overnight. Stop always wins, and nothing it notices with its camera can wake
 it or switch its motors on.
 
-<Fact>Quiet hours run from 22:00 to 07:00. Speech, alarms and light routines also silence its character sounds.</Fact>
+On a Lively lamp, Orion can also speak first. The rules that keep that in check are the subject of the next lesson,
+[How does Orion decide to act?](/projects/orion/learn/how-orion-decides-to-act/).
+
+<Fact>Quiet hours run from 22:00 to 07:00 by default, and owners can change them. Speech, alarms and light routines also silence its character sounds.</Fact>
 </Section>

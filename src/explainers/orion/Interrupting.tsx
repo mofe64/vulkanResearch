@@ -17,13 +17,14 @@ function voice(seed: number, from: number, to: number, size: number) {
 }
 
 const SAYERS = {
-  you: { label: "You say “Hey Orion”", words: "Hey Orion", real: true },
-  tv: { label: "The TV says “Hey, Ryan”", words: "Hey, Ryan", real: false },
+  you: { label: "“Hey Orion, what time is it?”", words: "Hey Orion, what time is it?", real: true, result: "The reply stops, the check confirms the name, and a fresh conversation starts with your question." },
+  stop: { label: "“Hey Orion, stop”", words: "Hey Orion, stop", real: true, result: "The reply stops, the check confirms the name, and Orion stays quiet." },
+  tv: { label: "The TV: “Hey, Ryan”", words: "Hey, Ryan", real: false, result: "If the detector is fooled, the reply stops; then the check finds no “Hey Orion” and throws the false alarm away." },
 };
 
 /**
  * While Orion talks, its microphones hear its own voice too. Echo cancellation takes it out, so a “Hey Orion” spoken
- * over the reply can still be heard. Both wake checks must still pass before the reply stops.
+ * over the reply can still be heard. A detection stops the reply at once; the wake check then decides what happens.
  */
 export default function Interrupting() {
   const [echo, setEcho] = useState(true);
@@ -33,7 +34,7 @@ export default function Interrupting() {
   const heard = orion.map((o, i) => (echo ? o * 0.06 : o) + other[i]);
   const say = SAYERS[who];
   const detected = echo; // without cancellation the quieter voice is buried under Orion's own
-  const accepted = detected && say.real;
+  const accepted = detected; // a detection stops the reply before the check runs
   const stopAt = 4.5;
   const X = (i: number) => 20 + (i / N) * 560;
   const T = (t: number) => 20 + (t / SPAN) * 560;
@@ -51,7 +52,7 @@ export default function Interrupting() {
           <text x={20} y={148} className="lx-axis">WHAT THE MICROPHONES PASS ON {echo ? "(Orion's voice removed)" : ""}</text>
           {lane(heard.map((v, i) => (accepted && (i / N) * SPAN > stopAt ? other[i] : v)), 190, "lx-ink")}
           {accepted && <line x1={T(stopAt)} x2={T(stopAt)} y1={20} y2={200} className="lx-cursor" />}
-          {accepted && <text x={T(stopAt) + 4} y={30} className="lx-axis lx-limit-text">reply stops, new turn starts</text>}
+          {accepted && <text x={T(stopAt) + 4} y={30} className="lx-axis lx-limit-text">reply stops</text>}
         </svg>
         <div className="lx-row">
           {(Object.keys(SAYERS) as (keyof typeof SAYERS)[]).map((k) => (
@@ -61,10 +62,10 @@ export default function Interrupting() {
         </div>
         <ol className="lx-checks">
           <li className={detected ? "is-pass" : "is-fail"}><b>Heard over the reply?</b><span>{detected ? "Yes: with Orion's own voice removed, the other voice stands out." : "No: Orion's own voice drowns it out."}</span></li>
-          <li className={!detected ? "is-skip" : say.real ? "is-pass" : "is-fail"}><b>Wake word confirmed?</b><span>{!detected ? "Never reached" : say.real ? "Yes: the reply stops and a fresh conversation starts, including the words just before." : "No: the reply carries on as if nothing happened."}</span></li>
+          <li className={!detected ? "is-skip" : say.real ? "is-pass" : "is-fail"}><b>Then: is it really “Hey Orion”?</b><span>{!detected ? "Never reached: Orion keeps talking." : say.result}</span></li>
         </ol>
       </div>
-      <figcaption className="lx-caption">The waves are illustrations. On Orion V2 the microphone board does the echo cancellation itself; Orion V1 has none, so it simply doesn't listen for its name while it talks.</figcaption>
+      <figcaption className="lx-caption">The waves are illustrations. On Orion V2 the microphone board does the echo cancellation itself.</figcaption>
     </figure>
   );
 }

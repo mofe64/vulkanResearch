@@ -10,13 +10,13 @@ const WORDS = [
 ];
 const WAKE_AT = 2.9; // the wake word is recognised just after it ends
 const PRE_ROLL = 3; // seconds always kept in memory (docs/voice-architecture.md)
-const KEEP_BEFORE = 2; // seconds of that kept with the command
+const KEEP_BEFORE = 3; // all of it goes into the recording
 const SPAN = 6.5;
 
 const STEPS = [
   "Orion always keeps the last 3 seconds of sound in memory, and throws away anything older.",
   "It recognises “Hey Orion” just after you finish saying it, so the words are already in the past.",
-  "That's why it keeps a memory: the 2 seconds before the wake word go into the recording, so nothing is lost.",
+  "That's why it keeps a memory: the whole 3 seconds go into the recording, so nothing is lost.",
   "It keeps recording until you stop talking. The whole clip goes to speech recognition.",
 ];
 
@@ -48,7 +48,7 @@ export default function PreRoll() {
         <p className="lx-card">{STEPS[s.step]}</p>
         <Stepper step={s.step} count={STEPS.length} playing={s.playing} onPlay={s.play} onPause={s.pause} onGo={s.go} />
       </div>
-      <figcaption className="lx-caption">The orange box is what gets recorded. A recording can run up to 30 seconds after the wake word.</figcaption>
+      <figcaption className="lx-caption">The orange box is what gets recorded. A recording can run up to 15 seconds after the wake word.</figcaption>
     </figure>
   );
 }

@@ -1,0 +1,178 @@
+---
+title: "How does Orion decide to act?"
+project: orion
+order: 6
+summary: "When Orion moves or speaks without being asked: one picture of the moment, how lively it is, the quirks every lamp is born with, the rules for speaking first, looking after you, and its memory of home."
+covers: ["Quiet, Lively or Demo", "Quirks", "Speaking first", "A memory of home"]
+recap:
+  - "Every initiative starts from one situation and passes the curiosity budget before Orion moves."
+  - "Quiet only moves, Lively can also speak and look after you, and quirks make each lamp a little different."
+  - "Speaking first follows strict rules: once a visit, spaced out, never at night or mid-concentration, and quieter when ignored."
+---
+import Section from "../../../components/learn/Section.astro";
+import Term from "../../../components/learn/Term.astro";
+import Fact from "../../../components/learn/Fact.astro";
+import UnderTheHood from "../../../components/learn/UnderTheHood.astro";
+import Predict from "../../../components/learn/Predict.astro";
+import InitiativeFlow from "../../../explainers/orion/InitiativeFlow.tsx";
+import Liveliness from "../../../explainers/orion/Liveliness.tsx";
+import Quirks from "../../../explainers/orion/Quirks.tsx";
+import RemarkRules from "../../../explainers/orion/RemarkRules.tsx";
+import SequenceView from "../../../explainers/kit/SequenceView.tsx";
+import CareSim from "../../../explainers/orion/CareSim.tsx";
+import HomeMemory from "../../../explainers/orion/HomeMemory.tsx";
+
+<p class="intro">
+So far Orion has mostly responded: to its name, to a face, to a hand. This lesson is about what it does on its own
+initiative: glancing at something new, saying hello when you sit down, suggesting a break. Doing that well is mostly a
+matter of knowing when not to.
+</p>
+
+<Section>
+
+## One picture of the moment
+
+Many parts of Orion could decide to act, and if each asked its own questions they would soon disagree. So every time the
+camera reports, Orion builds one <Term id="situation">situation</Term>: who is in view, whether anyone is looking at it,
+how long they've been here, the time, the light, and whether it's busy.
+
+Every initiative then takes the same path: a reaction, a check against the curiosity budget, the movement, and only
+then, maybe, words.
+
+<Fact>A visit starts when a face comes into view and ends when nobody has been seen for 10 minutes.</Fact>
+
+<UnderTheHood>
+The situation is built in `runtime/src/expression/situation.rs`; the shared path is in `runtime/src/expression/initiative.rs`.
+Each decision is written to the behaviour log with the situation at that moment, including the things Orion chose not
+to do and why, which Studio's Debug page shows.
+</UnderTheHood>
+
+<div slot="stage"><InitiativeFlow client:visible /></div>
+</Section>
+
+<Section>
+
+## Quiet, Lively or Demo
+
+How much Orion does on its own is one setting in Studio. Quiet reacts with movement only. Lively can also speak first
+and looks after the people at the desk. Demo turns everything up, for showing Orion to a room of people.
+
+<Fact>Demo also sends one camera picture with each remark, so the reply can mention what Orion sees.</Fact>
+
+<div slot="stage"><Liveliness client:visible /></div>
+</Section>
+
+<Section>
+
+## Every lamp is a little different
+
+When a new Orion first starts, it picks two <Term id="quirk">quirks</Term> at random: how curious it is and how chatty
+it is. A nosy lamp glances at new things often; a shy one rarely. A chatty lamp speaks up more and may add a playful
+thought; a reserved one keeps it brief.
+
+The same numbers that limit curiosity and speech come from the quirks, so the difference is real, not cosmetic.
+
+<Fact>The quirks are saved on the lamp, and Studio shows them under Personality and memory.</Fact>
+
+<div slot="stage"><Quirks client:visible /></div>
+</Section>
+
+<Section>
+
+## Speaking first
+
+A Lively Orion can say a short <Term id="remark">remark</Term> on its own: a hello when you arrive, a comment when you
+hold its gaze, a word about something new on the desk. A lamp that chatted constantly would be unbearable, so every
+remark has to pass a list of rules first.
+
+It speaks to each person once per visit, keeps remarks apart, says nothing at night, after a conversation, or while
+you're concentrating, and waits longer each time a remark is ignored.
+
+<Predict question="Orion mentions your new umbrella and you don't answer. How long until its next remark?" options={["After 10 minutes", "After 20 minutes"]} answer={1}>
+At least 20 minutes, for a normal lamp. An ignored remark doubles the usual 10-minute gap (up to four times), and a reply resets it.
+</Predict>
+
+<UnderTheHood>
+`runtime/src/expression/remarks.rs` checks the rules in this order: busy, asked to be quiet, already spoken this visit,
+concentrating, quiet hours, within 5 minutes of a conversation, spacing, the cooldown for that kind of remark (30 min
+for arrivals, 20 for looks, an hour for new things) and the hourly limit. The words come from the language model, which
+can't use tools for a remark and can choose to say nothing.
+</UnderTheHood>
+
+<div slot="stage"><RemarkRules client:visible /></div>
+</Section>
+
+<Section>
+
+## How a remark is said
+
+The movement always comes first: Orion turns to you, then speaks. The language model writes the remark from what just
+happened and Orion's recent remarks, in the style its quirks call for. Then Orion listens, so you can answer without
+saying "Hey Orion".
+
+You stay in charge. Saying "Hey Orion" during a remark stops it, and "be quiet for a while" silences remarks for up to
+8 hours.
+
+<Fact>A remark that can't start within 8 seconds of its moment is dropped: old news isn't worth saying.</Fact>
+</Section>
+
+<Section>
+
+## Waving back
+
+Raise your hand to Orion near your face, and a Lively lamp waves back: the head turns to you, the arm lifts and sways
+side to side twice, and it nods. No words, just the gesture.
+
+<Fact>The hand has to be up near a face for 0.6 seconds, so reaching for a mug doesn't count. Waving back uses the curiosity budget too.</Fact>
+
+<div slot="stage">
+<SequenceView client:visible
+  camera="front"
+  steps={[
+    { label: "a hand goes up near a face", wait: 1.5, note: "A palm near someone's face, held for 0.6 seconds." },
+    { label: "wave back", motion: "wave_back", note: "Orion's own wave_back motion: turn, lift, sway twice, nod, and return." },
+    { label: "back to idle", wait: 1.5 },
+  ]}
+  caption="The wave is a motion file like any other, played through Orion's compiler."
+/>
+</div>
+</Section>
+
+<Section>
+
+## Looking after you
+
+A Lively Orion also keeps an eye on the person at the desk. After a long stretch of work it stretches and suggests a
+break. When the room gets dark and its own light is low, it offers to turn its light on. A late goodbye becomes a
+goodnight, and Orion heads to rest soon after.
+
+<Fact>Each of these happens only while someone is in view, and the break and light offers at most once a visit.</Fact>
+
+<div slot="stage"><CareSim client:visible /></div>
+</Section>
+
+<Section>
+
+## A memory of home
+
+Orion remembers a little about the home it lives in. When you mention something coming up, such as an interview or a
+trip, it saves a short note and may ask how it went on the day or just after. It also notices habits, like when you
+usually arrive, and keeps one sentence about each of the last 30 days.
+
+This memory is background for conversations and welcomes, never something Orion brings up when nobody is there.
+
+<Fact>Home memory is stored on the lamp. Studio shows every part of it and can delete any item, or all of it.</Fact>
+
+<div slot="stage"><HomeMemory client:visible /></div>
+</Section>
+
+<Section>
+
+## You set the limits
+
+Everything in this lesson is adjustable. Owners can pick Quiet, Lively or Demo, move quiet hours, change
+how often remarks may come, and switch off any single behaviour. And Orion writes down each decision with its reason, so
+when it stays quiet, you can see why.
+
+<Fact>Nothing Orion notices can wake it or switch its motors on, and apart from a goodnight it never speaks first during quiet hours.</Fact>
+</Section>

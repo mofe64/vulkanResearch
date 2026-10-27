@@ -12,9 +12,9 @@ const NODES: FlowNode[] = [
 const INFO: Record<string, string> = {
   audio: "Never leaves the lamp. Speech recognition runs on the Pi and passes on only the text. A cancelled or rejected recording is thrown away.",
   text: "The transcript of what you said goes to Codex, which needs it to write a reply.",
-  image: "Kept in the Pi's memory only. One snapshot goes to Codex when you ask Orion to look at something; otherwise none.",
+  image: "Kept in the Pi's memory only. One snapshot goes to Codex when you ask Orion to look at something, and one with each spoken remark in Demo mode; otherwise none.",
   memory: "Stored on the Pi. Orion's behaviour journal records what it did, but never camera pixels or microphone audio.",
-  codex: "The online language model. It only ever sees text, plus a photo when you explicitly ask Orion to look.",
+  codex: "The online language model. It sees text, plus a photo when you ask Orion to look, or with each remark in Demo mode.",
 };
 
 /** What stays on the lamp and what goes online. */
@@ -34,7 +34,7 @@ export default function DataBoundary() {
         />
         <p className="lx-card">{INFO[pick]}</p>
       </div>
-      <figcaption className="lx-caption">Tap a box. The dashed line from the camera is used only when you ask Orion to look.</figcaption>
+      <figcaption className="lx-caption">Tap a box. The line from the camera is used only when you ask Orion to look, or for remarks in Demo mode.</figcaption>
     </figure>
   );
 }
