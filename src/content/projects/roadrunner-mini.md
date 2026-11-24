@@ -28,10 +28,10 @@ resources:
   guide: "/projects/roadrunner-mini/assembly/"
   bom:
     - group: "Actuators"
-      item: "Feetech STS3215 serial bus servos"
+      item: "Waveshare / Feetech ST3215 serial bus servos"
       qty: 6
-      detail: "Choose the 7.4 V version. 4 hips, head yaw and head pitch, all on the 7.4 V bus."
-      url: "https://www.aliexpress.com/item/1005009034555581.html"
+      detail: "Choose the 7.4 V (19.5 kg·cm) option, not 12 V. 4 hips, head yaw and head pitch, all on the 7.4 V bus."
+      url: "https://www.waveshare.com/st3215-servo.htm"
     - group: "Actuators"
       item: "Waveshare ST3215-HS serial bus servos, 20 kg·cm"
       qty: 2

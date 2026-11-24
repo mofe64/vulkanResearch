@@ -2,11 +2,11 @@
 import Base from "../layouts/Base.astro";
 import Hero from "../components/Hero.astro";
 import ProjectSpread from "../components/ProjectSpread.astro";
-import { getProjectsByActivity } from "../lib/content";
+import { getProjectsByCreated } from "../lib/content";
 
 // The workbench shows what is moving right now; everything else is one click away on /projects/.
 const RECENT = 3;
-const all = await getProjectsByActivity();
+const all = await getProjectsByCreated();
 const recent = all.slice(0, RECENT);
 ---
 

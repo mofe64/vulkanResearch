@@ -164,8 +164,10 @@ const { model, label } = Astro.props;
         for (const p of parts) if (p.obj.visible && (fitAll || focus.has(p.num))) box.expandByObject(p.obj);
         if (box.isEmpty()) box.setFromObject(pivot);
         const target = box.getCenter(new THREE.Vector3());
-        // Half the box diagonal over-estimates how much room a tall, thin shape needs; 0.8 of it frames snugly.
-        const radius = Math.max((box.getSize(new THREE.Vector3()).length() / 2) * 0.8, 0.14);
+        const size = box.getSize(new THREE.Vector3());
+        // Half the box diagonal over-estimates how much room a box needs; 0.8 of it frames snugly,
+        // while size.y * 0.58 keeps tall narrow robots from clipping top and bottom.
+        const radius = Math.max((size.length() / 2) * 0.8, size.y * 0.58, 0.14);
         const dir = new THREE.Vector3(...VIEWS[s.view ?? "front"]).normalize();
         const fit = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * (camera.aspect < 1 ? 1.35 : 1.05);
         const toPos = target.clone().add(dir.multiplyScalar(fit));

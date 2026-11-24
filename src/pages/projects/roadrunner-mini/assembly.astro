@@ -137,7 +137,7 @@ const headings = [
           <dl class="ideas">
             <div>
               <dt>Reading a screw size</dt>
-              <dd>“M3 × 8” means a 3 mm thread that is 8 mm long, measured from under the head to the tip. Most screws here are button heads: a low, rounded head driven with a hex key. The robot uses only M2 and M3 screws, plus two M4 screws that come with the camera mounting. The servo cases take M2 and the metal servo horns take M3.</dd>
+              <dd>“M3 × 8” means a 3 mm thread that is 8 mm long, measured from under the head to the tip. Most screws here are button heads: a low, rounded head driven with a hex key. The robot uses only M2 and M3 screws, plus two M4 screws that hold the camera. The servo cases take M2 and the metal servo horns take M3.</dd>
             </div>
             <div>
               <dt>Heat-set inserts</dt>
@@ -534,7 +534,7 @@ python3 -m venv .venv
         </Step>
 
         <Step n={32} title={t(32)} parts={ALL} image={still(32)} alt="The finished robot. The power wiring runs inside the body.">
-          <p>With the battery still disconnected, finish the power wiring. Everything runs from the battery through the fuse to the splice, then splits three ways:</p>
+          <p>With the battery still disconnected, route the power wiring inside the body. Everything runs from the battery through the fuse to the splice, then splits three ways:</p>
           <table>
             <thead><tr><th>From the splice</th><th>To</th><th>Powers</th></tr></thead>
             <tbody>
@@ -544,18 +544,19 @@ python3 -m venv .venv
             </tbody>
           </table>
           <ol>
-            <li>Connect the battery lead through the fuse holder to the splice.</li>
-            <li>Connect the three outputs as in the table. Use the screw terminals on the adapters, not their DC jacks.</li>
+            <li>Connect the battery lead through the fuse holder to the splice, and wire the splice to the inputs of UBEC 1 and UBEC 2.</li>
+            <li>Run the UBEC output leads and the battery-voltage lead up to the deck, and <b>leave both UBEC outputs and both adapters' screw terminals disconnected for now</b> so the next step can check the voltages before anything sees power.</li>
             <li>Check the servo chains: the four hips, yaw and pitch on adapter 1; the two wheels on adapter 2.</li>
           </ol>
           <p class="warn"><b>Never</b> connect battery voltage to adapter 1, and never connect the two servo buses together. The hip and head servos are 7.4 V servos, and a full 3S battery at 12.6 V will destroy them.</p>
         </Step>
 
         <Step n={33} title={t(33)} parts={ALL} image={still(33)} alt="The finished robot, ready for its first power-up.">
-          <p>Check the voltages before any servo sees them. A UBEC set wrong is the one mistake here that can't be undone.</p>
+          <p>Check the voltages before any servo or the Pi sees them. A UBEC set wrong is the one mistake here that can't be undone.</p>
           <ol>
             <li>Move each leg and the head by hand through their range. Nothing should rub or catch.</li>
-            <li>Take the power wires off both adapters' screw terminals and unplug UBEC 1's lead from the Pi. Connect the battery and measure each UBEC's output with the multimeter: <b>UBEC 1 must read 5.2 V</b> and <b>UBEC 2 must read 7.4 V</b>. Disconnect the battery, then reconnect everything.</li>
+            <li>With the UBEC outputs and both adapters' screw terminals still disconnected, connect the battery and measure each UBEC's output with the multimeter: <b>UBEC 1 must read 5.2 V</b> and <b>UBEC 2 must read 7.4 V</b>.</li>
+            <li>Disconnect the battery. Now connect UBEC 1 to the Pi's 5 V and ground pins, UBEC 2 to adapter 1's screw terminal, and the battery-voltage lead from the splice to adapter 2's screw terminal (use the screw terminals, not the DC jacks).</li>
             <li>For the first power-up with the servos connected, plug the <b>6 V bench supply</b> in where the battery goes. If something is miswired, a bench supply limits the damage where a LiPo won't. Bus 1 runs a little under 7.4 V on it, which is fine for these checks.</li>
             <li>Let the Pi draw more current over USB, which the camera needs. Add this line to <code>/boot/firmware/config.txt</code> and restart:
               <pre><code>usb_max_current_enable=1</code></pre>
