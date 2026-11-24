@@ -47,7 +47,9 @@ const items = Astro.props.headings.filter((h) => h.depth === 2);
   document.querySelectorAll<HTMLElement>("[data-lesson-map]").forEach((map) => {
     const details = map.querySelector("details")!;
     const wide = matchMedia("(min-width: 1000px)");
-    if (wide.matches) details.open = true;
+    const sync = () => { if (wide.matches) details.open = true; };
+    sync();
+    wide.addEventListener("change", sync);
     map.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => { if (!wide.matches) details.open = false; }));
   });
 </script>

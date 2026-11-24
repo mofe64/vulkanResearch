@@ -21,7 +21,7 @@ const FINDS: Find[] = [
   { id: "near", kind: "face", label: "face", score: { cpu: 0.94, hailo: 0.86 }, box: [252, 80, 96, 102] },
   { id: "far", kind: "face", label: "face", score: { cpu: 0.79, hailo: 0.55 }, box: [478, 96, 44, 50] },
   { id: "picture", kind: "face", label: "face", score: { cpu: 0.42, hailo: 0.29 }, box: [62, 60, 46, 50], fake: true },
-  { id: "palm", kind: "palm", label: "palm", score: { cpu: 0.81, hailo: 0.81 }, box: [158, 96, 62, 72] },
+  { id: "palm", kind: "palm", label: "palm", score: { cpu: 0.81, hailo: 0.81 }, box: [164, 98, 66, 74] },
   { id: "cup", kind: "object", label: "cup", score: { cpu: 0.66, hailo: 0.66 }, box: [410, 262, 66, 64] },
   { id: "book", kind: "object", label: "book", score: { cpu: 0.52, hailo: 0.52 }, box: [82, 290, 146, 42] },
 ];
@@ -86,12 +86,14 @@ export default function DetectorDemo() {
   const kept = (f: Find) => f.score[hw] >= limit(f.kind);
 
   const faces = FINDS.filter((f) => f.kind === "face" && kept(f));
+  const missedNear = !kept(FINDS[0]);
   const missedFar = !kept(FINDS[1]);
   const fake = kept(FINDS[2]);
   let verdict = `Orion counts ${faces.length === 1 ? "one face" : `${faces.length} faces`}.`;
-  if (missedFar) verdict += " It misses the person at the back.";
+  if (missedNear && missedFar) verdict += " It misses both people.";
+  else if (missedFar) verdict += " It misses the person at the back.";
   if (fake) verdict += " One of them is the picture on the wall.";
-  if (!missedFar && !fake) verdict += " Both people, and nothing else.";
+  if (!missedNear && !missedFar && !fake) verdict += " Both people, and nothing else.";
 
   return (
     <figure className="lx">

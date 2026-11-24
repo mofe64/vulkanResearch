@@ -28,7 +28,7 @@ const REPLY_WINDOW = 45;
 const RULES = [
   { label: "Orion isn't busy", reasons: ["busy"] },
   { label: "Nobody asked it to be quiet", reasons: ["asked_quiet"] },
-  { label: "It hasn't already spoken to this person this visit", reasons: ["once_per_visit"] },
+  { label: "It hasn't already spoken to this person this visit", reasons: ["once_per_visit", "care_once_per_visit"] },
   { label: "The person isn't concentrating", reasons: ["focus"] },
   { label: "It isn't quiet hours (22:00 to 07:00)", reasons: ["night"] },
   { label: "No conversation in the last 5 minutes", reasons: ["after_conversation"] },
@@ -42,6 +42,7 @@ const REASONS: Record<string, string> = {
   busy: "Orion is busy (talking, playing music or running a scene).",
   asked_quiet: "You asked it to be quiet for a while.",
   once_per_visit: "It already spoke with this person on this visit.",
+  care_once_per_visit: "It already offered this on this visit.",
   focus: "The person has been looking away for a long time: they're concentrating.",
   night: "It's quiet hours (22:00 to 07:00).",
   after_conversation: "A conversation ended less than 5 minutes ago.",
@@ -80,7 +81,7 @@ function refusal(e: Event, st: State, env: Env): string | null {
   if (env.busy) return "busy";
   if (now < st.quietUntil) return "asked_quiet";
   if (ABOUT_PERSON.includes(e) && st.spokeThisVisit) return "once_per_visit";
-  if (CARE.includes(e) && st.cared.includes(e)) return "once_per_visit";
+  if (CARE.includes(e) && st.cared.includes(e)) return "care_once_per_visit";
   if (env.focus && !CARE.includes(e)) return "focus";
   if (env.hour >= 22 || env.hour < 7) return "night";
   if (st.lastTalk !== null && now - st.lastTalk < AFTER_TALK) return "after_conversation";
@@ -220,9 +221,11 @@ export default function RemarkRules() {
           </div>
         </div>
 
-        <ul className="lx-log" aria-label="What happened">
-          {log.map((l, k) => <li key={`${l.t}-${k}-${l.text}`} className={k === 0 ? "is-new" : ""} style={l.ok ? { color: "var(--heat)" } : undefined}>+{fmt(l.t)} · {l.text}</li>)}
-        </ul>
+        {log.length > 0 && (
+          <ul className="lx-log" aria-label="What happened">
+            {log.map((l, k) => <li key={`${l.t}-${k}-${l.text}`} className={k === 0 ? "is-new" : ""} style={l.ok ? { color: "var(--heat)" } : undefined}>+{fmt(l.t)} · {l.text}</li>)}
+          </ul>
+        )}
 
         <details className="lx-more">
           <summary>Set it up yourself</summary>
