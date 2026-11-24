@@ -117,6 +117,11 @@ holds its pose throughout.
 
 Tiny movements are ignored, so Orion doesn't twitch every time someone shifts in their seat.
 
+The same applies while Orion is talking. If the person it's speaking to moves more than 10° away from where the lamp
+is pointing, Orion lets the current gesture finish (or waits up to 1.5 seconds), turns its neck and then its base
+toward them, and carries on gesturing in the new direction. It skips the turn if the reply is nearly over or a
+reaction is due.
+
 <Fact>Orion plans a new look every 0.1 seconds. The base joins after 0.2 seconds, and anything within 4° counts as already looking.</Fact>
 
 <UnderTheHood>

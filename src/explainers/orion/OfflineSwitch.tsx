@@ -2,6 +2,7 @@ import { useState } from "react";
 import "../kit/kit.css";
 
 // From Orion's system architecture: speech recognition and synthesis run locally; Codex replies and search are online.
+// Home Assistant runs in a container on the Pi; camera frames stay in memory unless a reply needs one.
 const FEATURES = [
   { what: "Hearing “Hey Orion”", online: false },
   { what: "Turning your speech into text", online: false },
@@ -9,10 +10,12 @@ const FEATURES = [
   { what: "Moving, idling and reacting", online: false },
   { what: "The light", online: false },
   { what: "Timers and alarms", online: false },
+  { what: "Smart-home devices (Home Assistant on the Pi)", online: false },
   { what: "Seeing faces and hands", online: false },
   { what: "Studio on your home network", online: false },
   { what: "Writing replies (Codex)", online: true },
   { what: "Searching the web", online: true },
+  { what: "A camera snapshot, only when you ask Orion to look (or with remarks in Demo mode)", online: true },
 ];
 
 /** Switch the internet off and see which of Orion's abilities stop. */
@@ -35,7 +38,7 @@ export default function OfflineSwitch() {
           ))}
         </ul>
       </div>
-      <figcaption className="lx-caption">Only the language model and web search leave the lamp. Without them Orion still hears, moves, lights up and keeps time.</figcaption>
+      <figcaption className="lx-caption">Only the language model, web search and the occasional snapshot that goes with a reply leave the lamp. Without them Orion still hears, moves, lights up and rings the timers and alarms already set. New spoken requests, including ones for your devices, need the language model to understand them.</figcaption>
     </figure>
   );
 }

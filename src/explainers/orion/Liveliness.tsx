@@ -2,13 +2,14 @@ import { useState } from "react";
 import "../kit/kit.css";
 
 // Studio's "How lively Orion is" (docs/configuration.md, motion-architecture.md).
+// A first installation writes behaviours.json with the Lively switches on (scripts/release_install.py).
 const MODES = {
   Quiet: {
     note: "Orion reacts with movement only. It never speaks unless spoken to.",
     rows: [["Glances, looks back, notices new things", true], ["Speaks first", false], ["Waves back, light care, break nudge, goodnight", false], ["Farewells and hand play", false]],
   },
   Lively: {
-    note: "Orion can also say a short remark, and looks after the people at the desk. Its own rules, and its quirks, keep it from overdoing it.",
+    note: "The setting a new lamp starts with. Orion can also say a short remark, and looks after the people at the desk. Its own rules, and its quirks, keep it from overdoing it.",
     rows: [["Glances, looks back, notices new things", true], ["Speaks first, within its rules", true], ["Waves back, light care, break nudge, goodnight", true], ["Farewells and hand play", false]],
   },
   Demo: {

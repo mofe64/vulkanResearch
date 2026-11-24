@@ -5,7 +5,7 @@ short: "Expressive desk-lamp robot"
 focus: ["Robotics", "Embedded AI"]
 status: "Active"
 started: "July 2026"
-stack: "Raspberry Pi 5, ReSpeaker 2-Mics HAT, Rustpotter, Qwen ASR, Piper TTS"
+stack: "Raspberry Pi 5, ReSpeaker XVF3800 4-mic array, openWakeWord, Qwen ASR, Piper TTS"
 # licence: ""  # TODO: add the licence before publishing
 tagline: "A home robot in the form of a desk lamp that listens, speaks and moves with character."
 art: "/art/orion-v2-poster.png"  # shown while the 3D model loads, or without WebGL

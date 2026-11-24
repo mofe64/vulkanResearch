@@ -1,7 +1,7 @@
 ---
 import { getCollection, getEntry, render } from "astro:content";
 import Base from "../../../../layouts/Base.astro";
-import ReadingMap from "../../../../components/ReadingMap.astro";
+import LessonMap from "../../../../components/learn/LessonMap.astro";
 import { getLessons, lessonSlug, lessonUrl, projectUrl, type Lesson } from "../../../../lib/content";
 import "../../../../components/learn/lesson.css";
 
@@ -26,7 +26,7 @@ const next = all[index + 1];
       </span>
       <h1>{lesson.data.title}</h1>
       <p class="lede">{lesson.data.summary}</p>
-      <div class="map-slot"><ReadingMap headings={headings} /></div>
+      <LessonMap headings={headings} />
     </header>
 
     <div class="lbody">

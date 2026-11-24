@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useOnScreen } from "../kit/playback";
 import "../kit/kit.css";
 
 const RATIO = 1.5; // a new face must look 1.5 times bigger (closer)... (pipeline.py)
@@ -16,11 +17,14 @@ export default function TargetChooser() {
   const [target, setTarget] = useState(1);
   const [challenger, setChallenger] = useState<{ id: number; since: number } | null>(null);
   const [now, setNow] = useState(0);
+  const [box, onScreen] = useOnScreen();
 
+  // The clock only runs while the explainer is on screen.
   useEffect(() => {
+    if (!onScreen) return;
     const id = setInterval(() => setNow((t) => t + 0.1), 100);
     return () => clearInterval(id);
-  }, []);
+  }, [onScreen]);
   useEffect(() => {
     const current = faces.find((f) => f.id === target)!;
     const best = faces
@@ -37,7 +41,7 @@ export default function TargetChooser() {
 
   const set = (id: number, patch: Partial<Face>) => setFaces(faces.map((f) => (f.id === id ? { ...f, ...patch } : f)));
   return (
-    <figure className="lx">
+    <figure className="lx" ref={box}>
       <div className="lx-body">
         <div className="lx-faces">
           {faces.map((f) => (

@@ -10,8 +10,19 @@ const EXAMPLES = [
   { said: "TV chatter", first: false, heard: "" },
 ];
 
-/** The second check is plain text matching, done here exactly: does the start of the transcript say “hey orion”? */
-const matches = (text: string) => /\bhey\W+orion\b/.test(text.toLowerCase());
+// The second check is plain text matching, ported from coordinator/src/session.rs (after_wake): the phrase, with the
+// spellings speech recognition tends to produce, and both of its words within the first eight words of the transcript.
+const WAKE = /\b(?:heyorion|(?:hey|hay|he|hei|hi|a|oi)[\s\p{P}]+(?:orion|orien|o['’]ryan|oryan|o-rion|arion))\b/iu;
+const OPENING_WORDS = 8;
+/** Where the phrase ends, counted in words, or null if it isn't there at all. */
+const wakeEnd = (text: string) => {
+  const m = WAKE.exec(text);
+  return m ? text.slice(0, m.index + m[0].length).split(/\s+/).filter(Boolean).length : null;
+};
+const matches = (text: string) => {
+  const end = wakeEnd(text);
+  return end !== null && end <= OPENING_WORDS;
+};
 
 /** Two checks before Orion reacts: a fast sound-pattern detector, then speech recognition on the first words. */
 export default function WakeCheck() {
@@ -44,6 +55,9 @@ export default function WakeCheck() {
           <input type="text" className="lx-btn" value={typed} placeholder="type what was heard" onChange={(e) => setTyped(e.target.value)} />
           <output>{typed ? (matches(typed) ? "wakes" : "ignored") : ""}</output>
         </label>
+        {typed && !matches(typed) && (wakeEnd(typed) ?? 0) > OPENING_WORDS && (
+          <p className="lx-note">“Hey Orion” is there, but it ends at word {wakeEnd(typed)}. Orion only looks in the first {OPENING_WORDS} words, so a name mentioned later in a sentence doesn't wake it.</p>
+        )}
       </div>
       <figcaption className="lx-caption">Nothing lights up or plays until the second check passes, so false alarms stay invisible. The examples are illustrations.</figcaption>
     </figure>

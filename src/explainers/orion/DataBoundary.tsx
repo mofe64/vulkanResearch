@@ -3,10 +3,10 @@ import FlowMap, { type FlowNode } from "../kit/FlowMap";
 import "../kit/kit.css";
 
 const NODES: FlowNode[] = [
-  { id: "audio", x: 100, y: 60, label: "Your voice", sub: "audio" },
-  { id: "text", x: 100, y: 120, label: "Your words", sub: "text" },
-  { id: "image", x: 100, y: 180, label: "Camera images" },
-  { id: "memory", x: 100, y: 240, label: "Conversation history" },
+  { id: "audio", x: 112, y: 60, label: "Your voice", sub: "audio", w: 152 },
+  { id: "text", x: 112, y: 120, label: "Your words", sub: "text", w: 152 },
+  { id: "image", x: 112, y: 180, label: "Camera images", w: 152 },
+  { id: "memory", x: 112, y: 240, label: "Conversation history", w: 152 },
   { id: "codex", x: 480, y: 120, label: "Codex", sub: "writes replies", w: 120 },
 ];
 const INFO: Record<string, string> = {
@@ -26,7 +26,7 @@ export default function DataBoundary() {
         <FlowMap
           nodes={NODES}
           edges={[{ from: "text", to: "codex" }, { from: "image", to: "codex", via: [300, 180] }]}
-          groups={[{ label: "On the lamp", x: 12, y: 18, w: 190, h: 260 }, { label: "Online", x: 400, y: 76, w: 160, h: 88, kind: "online" }]}
+          groups={[{ label: "On the lamp", x: 16, y: 18, w: 192, h: 260 }, { label: "Online", x: 400, y: 76, w: 160, h: 88, kind: "online" }]}
           height={290}
           active={[pick]}
           onSelect={setPick}

@@ -128,7 +128,7 @@ From `runtime/src/expression/mind.rs`: energy = 0.6 × (time-of-day curve) + 0.4
 People read body language before words. When you talk to Orion, it leans in. While it works out an answer it isn't
 frozen: after a few seconds it makes small thinking movements, so you know it's still with you.
 
-<Fact>Thinking beats start after 3 seconds and repeat every 3 to 5 seconds. Speech always takes priority over them.</Fact>
+<Fact>Thinking beats start after 3 seconds and repeat every 2.6 to 3.6 seconds. Speech always takes priority over them.</Fact>
 
 <div slot="stage">
 <SequenceView client:visible
@@ -136,8 +136,8 @@ frozen: after a few seconds it makes small thinking movements, so you know it's 
     { label: "you talk: lean in", motion: "listen_lean_in", note: "Orion leans in toward you while you speak." },
     { label: "first 3 s: still", wait: 3, note: "It holds still at first: most replies come quickly." },
     { label: "thinking beat", motion: "think_beat_a", note: "After 3 seconds of thinking, a small beat." },
-    { label: "pause", wait: 3.5 },
-    { label: "another beat", motion: "think_beat_b", note: "Another beat, 3 to 5 seconds later." },
+    { label: "pause", wait: 1 },
+    { label: "another beat", motion: "think_beat_b", note: "Another beat, 2.6 to 3.6 seconds after the last one started." },
     { label: "it answers", motion: "speak_calm_sway", note: "The reply is ready, so speech movement takes over." },
   ]}
   caption="One conversation turn, body language only. The motions are Orion's own."
@@ -218,12 +218,18 @@ Each of these is decoration on top of the safe rest sequence. If one fails, the 
 
 ## Knowing when to hold back
 
-A good character is as much about what it doesn't do. Orion never talks over you. Its idles, listening and thinking are
-silent. Its little sounds are switched off overnight. Stop always wins, and nothing it notices with its camera can wake
-it or switch its motors on.
+A good character is as much about what it doesn't do. Orion never talks over you. Its routine idles and its listening
+are silent. The sounds it does make are short and voice-like: a hum on a thinking beat, and small cues when it wakes,
+goes to sleep, yawns, notices someone arrive, peeks at something new, waves back, doesn't catch what you said, or hits
+an error. The sounds that go with its movements are switched off overnight. Stop always wins, and nothing it notices
+with its camera can wake it or switch its motors on.
+
+Its body shows when things go wrong, too. If Orion doesn't hear a request it makes a small unsure gesture, and if a
+request fails it looks sorry. When it's lighting something on your desk it does the opposite and stays still, with no
+idle movements, so the light doesn't wander.
 
 On a Lively lamp, Orion can also speak first. The rules that keep that in check are the subject of the next lesson,
 [How does Orion decide to act?](/projects/orion/learn/how-orion-decides-to-act/).
 
-<Fact>Quiet hours run from 22:00 to 07:00 by default, and owners can change them. Speech, alarms and light routines also silence its character sounds.</Fact>
+<Fact>Quiet hours run from 22:00 to 07:00 by default, and owners can change them. Speech, alarms and light routines also silence the sounds that go with its movements.</Fact>
 </Section>

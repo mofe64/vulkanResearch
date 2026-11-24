@@ -25,7 +25,7 @@ const STEPS = [
   { node: "waiting", sound: null, text: "Orion listens only for its name. Nothing else you say is recorded or sent anywhere." },
   { node: "listening", sound: "/learn/orion/voice_wake.wav", text: "Wake word confirmed: a short sound and a light pulse tell you it's listening. It records until you stop talking." },
   { node: "thinking", sound: "/learn/orion/voice_processing.wav", text: "Your words become text, Codex writes a reply, Piper turns it into a voice. Orion makes small thinking movements meanwhile." },
-  { node: "speaking", sound: null, text: "Orion speaks and moves with its voice. On V2 you can interrupt by saying “Hey Orion” again." },
+  { node: "speaking", sound: null, text: "Orion speaks and moves with its voice. You can interrupt by saying “Hey Orion” again." },
   { node: "quiet", sound: null, text: "When it finishes, it ignores the first moment of sound (the echo of its own voice) and waits for the room to go quiet." },
   { node: "followup", sound: null, text: "Then a teal pulse: for 5 seconds you can just answer, without saying “Hey Orion”. If you don't, it goes back to waiting." },
 ];

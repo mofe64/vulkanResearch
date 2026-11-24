@@ -4,14 +4,14 @@ import "../kit/kit.css";
 
 // A made-up stretch of sound, in seconds: what Orion hears, and when.
 const WORDS = [
-  { t: 0.2, d: 1.4, w: "(TV in the background)", noise: true },
-  { t: 2.0, d: 0.9, w: "Hey Orion" },
-  { t: 3.05, d: 1.8, w: "what's on my calendar today?" },
+  { t: 0.3, d: 1.5, w: "(TV in the background)", noise: true },
+  { t: 2.2, d: 0.9, w: "Hey Orion" },
+  { t: 3.35, d: 1.9, w: "what's on my calendar today?" },
 ];
-const WAKE_AT = 2.9; // the wake word is recognised just after it ends
+const WAKE_AT = 3.2; // the wake word is recognised just after it ends
 const PRE_ROLL = 3; // seconds always kept in memory (docs/voice-architecture.md)
 const KEEP_BEFORE = 3; // all of it goes into the recording
-const SPAN = 6.5;
+const SPAN = 7.0; // WAKE_AT - KEEP_BEFORE stays at or after 0 s, so the recording never starts before the chart
 
 const STEPS = [
   "Orion always keeps the last 3 seconds of sound in memory, and throws away anything older.",
@@ -24,7 +24,7 @@ const STEPS = [
 export default function PreRoll() {
   const [box, onScreen] = useOnScreen();
   const s = useSteps(STEPS.length, 3.2, { active: onScreen });
-  const now = s.step === 0 ? 1.4 + s.at * 1.4 : s.step === 1 ? WAKE_AT : s.step === 2 ? WAKE_AT : WAKE_AT + s.at * 2.1;
+  const now = s.step === 0 ? 1.6 + s.at * 1.6 : s.step === 1 ? WAKE_AT : s.step === 2 ? WAKE_AT : WAKE_AT + s.at * 2.3;
   const X = (t: number) => 20 + (t / SPAN) * 560;
   const kept = s.step >= 2 ? [WAKE_AT - KEEP_BEFORE, now] : null;
   return (
@@ -43,7 +43,7 @@ export default function PreRoll() {
           <line x1={X(now)} x2={X(now)} y1={14} y2={110} className="lx-cursor" />
           <text x={X(now) + 4} y={110} className="lx-axis">now</text>
           {s.step >= 1 && <text x={X(WAKE_AT)} y={128} textAnchor="middle" className="lx-axis lx-limit-text">“Hey Orion” recognised</text>}
-          {[0, 1, 2, 3, 4, 5, 6].map((t) => <text key={t} x={X(t)} y={146} textAnchor="middle" className="lx-axis">{t}s</text>)}
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((t) => <text key={t} x={X(t)} y={146} textAnchor="middle" className="lx-axis">{t}s</text>)}
         </svg>
         <p className="lx-card">{STEPS[s.step]}</p>
         <Stepper step={s.step} count={STEPS.length} playing={s.playing} onPlay={s.play} onPause={s.pause} onGo={s.go} />

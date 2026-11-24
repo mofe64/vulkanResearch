@@ -9,7 +9,7 @@ const DESK = [
   { name: "plant", x: 590, y: 120 },
 ];
 const ASKS = [
-  { say: "Look at the mug", result: "aimed", text: "Found one mug: Orion aims its head at it and holds there as a work anchor." },
+  { say: "Look at the mug", result: "aimed", text: "Found one mug: Orion aims its head at it and holds still there, so it can light what you're working on. Its idle movements pause so the light stays steady." },
   { say: "Look at the book", result: "ambiguous", text: "Two books: Orion asks which one you mean instead of guessing." },
   { say: "Look at the plant", result: "clamped", text: "Found it, but it's past how far the joints can turn: Orion points as far as it can and says so." },
   { say: "Look at the scissors", result: "not_found", text: "Nothing matches, even after searching around: Orion says it can't see any." },

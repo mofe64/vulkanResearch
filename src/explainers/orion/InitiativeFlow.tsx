@@ -4,12 +4,12 @@ import { useOnScreen, useSteps } from "../kit/playback";
 import "../kit/kit.css";
 
 const NODES: FlowNode[] = [
-  { id: "inputs", x: 80, y: 60, label: "Camera, clock, voice", sub: "and the light", w: 130 },
-  { id: "situation", x: 260, y: 60, label: "Situation", sub: "one picture of now" },
-  { id: "reaction", x: 440, y: 60, label: "A reaction?", sub: "arrival, look, object…", w: 130 },
-  { id: "budget", x: 440, y: 170, label: "Curiosity budget", sub: "allowed right now?", w: 130 },
-  { id: "move", x: 260, y: 170, label: "Movement", sub: "idle stops, it plays" },
-  { id: "remark", x: 80, y: 170, label: "A remark?", sub: "only if Lively", w: 130 },
+  { id: "inputs", x: 80, y: 60, label: "Camera, clock, voice", sub: "and the light", w: 148 },
+  { id: "situation", x: 260, y: 60, label: "Situation", sub: "one picture of now", w: 128 },
+  { id: "reaction", x: 440, y: 60, label: "A reaction?", sub: "arrival, look, object…", w: 148 },
+  { id: "budget", x: 440, y: 170, label: "Curiosity budget", sub: "allowed right now?", w: 148 },
+  { id: "move", x: 260, y: 170, label: "Movement", sub: "idle stops, it plays", w: 128 },
+  { id: "remark", x: 80, y: 170, label: "A remark?", sub: "only if Lively", w: 148 },
 ];
 const EDGES: FlowEdge[] = [
   { from: "inputs", to: "situation" },

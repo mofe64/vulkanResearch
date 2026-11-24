@@ -1,7 +1,7 @@
 ---
 import { render } from "astro:content";
 import RobotViewer from "./RobotViewer.astro";
-import { projectUrl, type Project } from "../lib/content";
+import { getLessons, projectUrl, type Project } from "../lib/content";
 
 interface Props { project: Project; num: number }
 const { project, num } = Astro.props;
@@ -9,6 +9,8 @@ const p = project.data;
 const { Content: Summary } = await render(project);
 // Only the version being worked on now; the full history lives on the project page.
 const latest = p.versions.at(-1)!;
+// Offer the lessons from the homepage once at least one is ready.
+const hasLessons = (await getLessons(project.id)).some((l) => l.data.status === "ready");
 ---
 
 <article class="spread">
@@ -32,6 +34,7 @@ const latest = p.versions.at(-1)!;
       <span>Stack <b>{p.stack}</b></span>
       {p.licence && <span>Licence <b>{p.licence}</b></span>}
       <a href={`${projectUrl(project.id)}#log`}>Project log →</a>
+      {hasLessons && <a href={`${projectUrl(project.id)}learn/`}>Learn how it works →</a>}
     </div>
   </div>
 </article>

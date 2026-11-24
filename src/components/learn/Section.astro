@@ -1,6 +1,7 @@
 ---
 // One idea of a lesson: the question as a ## heading and a few sentences on the left, the explainer that carries the
 // idea on the right (it stays in view while the text scrolls). On narrow screens the explainer follows the text.
+// A section with no stage gets lsec--solo, so its text isn't left in half of a two-column grid.
 //   <Section>
 //   ## Why doesn't Orion jerk?
 //   Text...
@@ -8,7 +9,7 @@
 //   </Section>
 ---
 
-<section class="lsec">
+<section class:list={["lsec", { "lsec--solo": !Astro.slots.has("stage") }]}>
   <div class="lsec-text"><slot /></div>
   {Astro.slots.has("stage") && <div class="lsec-stage"><slot name="stage" /></div>}
 </section>
