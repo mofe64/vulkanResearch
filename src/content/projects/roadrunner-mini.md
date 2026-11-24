@@ -62,10 +62,6 @@ resources:
       item: "8 A UBEC (Nuofany)"
       qty: 2
       detail: "UBEC 1 set to 5.2 V for the Pi. UBEC 2 set to 7.4 V for the hip and head servos."
-    - group: "Electronics"
-      item: "Eye LEDs with resistors"
-      qty: 2
-      detail: "Head. Not part of the S72 assembly steps."
     - group: "Wheels"
       item: "Pololu wheels, 70 × 8 mm"
       detail: "One pair"
