@@ -1,18 +1,19 @@
 import { useState } from "react";
 import "../kit/kit.css";
 
-// Tracking modes and the camera privacy switch (vision/README.md, docs/system-architecture.md).
+// Tracking modes and the camera privacy switch (vision/README.md, docs/system-architecture.md,
+// docs/configuration.md: a missing tracking.json selects Faces; Lively or Demo moves Off and Hands to Idle).
 const MODES = {
   Off: { runs: "Nothing in the background", follows: "Nothing", note: "You can still view the camera in Studio." },
-  Idle: { runs: "Face detection for Orion's own behaviours", follows: "The person talking to it, during a conversation", note: "The default: Orion notices, but doesn't stare." },
-  Faces: { runs: "Face detection", follows: "Faces, all the time", note: "Ambient following: Orion keeps looking at whoever is there." },
+  Idle: { runs: "Face detection for Orion's own behaviours", follows: "The person talking to it, during a conversation", note: "Orion notices, but doesn't stare. Turning on Lively or Demo moves Off and Hands to this mode, and in Lively or Demo it also watches for a raised palm." },
+  Faces: { runs: "Face detection", follows: "Faces, all the time", note: "The default until you choose a mode. Orion keeps looking at whoever is there. Lively and Demo leave this mode as it is." },
   Hands: { runs: "Palm detection instead of faces", follows: "Your hand", note: "Move your hand and the head follows it, like a torch you can steer. Saying “follow my hand” switches to this mode, and “stop following” switches back." },
 } as const;
 type Mode = keyof typeof MODES;
 
 /** Choose a tracking mode, then switch the camera's privacy setting and see what changes. */
 export default function VisionModes() {
-  const [mode, setMode] = useState<Mode>("Idle");
+  const [mode, setMode] = useState<Mode>("Faces");
   const [camera, setCamera] = useState(true);
   const m = MODES[mode];
   return (

@@ -94,7 +94,11 @@ below a lower one.
 The gap between the two lines stops tiny wobbles from flipping it back and forth. After a stretch of silence, the
 recording ends.
 
-<Fact>Orion starts counting speech above 0.5, stops below 0.35, and ends the recording after 1.2 seconds of silence.</Fact>
+Sometimes nobody says anything after the wake word, or someone keeps talking for too long. In both cases Orion stops
+listening, plays a short "didn't catch that" sound and makes an unsure gesture, so you know it gave up rather than
+quietly going back to waiting.
+
+<Fact>Orion starts counting speech above 0.5, stops below 0.35, and ends the recording after 1.2 seconds of silence. It gives up after 6 seconds with no speech, or when a recording reaches 15 seconds.</Fact>
 
 <div slot="stage"><VadThresholds client:visible /></div>
 </Section>

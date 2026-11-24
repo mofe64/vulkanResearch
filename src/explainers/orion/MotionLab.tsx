@@ -21,6 +21,9 @@ const STARTERS = Object.values(MOTIONS).filter((m) => m.space === "absolute" && 
 const home = POSES.home.positions;
 const poseName = (i: number) => `my_pose_${i + 1}`;
 
+// One line style per joint, shared by the plot and its legend.
+const TONES = ["heat", "ink", "link", "soft", "soft"] as const;
+
 /** The reader's keyframes as an Orion motion file plus the poses it names. */
 function toMotion(frames: Frame[], style: string): { motion: Motion; poses: Record<string, Positions> } {
   return {
@@ -167,10 +170,13 @@ export default function MotionLab() {
               series={JOINTS.map((j, i) => ({
                 label: JOINT_INFO[j].label,
                 points: traj.samples.map((s) => [s.time_from_start, deg(s.positions[i])] as [number, number]),
-                tone: (["heat", "ink", "link", "soft", "soft"] as const)[i],
+                tone: TONES[i],
                 dashed: i === 4,
               }))}
             />
+            <div className="lx-legend">
+              {JOINTS.map((j, i) => <span key={j}><i className={`lx-key lx-${TONES[i]}${i === 4 ? " is-dashed" : ""}`} />{JOINT_INFO[j].label}</span>)}
+            </div>
             <div className="lx-stats">
               <span>Length <b>{traj.duration_seconds.toFixed(2)} s</b></span>
               <span>Top speed <b>{deg(traj.peak_velocity_rad_s).toFixed(0)}°/s</b></span>

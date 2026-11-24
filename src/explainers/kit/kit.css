@@ -154,3 +154,17 @@ select.lx-btn { padding-right: 4px; }
 .lx-day { font: 12px var(--sans); padding: 8px 0; border: 1px solid var(--rule); background: #fff; border-radius: 3px; cursor: pointer; color: var(--ink); }
 .lx-day.is-window { background: #fdf0e9; }
 .lx-day.is-on { border-color: var(--heat); color: var(--heat); }
+
+/* Rule checklist (RemarkRules): the rules in the order Orion checks them. */
+.lx-rulebox { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+@media (max-width: 560px) { .lx-rulebox { grid-template-columns: minmax(0, 1fr); } }
+.lx-ruleside { display: grid; gap: 8px; }
+.lx-rules { list-style: none; margin: 0; padding: 0; font-size: 12px; counter-reset: rule; }
+.lx-rules li { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 6px; padding: 3px 0; border-bottom: 1px solid var(--rule-soft); color: var(--text-2); }
+.lx-rules li span:first-child { text-align: center; }
+.lx-rules li.is-pass span:first-child { color: #2f7d4f; }
+.lx-rules li.is-fail { color: var(--heat); }
+.lx-rules li.is-skip, .lx-rules li.is-na { color: #b5b5b5; }
+.lx-more { border-top: 1px solid var(--rule-soft); padding-top: 8px; }
+.lx-more summary { cursor: pointer; font-size: 12px; color: var(--link); }
+.lx-more-body { padding: 10px 0 0; }

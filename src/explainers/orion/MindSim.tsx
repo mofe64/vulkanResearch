@@ -3,6 +3,12 @@ import "../kit/kit.css";
 
 // A line-for-line port of Orion's mind state (runtime/src/expression/mind.rs) and how it shapes idles (acts.rs).
 const CIRCADIAN: [number, number][] = [[0, 0.15], [6, 0.15], [10, 0.9], [15, 0.7], [18, 0.8], [22, 0.3], [23, 0.15], [24, 0.15]];
+// Round to whole minutes first, so 11.999 h reads 12:00 rather than 11:00.
+function clock(hour: number) {
+  const mins = Math.round(hour * 60) % (24 * 60);
+  return `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+}
+
 function circadian(hour: number) {
   const h = ((hour % 24) + 24) % 24;
   for (let i = 0; i < CIRCADIAN.length - 1; i++) {
@@ -48,7 +54,7 @@ export default function MindSim() {
           </div>
         </div>
         <div className="lx-sliders">
-          <label className="lx-slider"><span>Time of day</span><input type="range" min={0} max={23.9} step={0.1} value={hour} onChange={(e) => setHour(Number(e.target.value))} /><output>{String(Math.floor(hour)).padStart(2, "0")}:{String(Math.round((hour % 1) * 60) % 60).padStart(2, "0")}</output></label>
+          <label className="lx-slider"><span>Time of day</span><input type="range" min={0} max={23.9} step={0.1} value={hour} onChange={(e) => setHour(Number(e.target.value))} /><output>{clock(hour)}</output></label>
           <div className="lx-slider"><span>Energy</span>{bar(energy)}<output>{energy.toFixed(2)}</output></div>
           <div className="lx-slider"><span>Activity</span>{bar(activity)}<output>{activity.toFixed(2)}</output></div>
           <div className="lx-slider"><span>Mood</span>{bar(mood, -1)}<output>{mood.toFixed(2)}</output></div>

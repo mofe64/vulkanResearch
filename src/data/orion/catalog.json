@@ -1,5 +1,5 @@
 {
-  "revision": "89c0e6c",
+  "revision": "4f745d9",
   "joints": [
     {
       "lower_rad": -1.4879613642490719,
@@ -414,7 +414,7 @@
   ],
   "motions": [
     {
-      "description": "Raise the head first, then adopt the attentive posture and return.",
+      "description": "Raise and turn the head first, then rise into the attentive posture and return.",
       "keyframes": [
         {
           "arrival": "settle",
@@ -423,8 +423,8 @@
           "marker": "arrival_head",
           "pose": null,
           "target": {
-            "head_pitch_joint": -0.08,
-            "head_roll_joint": -0.08
+            "head_pitch_joint": -0.16,
+            "head_roll_joint": -0.2
           }
         },
         {
@@ -434,9 +434,9 @@
           "marker": "arrival_attentive",
           "pose": null,
           "target": {
-            "elbow_pitch_joint": 0.025,
-            "head_pitch_joint": -0.08,
-            "shoulder_pitch_joint": -0.04
+            "elbow_pitch_joint": -0.16,
+            "head_pitch_joint": -0.18,
+            "shoulder_pitch_joint": -0.1
           }
         },
         {
@@ -653,7 +653,7 @@
       "style": "return_home"
     },
     {
-      "description": "Raise the gaze slowly while holding an attentive posture.",
+      "description": "Raise the gaze and lift the arm slowly while holding an attentive posture.",
       "keyframes": [
         {
           "arrival": "through",
@@ -662,9 +662,9 @@
           "marker": null,
           "pose": null,
           "target": {
-            "elbow_pitch_joint": -0.015,
+            "elbow_pitch_joint": -0.1407,
             "head_pitch_joint": -0.20943951023931956,
-            "shoulder_pitch_joint": -0.01
+            "shoulder_pitch_joint": -0.0414
           }
         },
         {
@@ -674,8 +674,10 @@
           "marker": null,
           "pose": null,
           "target": {
+            "elbow_pitch_joint": -0.0503,
             "head_pitch_joint": -0.08377580409572782,
-            "head_roll_joint": 0.04
+            "head_roll_joint": 0.04,
+            "shoulder_pitch_joint": -0.0246
           }
         },
         {
@@ -692,7 +694,7 @@
       "style": "attentive"
     },
     {
-      "description": "Raise the head slowly, breathe through the arm, and settle back.",
+      "description": "Raise the head slowly, lift the arm with it, and settle back.",
       "keyframes": [
         {
           "arrival": "through",
@@ -701,9 +703,9 @@
           "marker": null,
           "pose": null,
           "target": {
-            "elbow_pitch_joint": -0.02,
+            "elbow_pitch_joint": -0.1457,
             "head_pitch_joint": -0.20943951023931956,
-            "shoulder_pitch_joint": -0.01
+            "shoulder_pitch_joint": -0.0414
           }
         },
         {
@@ -713,9 +715,9 @@
           "marker": null,
           "pose": null,
           "target": {
-            "elbow_pitch_joint": -0.008,
+            "elbow_pitch_joint": -0.0583,
             "head_pitch_joint": -0.08377580409572782,
-            "shoulder_pitch_joint": -0.005
+            "shoulder_pitch_joint": -0.0176
           }
         },
         {
@@ -732,7 +734,7 @@
       "style": "living_idle"
     },
     {
-      "description": "Raise the gaze slowly while holding a directional or desk anchor.",
+      "description": "Raise the gaze and lift the arm slowly while holding a directional or desk anchor.",
       "keyframes": [
         {
           "arrival": "through",
@@ -741,9 +743,9 @@
           "marker": null,
           "pose": null,
           "target": {
-            "elbow_pitch_joint": -0.015,
+            "elbow_pitch_joint": -0.1407,
             "head_pitch_joint": -0.20943951023931956,
-            "shoulder_pitch_joint": -0.01
+            "shoulder_pitch_joint": -0.0414
           }
         },
         {
@@ -753,8 +755,10 @@
           "marker": null,
           "pose": null,
           "target": {
+            "elbow_pitch_joint": -0.0503,
             "head_pitch_joint": -0.08377580409572782,
-            "head_roll_joint": 0.04
+            "head_roll_joint": 0.04,
+            "shoulder_pitch_joint": -0.0246
           }
         },
         {
@@ -771,7 +775,7 @@
       "style": "living_idle"
     },
     {
-      "description": "Raise the gaze and turn the neck slowly to inspect the surroundings.",
+      "description": "Raise the gaze and turn the neck slowly to inspect the surroundings, with a small arm lift.",
       "keyframes": [
         {
           "arrival": "through",
@@ -780,8 +784,10 @@
           "marker": null,
           "pose": null,
           "target": {
+            "elbow_pitch_joint": -0.084,
             "head_pitch_joint": -0.14,
-            "head_roll_joint": 0.20943951023931956
+            "head_roll_joint": 0.20943951023931956,
+            "shoulder_pitch_joint": -0.0838
           }
         },
         {
@@ -791,8 +797,10 @@
           "marker": null,
           "pose": null,
           "target": {
+            "elbow_pitch_joint": -0.036,
             "head_pitch_joint": -0.06,
-            "head_roll_joint": 0.08377580409572782
+            "head_roll_joint": 0.08377580409572782,
+            "shoulder_pitch_joint": -0.0341
           }
         },
         {
@@ -809,7 +817,7 @@
       "style": "living_idle"
     },
     {
-      "description": "Turn the base slowly for a brief glance with a full return.",
+      "description": "Turn the base slowly for a brief glance while the arm eases back, with a full return.",
       "keyframes": [
         {
           "arrival": "settle",
@@ -819,7 +827,8 @@
           "pose": null,
           "target": {
             "base_yaw_joint": 0.20943951023931956,
-            "head_roll_joint": -0.07
+            "head_roll_joint": -0.07,
+            "shoulder_pitch_joint": -0.0838
           }
         },
         {
@@ -830,7 +839,8 @@
           "pose": null,
           "target": {
             "base_yaw_joint": 0.08377580409572782,
-            "head_roll_joint": -0.03
+            "head_roll_joint": -0.03,
+            "shoulder_pitch_joint": -0.0341
           }
         },
         {
@@ -887,7 +897,7 @@
       "style": "living_idle"
     },
     {
-      "description": "Turn the neck slowly left and right with a soft return.",
+      "description": "Turn the neck slowly left and right while the arm eases back, with a soft return.",
       "keyframes": [
         {
           "arrival": "through",
@@ -897,7 +907,8 @@
           "pose": null,
           "target": {
             "base_yaw_joint": -0.03,
-            "head_roll_joint": -0.20943951023931956
+            "head_roll_joint": -0.20943951023931956,
+            "shoulder_pitch_joint": -0.0718
           }
         },
         {
@@ -908,7 +919,8 @@
           "pose": null,
           "target": {
             "base_yaw_joint": 0.03,
-            "head_roll_joint": 0.20943951023931956
+            "head_roll_joint": 0.20943951023931956,
+            "shoulder_pitch_joint": -0.0718
           }
         },
         {
@@ -919,7 +931,8 @@
           "pose": null,
           "target": {
             "base_yaw_joint": -0.01,
-            "head_roll_joint": -0.07330382858376185
+            "head_roll_joint": -0.07330382858376185,
+            "shoulder_pitch_joint": -0.025
           }
         },
         {
@@ -989,18 +1002,29 @@
       "style": "living_idle"
     },
     {
-      "description": "Lean slightly toward the speaker, hold, and return.",
+      "description": "Pull back a little, lean toward the speaker, hold, and return.",
       "keyframes": [
         {
+          "arrival": "through",
+          "duration": 0.3,
+          "hold": 0.0,
+          "marker": null,
+          "pose": null,
+          "target": {
+            "head_pitch_joint": -0.03,
+            "shoulder_pitch_joint": -0.03
+          }
+        },
+        {
           "arrival": "settle",
-          "duration": 2.0,
+          "duration": 1.0,
           "hold": 0.5,
           "marker": "listen_hold",
           "pose": null,
           "target": {
-            "elbow_pitch_joint": -0.02,
-            "head_pitch_joint": -0.04,
-            "shoulder_pitch_joint": 0.035
+            "elbow_pitch_joint": -0.06,
+            "head_pitch_joint": -0.16,
+            "shoulder_pitch_joint": 0.2
           }
         },
         {
@@ -1284,7 +1308,7 @@
       "style": "expressive_turn"
     },
     {
-      "description": "Turn the neck aside with a raised gaze, then return.",
+      "description": "Turn the neck aside with a raised gaze and a small arm lift, then return.",
       "keyframes": [
         {
           "arrival": "settle",
@@ -1293,8 +1317,10 @@
           "marker": "look_away",
           "pose": null,
           "target": {
+            "elbow_pitch_joint": -0.06,
             "head_pitch_joint": -0.1,
-            "head_roll_joint": -0.17453292519943295
+            "head_roll_joint": -0.17453292519943295,
+            "shoulder_pitch_joint": -0.0674
           }
         },
         {
@@ -1311,7 +1337,7 @@
       "style": "attentive"
     },
     {
-      "description": "Raise the gaze in a clear head-only greeting and return.",
+      "description": "Raise the gaze and lift the arm in a clear greeting, then return.",
       "keyframes": [
         {
           "arrival": "through",
@@ -1320,7 +1346,9 @@
           "marker": "hi",
           "pose": null,
           "target": {
-            "head_pitch_joint": -0.17453292519943295
+            "elbow_pitch_joint": -0.1047,
+            "head_pitch_joint": -0.17453292519943295,
+            "shoulder_pitch_joint": -0.0262
           }
         },
         {
@@ -1330,7 +1358,9 @@
           "marker": null,
           "pose": null,
           "target": {
-            "head_pitch_joint": -0.05235987755982989
+            "elbow_pitch_joint": -0.0314,
+            "head_pitch_joint": -0.05235987755982989,
+            "shoulder_pitch_joint": -0.0079
           }
         },
         {
@@ -1347,7 +1377,7 @@
       "style": "attentive"
     },
     {
-      "description": "Raise the gaze, turn the neck with curiosity, and return.",
+      "description": "Raise the gaze, turn the neck with curiosity while the arm lifts, and return.",
       "keyframes": [
         {
           "arrival": "settle",
@@ -1356,7 +1386,9 @@
           "marker": "meet",
           "pose": null,
           "target": {
-            "head_pitch_joint": -0.17453292519943295
+            "elbow_pitch_joint": -0.1047,
+            "head_pitch_joint": -0.17453292519943295,
+            "shoulder_pitch_joint": -0.0262
           }
         },
         {
@@ -1366,8 +1398,10 @@
           "marker": "curious",
           "pose": null,
           "target": {
+            "elbow_pitch_joint": -0.1047,
             "head_pitch_joint": -0.17453292519943295,
-            "head_roll_joint": 0.17453292519943295
+            "head_roll_joint": 0.17453292519943295,
+            "shoulder_pitch_joint": -0.0785
           }
         },
         {
@@ -1591,18 +1625,29 @@
       "style": "return_home"
     },
     {
-      "description": "Sink the head and arm slowly, then return.",
+      "description": "Lift a little, then sink the head and arm slowly, and return.",
       "keyframes": [
         {
+          "arrival": "through",
+          "duration": 0.4,
+          "hold": 0.0,
+          "marker": null,
+          "pose": null,
+          "target": {
+            "elbow_pitch_joint": -0.04,
+            "head_pitch_joint": -0.05
+          }
+        },
+        {
           "arrival": "settle",
-          "duration": 1.5,
-          "hold": 0.25,
+          "duration": 1.6,
+          "hold": 0.5,
           "marker": "sleep_settle",
           "pose": null,
           "target": {
-            "elbow_pitch_joint": 0.005,
-            "head_pitch_joint": 0.08,
-            "shoulder_pitch_joint": -0.025
+            "elbow_pitch_joint": 0.24,
+            "head_pitch_joint": 0.32,
+            "shoulder_pitch_joint": -0.1
           }
         },
         {
@@ -1619,7 +1664,7 @@
       "style": "living_idle"
     },
     {
-      "description": "Sway the neck and arm gently with alternating raised and lowered gaze.",
+      "description": "Sway the neck and arm with alternating raised and lowered gaze.",
       "keyframes": [
         {
           "arrival": "through",
@@ -1628,10 +1673,10 @@
           "marker": null,
           "pose": null,
           "target": {
-            "elbow_pitch_joint": 0.015,
-            "head_pitch_joint": -0.04,
-            "head_roll_joint": 0.12,
-            "shoulder_pitch_joint": -0.025
+            "elbow_pitch_joint": 0.05,
+            "head_pitch_joint": -0.09,
+            "head_roll_joint": 0.24,
+            "shoulder_pitch_joint": -0.07
           }
         },
         {
@@ -1641,10 +1686,10 @@
           "marker": null,
           "pose": null,
           "target": {
-            "elbow_pitch_joint": -0.015,
-            "head_pitch_joint": 0.03,
-            "head_roll_joint": -0.1,
-            "shoulder_pitch_joint": 0.02
+            "elbow_pitch_joint": -0.05,
+            "head_pitch_joint": 0.07,
+            "head_roll_joint": -0.2,
+            "shoulder_pitch_joint": 0.06
           }
         },
         {
@@ -1708,9 +1753,9 @@
           "marker": "phrase",
           "pose": null,
           "target": {
-            "elbow_pitch_joint": -0.12,
-            "head_pitch_joint": -0.08,
-            "shoulder_pitch_joint": 0.1
+            "elbow_pitch_joint": -0.22,
+            "head_pitch_joint": -0.14,
+            "shoulder_pitch_joint": 0.2
           }
         },
         {
@@ -1720,10 +1765,10 @@
           "marker": null,
           "pose": null,
           "target": {
-            "elbow_pitch_joint": -0.05,
-            "head_pitch_joint": -0.02,
-            "head_roll_joint": -0.04,
-            "shoulder_pitch_joint": 0.045
+            "elbow_pitch_joint": -0.1,
+            "head_pitch_joint": -0.04,
+            "head_roll_joint": -0.1,
+            "shoulder_pitch_joint": 0.09
           }
         },
         {
@@ -1740,7 +1785,7 @@
       "style": "speaking_calm"
     },
     {
-      "description": "Make two clear downward nods with an upward return between them.",
+      "description": "Make two clear downward nods with the arm dipping along.",
       "keyframes": [
         {
           "arrival": "through",
@@ -1749,7 +1794,9 @@
           "marker": "agree",
           "pose": null,
           "target": {
-            "head_pitch_joint": 0.20943951023931956
+            "elbow_pitch_joint": 0.1257,
+            "head_pitch_joint": 0.20943951023931956,
+            "shoulder_pitch_joint": 0.0628
           }
         },
         {
@@ -1759,7 +1806,9 @@
           "marker": null,
           "pose": null,
           "target": {
-            "head_pitch_joint": -0.03490658503988659
+            "elbow_pitch_joint": -0.0209,
+            "head_pitch_joint": -0.03490658503988659,
+            "shoulder_pitch_joint": -0.0052
           }
         },
         {
@@ -1769,7 +1818,9 @@
           "marker": null,
           "pose": null,
           "target": {
-            "head_pitch_joint": 0.17453292519943295
+            "elbow_pitch_joint": 0.1047,
+            "head_pitch_joint": 0.17453292519943295,
+            "shoulder_pitch_joint": 0.0524
           }
         },
         {
@@ -1816,7 +1867,7 @@
       "style": "attentive"
     },
     {
-      "description": "A clear three-beat head shake used as a spoken disagreement reaction.",
+      "description": "A clear three-beat head shake led by the neck, with the base following.",
       "keyframes": [
         {
           "arrival": "through",
@@ -1825,8 +1876,8 @@
           "marker": "disagree",
           "pose": null,
           "target": {
-            "base_yaw_joint": -0.14,
-            "head_roll_joint": 0.04
+            "base_yaw_joint": -0.1,
+            "head_roll_joint": -0.28
           }
         },
         {
@@ -1836,8 +1887,8 @@
           "marker": null,
           "pose": null,
           "target": {
-            "base_yaw_joint": 0.14,
-            "head_roll_joint": -0.04
+            "base_yaw_joint": 0.1,
+            "head_roll_joint": 0.28
           }
         },
         {
@@ -1847,7 +1898,8 @@
           "marker": null,
           "pose": null,
           "target": {
-            "base_yaw_joint": -0.08
+            "base_yaw_joint": -0.05,
+            "head_roll_joint": -0.16
           }
         },
         {
@@ -1916,7 +1968,7 @@
       "style": "attentive"
     },
     {
-      "description": "Make three raised head bounces with a light arm lift.",
+      "description": "Make three raised head bounces with the arm bouncing along.",
       "keyframes": [
         {
           "arrival": "through",
@@ -1925,9 +1977,9 @@
           "marker": "laugh",
           "pose": null,
           "target": {
-            "elbow_pitch_joint": -0.02,
+            "elbow_pitch_joint": -0.128,
             "head_pitch_joint": -0.18,
-            "shoulder_pitch_joint": -0.04
+            "shoulder_pitch_joint": -0.067
           }
         },
         {
@@ -1937,8 +1989,9 @@
           "marker": null,
           "pose": null,
           "target": {
+            "elbow_pitch_joint": -0.03,
             "head_pitch_joint": -0.05,
-            "shoulder_pitch_joint": -0.015
+            "shoulder_pitch_joint": -0.0225
           }
         },
         {
@@ -1948,9 +2001,9 @@
           "marker": null,
           "pose": null,
           "target": {
-            "elbow_pitch_joint": -0.02,
+            "elbow_pitch_joint": -0.122,
             "head_pitch_joint": -0.17,
-            "shoulder_pitch_joint": -0.04
+            "shoulder_pitch_joint": -0.0655
           }
         },
         {
@@ -1960,8 +2013,9 @@
           "marker": null,
           "pose": null,
           "target": {
+            "elbow_pitch_joint": -0.03,
             "head_pitch_joint": -0.05,
-            "shoulder_pitch_joint": -0.01
+            "shoulder_pitch_joint": -0.0175
           }
         },
         {
@@ -1971,9 +2025,9 @@
           "marker": null,
           "pose": null,
           "target": {
-            "elbow_pitch_joint": -0.015,
+            "elbow_pitch_joint": -0.105,
             "head_pitch_joint": -0.15,
-            "shoulder_pitch_joint": -0.03
+            "shoulder_pitch_joint": -0.0525
           }
         },
         {
@@ -2032,8 +2086,8 @@
       "keyframes": [
         {
           "arrival": "settle",
-          "duration": 0.42,
-          "hold": 0.2,
+          "duration": 0.6,
+          "hold": 0.35,
           "marker": "sorry",
           "pose": null,
           "target": {
@@ -2043,7 +2097,7 @@
         },
         {
           "arrival": "settle",
-          "duration": 0.43,
+          "duration": 0.6,
           "hold": 0.0,
           "marker": null,
           "pose": null,
@@ -2083,24 +2137,24 @@
       "style": "attentive"
     },
     {
-      "description": "Lower the head and turn the neck softly for sympathy.",
+      "description": "Sink with the head down, the arm lowered and a soft turn, hold, and rise.",
       "keyframes": [
         {
           "arrival": "settle",
-          "duration": 0.5,
-          "hold": 0.25,
+          "duration": 0.8,
+          "hold": 0.5,
           "marker": "sympathy",
           "pose": null,
           "target": {
-            "elbow_pitch_joint": 0.025,
-            "head_pitch_joint": 0.2,
-            "head_roll_joint": 0.11,
-            "shoulder_pitch_joint": 0.04
+            "elbow_pitch_joint": 0.22,
+            "head_pitch_joint": 0.22,
+            "head_roll_joint": 0.12,
+            "shoulder_pitch_joint": 0.06
           }
         },
         {
           "arrival": "settle",
-          "duration": 0.5,
+          "duration": 0.7,
           "hold": 0.0,
           "marker": null,
           "pose": null,
@@ -2141,7 +2195,7 @@
       "style": "attentive"
     },
     {
-      "description": "Look slightly down while turning the neck from side to side.",
+      "description": "Look slightly down while turning the neck from side to side, with the arm easing back.",
       "keyframes": [
         {
           "arrival": "through",
@@ -2151,8 +2205,10 @@
           "pose": null,
           "target": {
             "base_yaw_joint": 0.05,
+            "elbow_pitch_joint": 0.048,
             "head_pitch_joint": 0.08,
-            "head_roll_joint": 0.19
+            "head_roll_joint": 0.19,
+            "shoulder_pitch_joint": -0.048
           }
         },
         {
@@ -2163,8 +2219,10 @@
           "pose": null,
           "target": {
             "base_yaw_joint": -0.05,
+            "elbow_pitch_joint": 0.048,
             "head_pitch_joint": 0.08,
-            "head_roll_joint": -0.17
+            "head_roll_joint": -0.17,
+            "shoulder_pitch_joint": -0.042
           }
         },
         {
@@ -2181,7 +2239,7 @@
       "style": "attentive"
     },
     {
-      "description": "Turn the neck aside and lower the gaze, then return quietly.",
+      "description": "Turn the neck aside, lower the gaze and ease back, then return quietly.",
       "keyframes": [
         {
           "arrival": "through",
@@ -2190,9 +2248,10 @@
           "marker": "reflection",
           "pose": null,
           "target": {
-            "head_pitch_joint": 0.1,
-            "head_roll_joint": 0.14,
-            "shoulder_pitch_joint": -0.03
+            "elbow_pitch_joint": 0.06,
+            "head_pitch_joint": 0.18,
+            "head_roll_joint": 0.26,
+            "shoulder_pitch_joint": -0.08
           }
         },
         {
@@ -2202,9 +2261,10 @@
           "marker": null,
           "pose": null,
           "target": {
-            "head_pitch_joint": 0.04,
-            "head_roll_joint": 0.06,
-            "shoulder_pitch_joint": -0.01
+            "elbow_pitch_joint": 0.02,
+            "head_pitch_joint": 0.08,
+            "head_roll_joint": 0.12,
+            "shoulder_pitch_joint": -0.03
           }
         },
         {
@@ -2221,17 +2281,19 @@
       "style": "speaking_calm"
     },
     {
-      "description": "Turn the head slightly to one side and return.",
+      "description": "Glance up and aside to think, hold, and return.",
       "keyframes": [
         {
           "arrival": "settle",
           "duration": 0.8,
-          "hold": 0.15,
+          "hold": 0.5,
           "marker": "think_glance",
           "pose": null,
           "target": {
-            "head_pitch_joint": -0.025,
-            "head_roll_joint": 0.09
+            "base_yaw_joint": 0.06,
+            "head_pitch_joint": -0.28,
+            "head_roll_joint": 0.44,
+            "shoulder_pitch_joint": -0.06
           }
         },
         {
@@ -2248,16 +2310,19 @@
       "style": "thinking"
     },
     {
-      "description": "Lower the head slightly and return.",
+      "description": "Lower the head and sink a little in thought, hold, and return.",
       "keyframes": [
         {
           "arrival": "settle",
           "duration": 0.8,
-          "hold": 0.15,
+          "hold": 0.5,
           "marker": "think_settle",
           "pose": null,
           "target": {
-            "head_pitch_joint": 0.07
+            "elbow_pitch_joint": 0.2,
+            "head_pitch_joint": 0.38,
+            "head_roll_joint": -0.14,
+            "shoulder_pitch_joint": -0.1
           }
         },
         {
@@ -2274,23 +2339,69 @@
       "style": "thinking"
     },
     {
-      "description": "Lift the head and arm gently, then settle.",
+      "description": "Dip, stretch tall with the head up, shake out, and settle.",
       "keyframes": [
         {
-          "arrival": "settle",
-          "duration": 0.9,
-          "hold": 0.15,
-          "marker": "wake_stretch",
+          "arrival": "through",
+          "duration": 0.45,
+          "hold": 0.0,
+          "marker": null,
           "pose": null,
           "target": {
-            "elbow_pitch_joint": -0.02,
-            "head_pitch_joint": -0.09,
-            "shoulder_pitch_joint": -0.035
+            "head_pitch_joint": 0.1
           }
         },
         {
           "arrival": "settle",
-          "duration": 1.1,
+          "duration": 1.2,
+          "hold": 0.6,
+          "marker": "wake_stretch",
+          "pose": null,
+          "target": {
+            "elbow_pitch_joint": -0.46,
+            "head_pitch_joint": -0.14,
+            "shoulder_pitch_joint": -0.04
+          }
+        },
+        {
+          "arrival": "through",
+          "duration": 0.3,
+          "hold": 0.0,
+          "marker": null,
+          "pose": null,
+          "target": {
+            "elbow_pitch_joint": -0.4,
+            "head_pitch_joint": -0.1,
+            "head_roll_joint": 0.16,
+            "shoulder_pitch_joint": -0.04
+          }
+        },
+        {
+          "arrival": "through",
+          "duration": 0.35,
+          "hold": 0.0,
+          "marker": null,
+          "pose": null,
+          "target": {
+            "elbow_pitch_joint": -0.4,
+            "head_pitch_joint": -0.1,
+            "head_roll_joint": -0.16,
+            "shoulder_pitch_joint": -0.04
+          }
+        },
+        {
+          "arrival": "through",
+          "duration": 1.0,
+          "hold": 0.0,
+          "marker": null,
+          "pose": null,
+          "target": {
+            "head_pitch_joint": 0.04
+          }
+        },
+        {
+          "arrival": "settle",
+          "duration": 0.5,
           "hold": 0.0,
           "marker": null,
           "pose": null,
@@ -2394,22 +2505,46 @@
       "style": "return_home"
     },
     {
-      "description": "Raise the head, hold briefly, then sink back.",
+      "description": "Dip, rise tall with the head up, hold, then sink back.",
       "keyframes": [
         {
+          "arrival": "through",
+          "duration": 0.35,
+          "hold": 0.0,
+          "marker": null,
+          "pose": null,
+          "target": {
+            "elbow_pitch_joint": 0.04,
+            "head_pitch_joint": 0.06
+          }
+        },
+        {
           "arrival": "settle",
-          "duration": 1.3,
-          "hold": 0.6,
+          "duration": 1.2,
+          "hold": 0.7,
           "marker": "yawn",
           "pose": null,
           "target": {
-            "head_pitch_joint": -0.12,
+            "elbow_pitch_joint": -0.26,
+            "head_pitch_joint": -0.32,
+            "shoulder_pitch_joint": -0.06
+          }
+        },
+        {
+          "arrival": "through",
+          "duration": 1.2,
+          "hold": 0.0,
+          "marker": null,
+          "pose": null,
+          "target": {
+            "elbow_pitch_joint": 0.06,
+            "head_pitch_joint": 0.1,
             "shoulder_pitch_joint": -0.02
           }
         },
         {
           "arrival": "settle",
-          "duration": 1.8,
+          "duration": 0.7,
           "hold": 0.0,
           "marker": null,
           "pose": null,

@@ -20,26 +20,38 @@ const NODES: FlowNode[] = [
 ];
 const EDGES: FlowEdge[] = [...ASKS.map((a) => ({ from: a.id, to: "runtime" })), { from: "runtime", to: "motors" }];
 
+type Flight = { i: number; ok: boolean; why: string; nextLamp: Lamp; t: number };
+
 /** Everything that wants to move Orion has to ask the runtime. Try asking while the lamp is awake, then resting. */
 export default function MotorGate() {
   const [lamp, setLamp] = useState<Lamp>("awake");
-  const [ask, setAsk] = useState<{ i: number; t: number } | null>(null);
+  // The request in flight, with its verdict fixed when it was sent, so a state change halfway can't flip the answer.
+  const [ask, setAsk] = useState<Flight | null>(null);
   const [message, setMessage] = useState("Tap a box on the left to send its request.");
   const raf = useRef(0);
+
+  const stop = () => {
+    cancelAnimationFrame(raf.current);
+    setAsk(null);
+  };
 
   const send = (id: string) => {
     const i = ASKS.findIndex((a) => a.id === id);
     if (i < 0) return;
     cancelAnimationFrame(raf.current);
-    const start = performance.now();
     const [ok, why] = ASKS[i][lamp];
+    let nextLamp: Lamp = lamp;
+    if (ok && id === "voice") nextLamp = "awake";
+    if (ok && id === "studio") nextLamp = "resting";
+    const start = performance.now();
+    let settled = false;
     const frame = (now: number) => {
       const t = (now - start) / 900;
-      setAsk({ i, t });
-      if (t >= 1 && t < 1.05) {
+      setAsk({ i, ok, why, nextLamp, t });
+      if (!settled && t >= 1) {
+        settled = true;
         setMessage(why);
-        if (ok && id === "voice" && lamp === "resting") setLamp("awake");
-        if (ok && id === "studio") setLamp("resting");
+        setLamp(nextLamp);
       }
       if (t < 2) raf.current = requestAnimationFrame(frame);
       else setAsk(null);
@@ -50,9 +62,8 @@ export default function MotorGate() {
 
   let packet;
   if (ask) {
-    const [ok] = ASKS[ask.i][lamp];
     if (ask.t < 1) packet = { edge: ask.i, at: ask.t };
-    else if (ok) packet = { edge: ASKS.length, at: Math.min(1, ask.t - 1) };
+    else if (ask.ok) packet = { edge: ASKS.length, at: Math.min(1, ask.t - 1) };
     else packet = { edge: ask.i, at: Math.max(0, 2 - ask.t), bad: true, label: "refused" };
   }
 
@@ -62,7 +73,7 @@ export default function MotorGate() {
         <div className="lx-row">
           <span className="lx-label">Orion is</span>
           {(["awake", "resting"] as const).map((s) => (
-            <button key={s} type="button" className="lx-btn" aria-pressed={lamp === s} onClick={() => setLamp(s)}>{s}</button>
+            <button key={s} type="button" className="lx-btn" aria-pressed={lamp === s} onClick={() => { stop(); setLamp(s); }}>{s}</button>
           ))}
         </div>
         <FlowMap nodes={NODES} edges={EDGES} height={300} active={ask ? [ASKS[ask.i].id] : []} packet={packet} onSelect={send} label="Requests to move Orion going through the runtime" />

@@ -1,0 +1,55 @@
+---
+// "In this lesson": the lesson's sections as numbered jump links, under the lesson's title.
+// Wide screens show it open, in two columns; narrow screens start it collapsed so the lesson comes first.
+import type { MarkdownHeading } from "astro";
+
+interface Props { headings: MarkdownHeading[] }
+const items = Astro.props.headings.filter((h) => h.depth === 2);
+---
+
+{items.length > 1 && (
+  <nav class="lmap" aria-label="In this lesson" data-lesson-map>
+    <details>
+      <summary>In this lesson <span class="count">{items.length} sections</span></summary>
+      <ol style={`--rows: ${Math.ceil(items.length / 2)}`}>
+        {items.map((h, i) => (
+          <li><a href={`#${h.slug}`}><span class="n">{String(i + 1).padStart(2, "0")}</span>{h.text}</a></li>
+        ))}
+      </ol>
+    </details>
+  </nav>
+)}
+
+<style>
+  .lmap { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); font-size: 13px; line-height: 1.45; }
+  summary {
+    display: flex; align-items: baseline; gap: 8px; list-style: none; cursor: pointer; padding: 10px 0;
+    font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "▸"; font-size: 12px; letter-spacing: 0; }
+  details[open] summary::before { content: "▾"; }
+  summary:hover { color: var(--ink); }
+  .count { letter-spacing: 0; text-transform: none; }
+  ol { list-style: none; margin: 0; padding: 0 0 10px; display: grid; gap: 0 28px; }
+  li a { display: flex; gap: 10px; align-items: baseline; padding: 6px 0; color: var(--text-2); border-top: 1px solid var(--rule-soft); }
+  li a:hover { color: var(--ink); text-decoration: none; }
+  .n { font: 11px var(--mono); color: var(--heat); flex: none; }
+  @media (min-width: 1000px) {
+    /* Two columns read top to bottom, so the numbers run down the first column, then the second. */
+    ol { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(var(--rows), auto); grid-auto-flow: column; }
+    li a { padding: 4px 0; }
+  }
+</style>
+
+<script>
+  // Open on wide screens; on narrow ones, picking a section closes the list so the section is in view.
+  document.querySelectorAll<HTMLElement>("[data-lesson-map]").forEach((map) => {
+    const details = map.querySelector("details")!;
+    const wide = matchMedia("(min-width: 1000px)");
+    const sync = () => { if (wide.matches) details.open = true; };
+    sync();
+    wide.addEventListener("change", sync);
+    map.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => { if (!wide.matches) details.open = false; }));
+  });
+</script>
