@@ -1,0 +1,789 @@
+---
+// Road Runner Mini v1 (CAD state S72) assembly guide. Step order, fasteners and checks come from the robot's
+// repository (docs/assembly/ASSEMBLY.html, PARTS.md, PRINT.md, DESIGN.md); servo set-up and bring-up come from
+// robot/README.md. Each <AssemblyStep> lists the parts the 3D view shows; the names are the node names in
+// public/models/roadrunner-mini-v1.glb without their prefix (scripts/roadrunner2glb.py).
+// 3D axes, for `from` (mm): +x is the robot's left, +y is up, +z is forward.
+import Base from "../../../layouts/Base.astro";
+import AssemblyViewer from "../../../components/AssemblyViewer.astro";
+import Step from "../../../components/AssemblyStep.astro";
+import ReadingMap from "../../../components/ReadingMap.astro";
+import { projectUrl } from "../../../lib/content";
+
+const MODEL = "/models/roadrunner-mini-v1.glb";
+const REPO = "https://github.com/mofe64/roadRunnerMiniV1";
+const ROBOT_README = `${REPO}/blob/main/robot/README.md`;
+const still = (n: number) => `/guides/roadrunner-mini/step-${String(n).padStart(2, "0")}.webp`;
+const resources = `${projectUrl("roadrunner-mini")}#resources`;
+
+// Part names. Printed parts: their part number ("09l" is the left hub). Bought parts: their model name.
+const HIPS_L = ["hipfl", "hiprl"];
+const HIPS_R = ["hipfr", "hiprr"];
+const HIPS = [...HIPS_L, ...HIPS_R];
+const WHEEL_L = ["wheelservol", "11l", "10l", "09l", "wheell"]; // a finished wheel unit
+const WHEEL_R = ["wheelservor", "11r", "10r", "09r", "wheelr"];
+const SERVOS = [...HIPS, "wheelservol", "wheelservor", "yawservo", "pitchservo"];
+const NECK = ["04", "yawservo", "07", "pitchservo"]; // the lid with everything it carries, before the head
+const HEAD = ["08", "oak"];
+
+// What is in place after each stage of the build. Each step shows one of these, highlighting what it adds.
+const chassis = ["01", "02"];
+const withHipsL = [...chassis, ...HIPS_L];
+const withHips = [...chassis, ...HIPS];
+const withSplice = [...withHips, "xt60"];
+const withTray = [...withSplice, "03"];
+const withFuse = [...withTray, "fuse"];
+const withLinksL = [...withFuse, "12l", "13l"];
+const withLegL = [...withLinksL, ...WHEEL_L, "kneesl"];
+const withLinksR = [...withLegL, "12r", "13r"];
+const withLegs = [...withLinksR, ...WHEEL_R, "kneesr"];
+const withBattery = [...withLegs, "battery"];
+const withPi = [...withBattery, "pi", "cooler"];
+const withImu = [...withPi, "06", "imu"];
+const withDeck = [...withImu, "05"];
+const withAdapters = [...withDeck, "adapter1", "adapter2"];
+const withUbecs = [...withAdapters, "ubec1", "ubec2"];
+const ALL = [...withUbecs, ...NECK, ...HEAD];
+
+// The build in five stages. Step numbers run on across stages.
+const STAGES = [
+  { id: "stage-prepare", title: "Prepare", steps: ["Print the test coupons and the parts", "Fit the heat-set inserts", "Set up the Raspberry Pi", "Give each servo its ID"] },
+  { id: "stage-body", title: "Chassis, hip servos and tray", steps: ["Join the chassis halves", "Fit the left hip servos", "Fit the right hip servos", "Fit the power splice", "Lower the body into the tray", "Fit the fuse holder", "Check the hip horns"] },
+  { id: "stage-legs", title: "Wheels and five-bar legs", steps: ["Start the left wheel unit", "Fit the front plate", "Fit the hub and the wheel", "Build the right wheel unit", "Fit the left upper links", "Join the left knees", "Fit the right upper links", "Join the right knees"] },
+  { id: "stage-decks", title: "Electronics decks", steps: ["Slide in the battery", "Fit the Raspberry Pi", "Fit the IMU plate and the IMU", "Fit the upper deck", "Fit the bus servo adapters", "Fit the UBECs"] },
+  { id: "stage-head", title: "Neck, head and bring-up", steps: ["Fit the yaw servo to the lid", "Fit the pitch bracket", "Fit the pitch servo", "Fit the camera in the head", "Fit the head to the pitch servo", "Fit the lid onto the body", "Wire the power", "Check the voltages and power up", "Calibrate and take the first drive"] },
+];
+const TITLES = STAGES.flatMap((s) => s.steps);
+const t = (n: number) => TITLES[n - 1];
+/** Step number of a title, for "see step N" references; fails the build if the title doesn't exist. */
+const at = (title: string) => {
+  const i = TITLES.indexOf(title);
+  if (i < 0) throw new Error(`No step titled "${title}"`);
+  return i + 1;
+};
+let first = 1;
+const stageInfo = STAGES.map((s, i) => {
+  const info = { ...s, n: i + 1, from: first, to: first + s.steps.length - 1 };
+  first += s.steps.length;
+  return info;
+});
+const stage = (n: number) => stageInfo[n - 1];
+
+const headings = [
+  { depth: 2, slug: "before-you-start", text: "Before you start" },
+  { depth: 2, slug: "ideas", text: "Ideas and words used in this guide" },
+  ...stageInfo.flatMap((s) => [
+    { depth: 2, slug: s.id, text: `Stage ${s.n}: ${s.title}` },
+    ...s.steps.map((text, i) => ({ depth: 3, slug: `step-${s.from + i}`, text: `${s.from + i}. ${text}` })),
+  ]),
+  { depth: 2, slug: "if-something-is-wrong", text: "If something is wrong" },
+  { depth: 2, slug: "final-checks", text: "Final checks" },
+];
+---
+
+<Base title="Build Road Runner Mini" description="Step-by-step assembly guide for Road Runner Mini v1, a self-balancing wheeled biped, with a 3D view of every step.">
+  <article class="guide" data-guide>
+    <header class="intro">
+      <span class="eyebrow"><a href={projectUrl("roadrunner-mini")}>Road Runner Mini</a> · Assembly guide · v1, CAD state S72</span>
+      <h1>Build Road Runner Mini, step by step</h1>
+      <p class="lede">
+        This guide takes you from a box of printed parts to a robot that stands up on two wheels and balances itself.
+        Every step names its screws, shows where the new parts go, and explains why it comes where it does.
+      </p>
+      <p class="note">
+        On a wide screen, the 3D view beside the steps follows along as you scroll. Parts added in the current step are
+        orange, printed parts are white and bought parts such as servos and boards are grey. Drag the view to turn it.
+        Cables and wires aren't in the 3D model; the text says where they go.
+      </p>
+    </header>
+
+    <div class="layout">
+      <div class="steps">
+        <div class="map-slot"><ReadingMap headings={headings} /></div>
+
+        <section class="prep" id="before-you-start" aria-labelledby="before-title">
+          <h2 id="before-title">Before you start</h2>
+          <p>
+            The build has five stages: prepare the parts, servos and Raspberry Pi; build the body around the four hip
+            servos; build the wheels and legs; fit the electronics decks; then fit the neck and head, wire the power and
+            bring the robot up. Printing takes two to three days of printer time. The assembly is a couple of evenings,
+            with a little soldering for the inserts and the power leads.
+          </p>
+          <p>
+            The order matters more than usual on this robot. It is small and tightly packed, so several screws can only
+            be reached before the next part goes on. Where that's the case, the step says so.
+          </p>
+          <h3>What you need</h3>
+          <ul>
+            <li><b>Printed parts:</b> the 18 parts and 2 test coupons in the <a href={resources}>STL download</a>, or the Bambu Studio plates if you print on a Bambu machine.</li>
+            <li><b>Electronics, wiring and screws:</b> the <a href={resources}>bill of materials</a>. Sort the screws into labelled pots by size before you begin.</li>
+            <li><b>A computer</b> to prepare the Raspberry Pi's memory card and connect to it over the network.</li>
+            <li><b>A 6 V bench power supply</b> for setting up the servos and for the first power-up, and a <b>multimeter</b> to check the UBEC voltages.</li>
+          </ul>
+          <h3>Tools</h3>
+          <ul>
+            <li>Soldering iron with an M3 heat-set insert tip, plus solder and heat-shrink for the power leads</li>
+            <li><b>1.5 mm L-shaped hex key or 1.5 mm ball-end hex driver.</b> The M2 hip screws sit inside the narrow spine, where a straight driver won't fit. Don't start without one.</li>
+            <li>2 mm hex key for the M3 button-head screws, and 2.5 mm for the two M4 camera screws</li>
+            <li>Small Phillips screwdriver for the pointed screws from the servo bags</li>
+            <li>A pea-sized piece of Blu Tack, to hold a screw on the end of the key where you can't reach with fingers</li>
+            <li>Medium-strength threadlocker, flush cutters for supports, and a phone with a spirit-level app for calibration</li>
+          </ul>
+          <p class="warn"><b>Safety</b> Road Runner Mini runs on a 3S lithium-polymer battery and has no power switch. Disconnect the battery whenever you aren't using the robot, never charge it unattended, and stop using a battery that is swollen or damaged. When the robot stops, its legs go limp and it falls, so keep a hand near it during every test.</p>
+        </section>
+
+        <section class="prep" id="ideas" aria-labelledby="ideas-title">
+          <h2 id="ideas-title">Ideas and words used in this guide</h2>
+          <dl class="ideas">
+            <div>
+              <dt>Reading a screw size</dt>
+              <dd>“M3 × 8” means a 3 mm thread that is 8 mm long, measured from under the head to the tip. Most screws here are button heads: a low, rounded head driven with a hex key. The robot uses only M2 and M3 screws, plus two M4 screws that come with the camera mounting. The servo cases take M2 and the metal servo horns take M3.</dd>
+            </div>
+            <div>
+              <dt>Heat-set inserts</dt>
+              <dd>A heat-set insert is a small brass sleeve with a metal thread inside. You press it into a printed hole with a hot soldering iron; the plastic melts around its knurled outside and grips it as it cools. They go wherever an M3 screw holds two printed parts together and may be undone again: the chassis, the decks and the wheel hubs.</dd>
+            </div>
+            <div>
+              <dt>Pilot holes and why there are no M2.5 screws</dt>
+              <dd>The small M2 screws that hold boards and plates go straight into plastic. Their holes are printed undersized (1.8 mm, or 2.0 mm in the circuit-board posts) so the screw cuts its own thread as it goes in. Turn them in by hand and stop when they are snug. Don't swap in M2.5 screws, even where a board is normally fitted with them, such as the Raspberry Pi: the holes are sized for M2 and a bigger screw will split the post. Don't drill the holes out either.</dd>
+            </div>
+            <div>
+              <dt>Horns and idler discs</dt>
+              <dd>A horn is the round metal plate on a servo's output shaft. It turns with the motor and is held on by a centre screw from the servo bag. On the opposite face of the servo is an <b>idler disc</b>, which spins freely on a pin and just carries load. Several parts here bolt to both, so the joint is supported from two sides.</dd>
+            </div>
+            <div>
+              <dt>Five-bar legs</dt>
+              <dd>Each leg has two hip servos side by side in the body, 50 mm apart. Each servo swings a 60 mm upper link, and two 100 mm lower links join the upper links at the knees and meet at the wheel. Turning both hip servos the same way swings the wheel forward or back; turning them towards or away from each other folds or straightens the leg, which raises or lowers the body between 65 and 140 mm. Because the motors stay in the body, the legs are light, which makes balancing easier.</dd>
+            </div>
+            <div>
+              <dt>Two servo buses at two voltages</dt>
+              <dd>The servos are chained on serial buses: each servo has two sockets, and the controller talks to them by ID number over one shared cable. Road Runner Mini has two buses, each with its own Waveshare adapter. <b>Bus 1</b> runs the four hips and the two head servos, which are the 7.4 V version of the STS3215; a UBEC (a small switching regulator that turns battery voltage into a fixed lower one) feeds it 7.4 V. <b>Bus 2</b> runs the two wheel servos straight from the battery, up to 12.6 V when it is full. The two buses must never be joined: battery voltage on bus 1 destroys the 7.4 V servos.</dd>
+            </div>
+            <div>
+              <dt>Other words</dt>
+              <dd><b>Left</b> and <b>right</b> always mean the robot's own left and right, as if you were standing behind it. The <b>spine</b> is the narrow box down the middle of the lower chassis that the four hip servos are screwed to. The <b>side bays</b> are the spaces on either side of the battery cradle. A <b>boss</b> is a raised round post that a screw or insert goes into. A <b>nyloc nut</b> has a nylon ring inside that grips the thread, so it stays put without being tightened hard.</dd>
+            </div>
+          </dl>
+          <table class="joints">
+            <thead><tr><th>Servo ID</th><th>Servo</th><th>Bus</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Head pitch (nod)</td><td>1, 7.4 V</td></tr>
+              <tr><td>2</td><td>Head yaw (turn)</td><td>1, 7.4 V</td></tr>
+              <tr><td>3</td><td>Hip, front right</td><td>1, 7.4 V</td></tr>
+              <tr><td>4</td><td>Hip, front left</td><td>1, 7.4 V</td></tr>
+              <tr><td>5</td><td>Hip, rear right</td><td>1, 7.4 V</td></tr>
+              <tr><td>6</td><td>Hip, rear left</td><td>1, 7.4 V</td></tr>
+              <tr><td>11</td><td>Wheel, left</td><td>2, battery</td></tr>
+              <tr><td>12</td><td>Wheel, right</td><td>2, battery</td></tr>
+            </tbody>
+          </table>
+          <p class="small">Part numbers in this guide (01 chassis lower, 09l left hub, and so on) match the file names in the STL download.</p>
+        </section>
+
+        <h2 class="stage" id={stage(1).id}><span>Stage 1 of 5 · steps {stage(1).from}–{stage(1).to}</span>{stage(1).title}</h2>
+
+        <Step n={1} title={t(1)} parts={ALL} image={still(1)} alt="The whole robot: printed parts in white, servos, boards and battery in grey.">
+          <p>Print the two test coupons first, with the same printer, filament and settings you will use for the parts. Every tight fit in the robot (screw holes, insert holes, horn pockets, the servo notches) is on a coupon, so ten minutes of checking here can save a day of reprinting later.</p>
+          <table>
+            <thead><tr><th>Coupon check</th><th>Right result</th></tr></thead>
+            <tbody>
+              <tr><td>M2 screw in the 1.8 mm hole</td><td>Cuts its own thread; you need a screwdriver to turn it</td></tr>
+              <tr><td>M2 screw in the 2.5 mm hole, M3 in the 3.5 mm hole</td><td>Passes straight through</td></tr>
+              <tr><td>Heat-set insert in the 4.0 mm hole</td><td>Only goes in with heat</td></tr>
+              <tr><td>Servo horn in the 20.2 mm pocket</td><td>Stays in upside down, drops out when you tap the coupon</td></tr>
+              <tr><td>8 mm tab in the slots; STS3215 in the notch</td><td>Slides in without force; the servo can shift a little side to side</td></tr>
+            </tbody>
+          </table>
+          <p>If a check fails, tune the printer's flow or hole compensation before going on. Then print the parts in PLA, keeping each file's orientation. The parts were designed on a Bambu Lab A1 with a 0.4 mm nozzle and 0.2 mm layers; the plate files carry these settings for you.</p>
+          <table>
+            <thead><tr><th>Parts</th><th>Walls</th><th>Infill</th><th>Supports</th></tr></thead>
+            <tbody>
+              <tr><td>Leg parts and IMU plate (06, 09–13)</td><td>4</td><td>100%</td><td>None, except the lower rear links (11): tree supports everywhere</td></tr>
+              <tr><td>Pitch bracket (07), on its long side</td><td>5</td><td>40% gyroid</td><td>Tree, build plate only; 5 mm brim</td></tr>
+              <tr><td>Head (08), upright</td><td>4</td><td>30% gyroid</td><td>Tree, build plate only</td></tr>
+              <tr><td>Chassis lower and upper (01, 02)</td><td>4</td><td>30% gyroid</td><td>Upper only: tree, build plate only; 5 mm brim on both</td></tr>
+              <tr><td>Upper deck, tray, lid (05, 03, 04)</td><td>4</td><td>30% gyroid</td><td>Tray and lid: tree, build plate only</td></tr>
+            </tbody>
+          </table>
+          <p class="tip"><b>Why these settings</b> The leg parts are solid because the whole robot hangs off a few small screw bosses on them. The pitch bracket's arms are only 2 mm thick, so it must lie on its long side: that way the layers run along the arms instead of across them, where they would snap. After printing, clear the brim out of the holes in the chassis upper's corner posts.</p>
+        </Step>
+
+        <Step n={2} title={t(2)} parts={["02", "05", "09l", "09r"]} focus={["02", "05", "09l", "09r"]} frame="all" image={still(2)} alt="The chassis upper, upper deck and both wheel hubs, highlighted: the parts that take heat-set inserts."
+          hardware={[{ qty: 20, item: "M3 × 5 × 4 heat-set inserts" }]}>
+          <p>Fit every insert now, while the parts are bare. The holes are easy to reach and there is no electronics nearby for the iron to damage.</p>
+          <table>
+            <thead><tr><th>Part</th><th>Inserts</th><th>Where</th></tr></thead>
+            <tbody>
+              <tr><td>Chassis upper (02)</td><td>12</td><td>4 in the bottoms of the corner posts, 4 in the tops of the deck columns, 2 in the rear bosses (from the rear face) and 2 in the front pads (from the front face).</td></tr>
+              <tr><td>Upper deck (05)</td><td>4</td><td>One in each end pocket, from the end face: 2 at the front, 2 at the rear. These take the lid screws; there's no room for a nut here.</td></tr>
+              <tr><td>Wheel hubs (09l, 09r)</td><td>2 each</td><td>From the flange face, in the two larger 4.0 mm holes on the centre line, above and below the centre hole. Leave the four smaller 3.5 mm holes alone: those are for the horn screws.</td></tr>
+            </tbody>
+          </table>
+          <ol>
+            <li>Sit the insert on its hole, lower the hot tip into it and let it sink with light pressure, keeping the iron square to the face.</li>
+            <li>Stop when the top of the insert is flush, lift the iron straight out, and let the part cool before fitting screws.</li>
+          </ol>
+          <p class="warn"><b>Check</b> Each insert must be flush and straight. A crooked insert makes its screw bind, and in the corner posts it would pull the two chassis halves out of line.</p>
+        </Step>
+
+        <Step n={3} title={t(3)} parts={["pi", "cooler"]} focus={["pi", "cooler"]} frame="all" image={still(3)} alt="The Raspberry Pi 5 with its Active Cooler, highlighted.">
+          <p>The servos get their ID numbers from a tool that runs on the Pi, so set the Pi up first, on the table. The <a href={ROBOT_README}>robot program's README</a> has the full details.</p>
+          <ol>
+            <li>Fit the Active Cooler to the Pi, following its instructions.</li>
+            <li>Write Raspberry Pi OS (64-bit) to the memory card with Raspberry Pi Imager, setting a hostname, user, Wi-Fi and SSH key in its settings. Power the Pi from a USB-C supply for now and connect over SSH.</li>
+            <li>Turn on the I²C bus the IMU uses, at its fast 400 kHz speed. Add this line to <code>/boot/firmware/config.txt</code>, then restart:
+              <pre><code>dtparam=i2c_arm=on,i2c_arm_baudrate=400000</code></pre>
+            </li>
+            <li>Get the code and give it its own Python environment:
+              <pre><code>git clone https://github.com/mofe64/roadRunnerMiniV1.git ~/roadRunnerMiniV1
+cd ~/roadRunnerMiniV1/robot
+python3 -m venv .venv
+.venv/bin/pip install numpy pyserial smbus2 pygame depthai==2.33.0.0</code></pre>
+            </li>
+          </ol>
+          <p class="tip"><b>Why a venv</b> Keeping the robot's packages in <code>robot/.venv</code> means a system update can't change them under you, and the exact camera library version the code was tested with stays pinned.</p>
+        </Step>
+
+        <Step n={4} title={t(4)} parts={SERVOS} focus={SERVOS} image={still(4)} alt="All eight servos on their own, in the positions they take in the robot: four hips in the body, two wheels at the bottom and the two head servos at the top.">
+          <p>The picture shows where the eight servos end up. New servos all share the same ID, so the controller can't tell them apart on a shared bus. Give each one its own ID now, while you can plug them in one at a time; once the hips are screwed inside the body you can't reach their sockets. This also tests every servo before it is built in.</p>
+          <ol>
+            <li>Connect one bus servo adapter to the Pi with a USB cable, set its switch to <b>USB</b>, and power it from the <b>6 V bench supply</b> through its screw terminal.</li>
+            <li>Run the ID tool and follow its prompts, plugging in one servo at a time:
+              <pre><code>cd ~/roadRunnerMiniV1/robot
+.venv/bin/python tools/setup_ids.py</code></pre>
+            </li>
+            <li>Label each servo with tape as you go (“4 hip FL”). Use the ID table above: hips 3 to 6, head 1 and 2, wheels 11 and 12.</li>
+          </ol>
+          <p class="warn"><b>Easy to mix up</b> The four hip servos look identical and their IDs aren't in a simple left-to-right order. A swapped pair won't show up until calibration, when the legs move the wrong way. The tape labels are worth it.</p>
+        </Step>
+
+        <h2 class="stage" id={stage(2).id}><span>Stage 2 of 5 · steps {stage(2).from}–{stage(2).to}</span>{stage(2).title}</h2>
+        <p class="stage-note">Everything in this stage happens before the tray goes on, because the tray closes off the hip screws and the side bays. Keep the horns on the hip servos throughout.</p>
+
+        <Step n={5} title={t(5)} parts={chassis} focus={["02"]} from={[0, 50, 0]} frame="all" image={still(5)} alt="The chassis upper, highlighted, sitting on the floor of the chassis lower."
+          hardware={[{ qty: 4, item: "M3 × 8 button-head screws" }]}>
+          <p>The chassis is printed as two parts so each one has a big flat face to sit on the print bed. The lower part is the floor and the spine; the upper part carries the battery cradle and the decks.</p>
+          <ol>
+            <li>Set the chassis upper (02) on the floor of the chassis lower (01), with its two rear bosses at the back.</li>
+            <li>From below, fit four <b>M3 × 8</b> up through the corner holes in the floor into the corner-post inserts. No washers.</li>
+            <li>Tighten until snug.</li>
+          </ol>
+          <p class="tip"><b>Why exactly M3 × 8</b> The floor is 2 mm thick, so an 8 mm screw reaches 6 mm into a hole that is 6.5 mm deep. A longer screw would bottom out before it clamped.</p>
+        </Step>
+
+        <Step n={6} title={t(6)} parts={withHipsL} focus={HIPS_L} from={[40, 0, 0]} view="left" image={still(6)} alt="The two left hip servos, highlighted, against the left wall of the spine."
+          hardware={[{ qty: 8, item: "M2 × 8 button-head screws" }, { qty: 8, item: "M2 washers" }]}>
+          <p>The four hip servos are screwed to the outside of the spine, two on each side, with their horns facing out. The screws go in from <b>inside</b> the spine, which is why this needs the L-key.</p>
+          <ol>
+            <li>Check the horn is on each servo with its centre screw tight. The tray has open slots, so the body goes into it with the horns on.</li>
+            <li>Plug a bus cable into the servo first. Its sockets are on the back face and sit in a pocket in the spine wall, so you can't plug in afterwards. The cable runs through the slot in the wall into the spine and out at the bottom.</li>
+            <li>Hold the front-left servo (ID 4) against the wall so its back sits flat on the four pads and its idler disc goes into the round hole.</li>
+            <li>From inside the spine, fit four <b>M2 × 8</b>, each with a washer, through the wall into the servo. Reach the lower screws through the two openings in the floor; the upper screw heads sit in small pockets in the spine roof. A little Blu Tack holds each screw on the key.</li>
+            <li>Turn each screw the last part by hand and stop when the head meets the washer. Repeat for the rear-left servo (ID 6).</li>
+          </ol>
+          <p class="warn"><b>Don't force it</b> Each screw should reach about 4.3 mm into the servo, but the real depth of the case holes isn't modelled. If a screw stops before its head meets the washer, add a second washer rather than force it.</p>
+        </Step>
+
+        <Step n={7} title={t(7)} parts={withHips} focus={HIPS_R} from={[-40, 0, 0]} view="right" image={still(7)} alt="The two right hip servos, highlighted, against the right wall of the spine."
+          hardware={[{ qty: 8, item: "M2 × 8 button-head screws" }, { qty: 8, item: "M2 washers" }]}>
+          <ol>
+            <li>Fit the front-right (ID 3) and rear-right (ID 5) servos in the same way: cable plugged in first, back flat on the pads, four <b>M2 × 8</b> with washers from inside the spine.</li>
+            <li>Check all four: there should be no gap between any servo's back and its pads.</li>
+          </ol>
+          <p>The four hip servos are the robot's legs. Every newton of force that holds the robot up goes through these sixteen small screws, so take the time to seat each one properly.</p>
+        </Step>
+
+        <Step n={8} title={t(8)} parts={withSplice} focus={["xt60"]} from={[-40, 0, 0]} view="right" image={still(8)} alt="The XT60 power splice, highlighted, in the right side bay of the chassis.">
+          <p>The splice is where the battery's power divides three ways: to the wheel bus and to the two UBECs. It lives in the right side bay, beside the battery cradle, and the tray closes that bay, so it goes in now.</p>
+          <ol>
+            <li>Make up the splice from XT60 connectors and 16 AWG wire, insulating every joint with heat-shrink.</li>
+            <li>Put it in the right side bay and hold it with cable ties through the slots in the battery cradle wall.</li>
+            <li>Leave all the wires long. Their routes aren't in the model; you'll lead them up to the deck in step {at("Fit the UBECs")} and connect them in step {at("Wire the power")}.</li>
+          </ol>
+          <p class="tip"><b>Why not the fuse too</b> The fuse holder doesn't fit in the left side bay. It goes on the outside of the tray in step {at("Fit the fuse holder")}, so leave its wires long enough to reach out through the rear-left slot.</p>
+        </Step>
+
+        <Step n={9} title={t(9)} parts={withTray} focus={["03"]} from={[0, -70, 0]} frame="all" image={still(9)} alt="The tray, highlighted, around the body, with the hip servos passing through the slots in its side walls."
+          hardware={[{ qty: 4, item: "M3 × 8 button-head screws" }]}>
+          <p>The tray is the lower half of the robot's shell. Each side wall has two slots, open at the top, so the body can go straight down into it with the hip servos and horns already fitted.</p>
+          <ol>
+            <li>Hold the body level over the tray, front over front, and line each hip servo up with its slot.</li>
+            <li>Lower it straight down until the chassis sits on the tray floor. Don't spread the walls to help it.</li>
+            <li>Fit two <b>M3 × 8</b> through the tray's rear wall into the rear-boss inserts, and two through the front wall into the front-pad inserts.</li>
+          </ol>
+          <p class="warn"><b>Tight by design</b> There is 1 mm between each horn and its slot edge and 0.5 mm beside each servo case. If the body doesn't drop in freely, lift it out and find what's catching, usually a cable or a horn that isn't fully seated. Forcing it can crack the slot.</p>
+        </Step>
+
+        <Step n={10} title={t(10)} parts={withFuse} focus={["fuse"]} from={[40, 0, 0]} view="left" image={still(10)} alt="The fuse holder, highlighted, on the outside of the tray's left wall, between the two hip servos."
+          hardware={[{ qty: 2, item: "Cable ties, 2.5 mm" }]}>
+          <p>The 10 A fuse protects the wiring if anything shorts. It sits on the outside of the tray's left wall, on the centre post between the two left slots, where you can see it and change it without opening the robot.</p>
+          <ol>
+            <li>Hold the holder against the centre post with its long side running front to back and its cap pointing up.</li>
+            <li>Thread one cable tie through the front pair of small holes and one through the rear pair, round the holder, and close them.</li>
+            <li>Lead its wires in through the rear-left slot to the splice.</li>
+          </ol>
+          <p class="tip"><b>If a tie won't go through</b> Inside the wall, each tie has to pass through a 2 mm gap between the tray and the chassis; a tie is 1.2 mm thick, so it's snug. If it won't go, lift the body back out, thread both ties through the holes, lower the body again, then close them.</p>
+        </Step>
+
+        <Step n={11} title={t(11)} parts={withFuse} focus={HIPS} frame="all" image={still(11)} alt="The body in its tray with the four hip servos and their horns highlighted.">
+          <ol>
+            <li>Check that the centre screw on each of the four hip horns is tight. The upper links will hang off these horns.</li>
+            <li>If you took a horn off, push it back onto its spline through the slot and refit its centre screw.</li>
+          </ol>
+          <p class="tip"><b>No need to centre the servos</b> It doesn't matter what angle a horn sits at on its spline. Calibration in step {at("Calibrate and take the first drive")} measures each joint and records its own zero.</p>
+        </Step>
+
+        <h2 class="stage" id={stage(3).id}><span>Stage 3 of 5 · steps {stage(3).from}–{stage(3).to}</span>{stage(3).title}</h2>
+        <p class="stage-note">Build each wheel unit on the table first, then hang it on the upper links at the knees. The right side is a mirror of the left, with the same screws.</p>
+
+        <Step n={12} title={t(12)} parts={["wheelservol", "11l"]} focus={["wheelservol", "11l"]} frame="all" from={[0, 0, -40]} view="left" image={still(12)} alt="The left wheel servo with the lower rear link, highlighted, bolted to its back."
+          hardware={[{ qty: 4, item: "M3 × 8 button-head screws" }, { qty: 4, item: "M3 washers, 1 mm" }]}>
+          <p>Each wheel unit is a wheel servo with three parts hung on it: the lower rear link on its back, the front plate around its horn, and the hub that carries the wheel.</p>
+          <ol>
+            <li>Fit one of the aluminium disc horns from the ST3215-HS box onto the left wheel servo's spline, with its centre screw.</li>
+            <li>Lay the lower rear link (11l, the dog-leg shaped part) on the idler disc on the servo's back. Fit four <b>M3 × 8</b>, each with a <b>1 mm washer</b>, through the link into the disc, from the link's inside face.</li>
+          </ol>
+          <p class="warn"><b>The washers are essential</b> Without them, these screws go right through the idler disc and their tips press on the servo case, locking the joint.</p>
+        </Step>
+
+        <Step n={13} title={t(13)} parts={["wheelservol", "11l", "10l"]} focus={["10l"]} frame="all" from={[40, 0, 0]} view="left" image={still(13)} alt="The lower front plate, highlighted, around the wheel servo's horn."
+          hardware={[{ qty: 2, item: "M2 × 8 button-head screws" }]}>
+          <ol>
+            <li>Put the lower front plate (10l) over the horn so its ring goes around it.</li>
+            <li>Fit two <b>M2 × 8</b> through its two bosses into the servo case.</li>
+            <li>Tie the wheel servo's cable to the plate through one of its small hole pairs, so the cable moves with the leg instead of being pulled by it.</li>
+          </ol>
+          <p class="tip"><b>Why before the hub</b> The hub's flange is wider than this ring. Once the hub is on, the plate can't go over it.</p>
+        </Step>
+
+        <Step n={14} title={t(14)} parts={WHEEL_L} focus={["09l", "wheell"]} frame="all" from={[50, 0, 0]} view="left" image={still(14)} alt="The hub and wheel, highlighted, on the outside of the left wheel unit."
+          hardware={[{ qty: 4, item: "M3 × 8 button-head screws" }, { qty: 2, item: "M3 × 12 button-head screws" }]}>
+          <ol>
+            <li>Put the hub (09l) onto the horn through the ring, flange outwards. Fit four <b>M3 × 8</b> through its counterbores into the horn, without washers.</li>
+            <li>Fit the wheel with two <b>M3 × 12</b> through the wheel into the two inserts in the hub. These screws only hold the wheel to the hub; they don't reach the horn.</li>
+            <li>Turn the wheel by hand: it should turn with the horn, while the rear link swings freely on the idler disc.</li>
+          </ol>
+          <p class="tip"><b>If a wheel screw spins</b> The hub insert is missing or loose. Fit it as in step {at("Fit the heat-set inserts")}; the screw can't grip the plastic on its own.</p>
+        </Step>
+
+        <Step n={15} title={t(15)} parts={WHEEL_R} focus={WHEEL_R} frame="all" from={[-50, 0, 0]} view="right" image={still(15)} alt="The finished right wheel unit, highlighted: wheel servo, rear link, front plate, hub and wheel."
+          hardware={[{ qty: 8, item: "M3 × 8 button-head screws" }, { qty: 4, item: "M3 washers, 1 mm" }, { qty: 2, item: "M2 × 8 button-head screws" }, { qty: 2, item: "M3 × 12 button-head screws" }]}>
+          <p>Build the right unit the same way, as a mirror image, using the R parts (09r, 10r, 11r) and the second disc horn.</p>
+          <ol>
+            <li>Disc horn on the spline; lower rear link on the idler disc with four <b>M3 × 8</b> and <b>1 mm washers</b>.</li>
+            <li>Front plate around the horn with two <b>M2 × 8</b>; tie the cable to it.</li>
+            <li>Hub flange-out with four <b>M3 × 8</b>, no washers; wheel with two <b>M3 × 12</b>.</li>
+          </ol>
+        </Step>
+
+        <Step n={16} title={t(16)} parts={withLinksL} focus={["12l", "13l"]} from={[40, 0, 0]} view="left" image={still(16)} alt="The two left upper links, highlighted, bolted to the left hip horns."
+          hardware={[{ qty: 8, item: "M3 × 8 button-head screws" }, { qty: 8, item: "M3 washers, 1 mm" }]}>
+          <ol>
+            <li>Put the upper front link (12l) on the front-left hip horn and the upper rear link (13l) on the rear-left horn, with the knee boss at the free end facing in towards the body.</li>
+            <li>Fit four <b>M3 × 8</b>, each with a <b>1 mm washer</b>, through each link into its horn.</li>
+          </ol>
+          <p class="tip"><b>Why the washers here</b> The washer sets how far each screw reaches into the horn: with it, the tip goes in 3 mm. Without it, the screw would go deeper than the horn's thread allows.</p>
+        </Step>
+
+        <Step n={17} title={t(17)} parts={withLegL} focus={[...WHEEL_L, "kneesl"]} from={[30, -30, 0]} view="left" frame="all" image={still(17)} alt="The left wheel unit, highlighted, joined to the two upper links at the knees."
+          hardware={[{ qty: 2, item: "M3 × 16 button-head screws" }, { qty: 2, item: "M3 nyloc nuts" }, { qty: 2, item: "M3 washers, 1 mm" }, { qty: 1, item: "Threadlocker, a drop per screw" }]}>
+          <p>The knees close the five-bar loop: the front knee joins the upper front link to the front plate, and the rear knee joins the upper rear link to the lower rear link.</p>
+          <ol>
+            <li>Hold the wheel unit under the upper links with its links overlapping theirs at both knees.</li>
+            <li>For each knee, push an <b>M3 × 16</b> in from the inside (the upper link's side), with a <b>1 mm washer</b> between the two links. The hole is 3.2 mm, so the screw is a firm fit: turn it in, don't tap it.</li>
+            <li>Put a small drop of threadlocker on the screw's tip only, then fit a <b>nyloc nut</b> on the outside.</li>
+            <li>Tighten until the parts touch, then stop. The knee must swing freely.</li>
+          </ol>
+          <p class="warn"><b>Keep threadlocker off the plastic</b> It can attack PLA and make it brittle. On the tip of the screw it does its job, which is keeping the nut from walking off as the knee works back and forth.</p>
+        </Step>
+
+        <Step n={18} title={t(18)} parts={withLinksR} focus={["12r", "13r"]} from={[-40, 0, 0]} view="right" image={still(18)} alt="The two right upper links, highlighted, bolted to the right hip horns."
+          hardware={[{ qty: 8, item: "M3 × 8 button-head screws" }, { qty: 8, item: "M3 washers, 1 mm" }]}>
+          <ol>
+            <li>Upper front link (12r) on the front-right horn, upper rear link (13r) on the rear-right horn, knee bosses facing in.</li>
+            <li>Four <b>M3 × 8</b> with <b>1 mm washers</b> through each link into its horn.</li>
+          </ol>
+        </Step>
+
+        <Step n={19} title={t(19)} parts={withLegs} focus={[...WHEEL_R, "kneesr"]} from={[-30, -30, 0]} view="right" frame="all" image={still(19)} alt="The right wheel unit, highlighted, joined to the right upper links at the knees."
+          hardware={[{ qty: 2, item: "M3 × 16 button-head screws" }, { qty: 2, item: "M3 nyloc nuts" }, { qty: 2, item: "M3 washers, 1 mm" }]}>
+          <ol>
+            <li>Join the right wheel unit at both knees as on the left: <b>M3 × 16</b> from the inside, <b>washer</b> between the links, threadlocker on the tip, <b>nyloc nut</b> outside, snug but free.</li>
+            <li>Move each leg by hand through its whole range, folded and stretched. Nothing should bind, and the legs must not touch the tray.</li>
+          </ol>
+          <p class="tip"><b>Knees and wobble</b> A loose knee screw shows up later as a slow 3 Hz rocking that the balance policy can't fix. Check all four knees before every run.</p>
+        </Step>
+
+        <h2 class="stage" id={stage(4).id}><span>Stage 4 of 5 · steps {stage(4).from}–{stage(4).to}</span>{stage(4).title}</h2>
+        <p class="stage-note">The electronics stack up in layers: battery in its cradle, the Pi and IMU on the lower deck above it, then the upper deck with the servo adapters and UBECs. Each layer covers the one below, so finish and check each before the next goes on.</p>
+
+        <Step n={20} title={t(20)} parts={withBattery} focus={["battery"]} from={[0, 0, -120]} view="back" image={still(20)} alt="The battery, highlighted, sliding into its cradle from the back of the robot."
+          hardware={[]}>
+          <ol>
+            <li>Slide the battery into its cradle from the rear, leads at the back.</li>
+            <li>Hold it in with tape or a strap: there is no battery door yet.</li>
+            <li>Keep it disconnected until step {at("Check the voltages and power up")}.</li>
+          </ol>
+          <p class="tip"><b>Why it's low and central</b> At 277 g the battery is the heaviest single part. Sitting low in the middle of the body, it keeps the centre of mass between the wheels, which is where the balance policy expects it.</p>
+        </Step>
+
+        <Step n={21} title={t(21)} parts={withPi} focus={["pi", "cooler"]} from={[0, 50, 0]} image={still(21)} alt="The Raspberry Pi 5 with its cooler, highlighted, on the lower deck above the battery."
+          hardware={[{ qty: 4, item: "M2 × 8 button-head screws" }]}>
+          <ol>
+            <li>Put the Pi on the lower deck, above the battery, and fit four <b>M2 × 8</b> through its mounting holes into the pilot holes. They cut their own thread, so stop as soon as they're snug.</li>
+            <li>Leave the four posts at the front of the deck empty: they're for the IMU plate in the next step.</li>
+          </ol>
+        </Step>
+
+        <Step n={22} title={t(22)} parts={withImu} focus={["06", "imu"]} from={[0, 40, 0]} image={still(22)} alt="The IMU plate and IMU board, highlighted, on the four posts at the front of the lower deck."
+          hardware={[{ qty: 4, item: "M2 × 8 button-head screws" }, { qty: 2, item: "M2 × 6 screws" }, { qty: 1, item: "STEMMA QT to female Dupont cable" }]}>
+          <p>The IMU measures how the body is tilting and turning, 50 times a second. It is the most important sensor on the robot: the policy balances on what it reports.</p>
+          <ol>
+            <li>Put the IMU plate (06) on the four front posts, its two small posts pointing up and its tongue pointing forward. Fit four <b>M2 × 8</b>.</li>
+            <li>Put the IMU board on the two small posts with the <b>X arrow on the board pointing to the robot's nose</b>, and fit two <b>M2 × 6</b>.</li>
+            <li>Plug the STEMMA QT cable into the board's rear socket and connect the other end to the Pi's header: red to pin 1 (3.3 V), black to pin 6 (ground), blue to pin 3 (SDA), yellow to pin 5 (SCL).</li>
+          </ol>
+          <p class="warn"><b>Before the upper deck</b> Once the upper deck is on, you can't reach the IMU. Check now that it sits level and doesn't move, and that the arrow points forward: the policy reads tilt along the board's own axes, so a board turned round would make it lean the wrong way to catch a fall.</p>
+        </Step>
+
+        <Step n={23} title={t(23)} parts={withDeck} focus={["05"]} from={[0, 50, 0]} image={still(23)} alt="The upper deck, highlighted, on the four deck columns above the Pi."
+          hardware={[{ qty: 4, item: "M3 × 8 button-head screws" }]}>
+          <ol>
+            <li>Connect everything that runs below the deck first: the two USB-A to USB-C cables in the Pi's USB ports (one per servo adapter) and the 2-pin Dupont lead on the Pi's 5 V and ground pins for UBEC 1. Lead the free ends up beside the deck columns.</li>
+            <li>Put the deck on the four columns with its eight small posts at the rear, and fit four <b>M3 × 8</b> into the column inserts.</li>
+          </ol>
+        </Step>
+
+        <Step n={24} title={t(24)} parts={withAdapters} focus={["adapter1", "adapter2"]} from={[0, 40, 0]} view="back" image={still(24)} alt="The two bus servo adapters, highlighted, side by side at the rear of the upper deck."
+          hardware={[{ qty: 8, item: "M2 × 6 screws" }]}>
+          <ol>
+            <li>Fit <b>adapter 1</b> (hips and head) on the four posts at the <b>rear left</b>, with the edge that has the USB-C socket, the screw terminal and the DC jack facing forward. Fit four <b>M2 × 6</b>.</li>
+            <li>Fit <b>adapter 2</b> (wheels) on the rear-right posts, facing the same way, with four more <b>M2 × 6</b>.</li>
+            <li>Set the switch on each adapter to <b>USB</b>, and plug in the USB cables from the Pi.</li>
+          </ol>
+          <p class="tip"><b>The open channel</b> In front of the adapters is a 35 mm channel with nothing in it. It is there on purpose: a straight USB-C plug and the bend in its cable need that much room. Lay the USB cables and the adapters' power wires in it.</p>
+        </Step>
+
+        <Step n={25} title={t(25)} parts={withUbecs} focus={["ubec1", "ubec2"]} from={[0, 40, 0]} image={still(25)} alt="The two UBECs, highlighted, at the front of the upper deck."
+          hardware={[{ qty: 4, item: "Cable ties, 2.5 mm, 150 mm" }, { qty: 1, item: "Double-sided foam tape" }]}>
+          <ol>
+            <li>Set each UBEC's output as its instructions describe: <b>UBEC 1 to 5.2 V</b> for the Pi and <b>UBEC 2 to 7.4 V</b> for bus 1. Mark them so you can't mix them up.</li>
+            <li>Put foam tape under UBEC 1 and fit it at the front right of the deck, between the tie slots. Hold it with two cable ties, each going down through one slot, under the deck and up through the next.</li>
+            <li>Fit UBEC 2 the same way at the front left.</li>
+            <li>Check under the deck: the ties must not press on the IMU or the Pi's cooler.</li>
+          </ol>
+          <p class="tip"><b>Why 5.2 V for the Pi</b> The Pi is fed through its header pins rather than USB-C. A little over 5 V makes up for the drop in the thin lead, so the Pi doesn't report under-voltage when the camera draws current.</p>
+        </Step>
+
+        <h2 class="stage" id={stage(5).id}><span>Stage 5 of 5 · steps {stage(5).from}–{stage(5).to}</span>{stage(5).title}</h2>
+        <p class="stage-note">The neck and head are built on the lid, off the robot. Only when the head is on does the lid go onto the body.</p>
+
+        <Step n={26} title={t(26)} parts={["04", "yawservo"]} focus={["yawservo"]} from={[0, 40, 0]} frame="all" image={still(26)} alt="The lid on its own, with the yaw servo, highlighted, on top of it."
+          hardware={[{ qty: 4, item: "M2 × 6 pointed screws (servo bag)" }]}>
+          <ol>
+            <li>Put the yaw servo (ID 2) on top of the lid with its horn pointing up and its back face on the lid.</li>
+            <li>Pass its plugs and cable down through the window in the lid.</li>
+            <li>From inside the lid, fit four <b>M2 × 6</b> pointed screws from the servo bag up through the lid into the servo.</li>
+          </ol>
+        </Step>
+
+        <Step n={27} title={t(27)} parts={["04", "yawservo", "07"]} focus={["07"]} from={[0, 40, 0]} frame="all" image={still(27)} alt="The U-shaped pitch bracket, highlighted, on the yaw servo's horn."
+          hardware={[{ qty: 4, item: "M3 × 8 button-head screws" }]}>
+          <ol>
+            <li>Put the base of the pitch bracket (07) on the yaw horn.</li>
+            <li>Fit four <b>M3 × 8</b> from above, inside the U, into the horn. No washers.</li>
+          </ol>
+        </Step>
+
+        <Step n={28} title={t(28)} parts={NECK} focus={["pitchservo"]} from={[0, 40, 0]} frame="all" image={still(28)} alt="The pitch servo, highlighted, between the arms of the bracket, horn on the robot's left."
+          hardware={[{ qty: 8, item: "M2 × 6 pointed screws (servo bag)" }]}>
+          <ol>
+            <li>Plug a bus cable into the pitch servo (ID 1) first.</li>
+            <li>Put the servo into the U with its horn on the robot's <b>left</b>.</li>
+            <li>Fit four <b>M2 × 6</b> pointed screws through each arm, from the outside, into the servo. If one is still loose when it bottoms out, put a washer under it.</li>
+            <li>Fit the horn onto the spline with its centre screw, and the idler disc onto the idler pin.</li>
+          </ol>
+        </Step>
+
+        <Step n={29} title={t(29)} parts={HEAD} focus={["oak"]} from={[0, -40, 0]} view="below" frame="all" image={still(29)} alt="The head seen from below, with the OAK-D Lite camera, highlighted, on its ledges inside."
+          hardware={[{ qty: 2, item: "M4 × 10 button-head screws" }, { qty: 2, item: "M4 washers" }]}>
+          <ol>
+            <li>Put the OAK-D Lite on the two ledges inside the head (08), lens to the front.</li>
+            <li>Fit two <b>M4 × 10</b> with washers into the camera's rear holes. Reach them with the key through the two 8 mm holes in the head's back wall; the larger 10 mm holes in the sides aren't for these.</li>
+            <li>Plug the USB-C end of the USB 3 cable into the camera.</li>
+          </ol>
+        </Step>
+
+        <Step n={30} title={t(30)} parts={[...NECK, ...HEAD]} focus={HEAD} from={[0, 60, 0]} frame="all" image={still(30)} alt="The head with its camera, highlighted, lowered over the pitch servo and bracket."
+          hardware={[{ qty: 8, item: "M3 × 8 button-head screws" }]}>
+          <ol>
+            <li>Lower the head straight down over the pitch servo. The bracket's screw heads slide up through the grooves in the head's side ribs.</li>
+            <li>Fit four <b>M3 × 8</b> through each rib: four into the horn on the left and four into the idler disc on the right. No washers.</li>
+            <li>Reach up through the open bottom of the head with the short end of the L-key and turn in small strokes, with a bit of Blu Tack holding each screw.</li>
+          </ol>
+          <p class="tip"><b>Why the screws go in last</b> The screw tips stick out of the ribs, so with them in the head can't slide down over the bracket.</p>
+        </Step>
+
+        <Step n={31} title={t(31)} parts={ALL} focus={[...NECK, ...HEAD]} from={[0, 80, 0]} frame="all" image={still(31)} alt="The lid with the neck and head, highlighted, coming down onto the body."
+          hardware={[{ qty: 4, item: "M3 × 8 button-head screws" }]}>
+          <ol>
+            <li>Plug the yaw and pitch servo cables into the sockets on adapter 1, and the camera's USB 3 cable into one of the Pi's <b>blue</b> USB 3 ports.</li>
+            <li>Lower the lid onto the tray.</li>
+            <li>Fit four <b>M3 × 8</b> through the side holes in the lid's ends into the inserts in the upper deck's end pockets. Each tip stops about 1 mm short of the bottom of its pocket.</li>
+          </ol>
+        </Step>
+
+        <Step n={32} title={t(32)} parts={ALL} image={still(32)} alt="The finished robot. The power wiring runs inside the body.">
+          <p>With the battery still disconnected, finish the power wiring. Everything runs from the battery through the fuse to the splice, then splits three ways:</p>
+          <table>
+            <thead><tr><th>From the splice</th><th>To</th><th>Powers</th></tr></thead>
+            <tbody>
+              <tr><td>UBEC 2 (7.4 V)</td><td>Screw terminal of adapter 1</td><td>4 hip servos, yaw and pitch servos</td></tr>
+              <tr><td>Direct, battery voltage</td><td>Screw terminal of adapter 2</td><td>2 wheel servos</td></tr>
+              <tr><td>UBEC 1 (5.2 V)</td><td>Pi header, 5 V and ground pins</td><td>Raspberry Pi and, through it, the camera</td></tr>
+            </tbody>
+          </table>
+          <ol>
+            <li>Connect the battery lead through the fuse holder to the splice.</li>
+            <li>Connect the three outputs as in the table. Use the screw terminals on the adapters, not their DC jacks.</li>
+            <li>Check the servo chains: the four hips, yaw and pitch on adapter 1; the two wheels on adapter 2.</li>
+          </ol>
+          <p class="warn"><b>Never</b> connect battery voltage to adapter 1, and never connect the two servo buses together. The hip and head servos are 7.4 V servos, and a full 3S battery at 12.6 V will destroy them.</p>
+        </Step>
+
+        <Step n={33} title={t(33)} parts={ALL} image={still(33)} alt="The finished robot, ready for its first power-up.">
+          <p>Check the voltages before any servo sees them. A UBEC set wrong is the one mistake here that can't be undone.</p>
+          <ol>
+            <li>Move each leg and the head by hand through their range. Nothing should rub or catch.</li>
+            <li>Take the power wires off both adapters' screw terminals and unplug UBEC 1's lead from the Pi. Connect the battery and measure each UBEC's output with the multimeter: <b>UBEC 1 must read 5.2 V</b> and <b>UBEC 2 must read 7.4 V</b>. Disconnect the battery, then reconnect everything.</li>
+            <li>For the first power-up with the servos connected, plug the <b>6 V bench supply</b> in where the battery goes. If something is miswired, a bench supply limits the damage where a LiPo won't. Bus 1 runs a little under 7.4 V on it, which is fine for these checks.</li>
+            <li>Let the Pi draw more current over USB, which the camera needs. Add this line to <code>/boot/firmware/config.txt</code> and restart:
+              <pre><code>usb_max_current_enable=1</code></pre>
+            </li>
+            <li>Check the IMU is on the bus: <code>i2cdetect -y 1</code> must show <code>6a</code>.</li>
+          </ol>
+        </Step>
+
+        <Step n={34} title={t(34)} parts={ALL} image={still(34)} alt="The finished Road Runner Mini.">
+          <p>Each step below must pass before you move to the next; the <a href={ROBOT_README}>robot README</a> covers each tool in more detail. Run them from <code>~/roadRunnerMiniV1/robot</code>.</p>
+          <ol>
+            <li><b>Calibrate.</b> With all servos connected, run <code>.venv/bin/python tools/calibrate.py</code> and follow the prompts. The servos stay limp so you can move them by hand. Hold the robot in the air for the legs and head, then stand it on the floor for the wheels; a phone spirit-level app helps you set the body level.</li>
+            <li><b>Check the IMU.</b> <code>.venv/bin/python tools/check_imu.py</code>: all three checks must say OK.</li>
+            <li><b>Wheels in the air.</b> Hold the robot up with the wheels free and run <code>.venv/bin/python run_brain.py --air</code> (add <code>--bench-power</code> while on the bench supply). The legs move to the standing pose. Tip the robot forward a little: the wheels must turn forward, trying to drive under the body. Tip it back: they turn backwards. If a wheel turns the wrong way, press q and calibrate again.</li>
+            <li><b>Held on the floor.</b> Now on the battery, run <code>.venv/bin/python run_brain.py --held</code>, hold the robot upright on its wheels and press Enter. Keep your hands close without touching it. Press q to stop.</li>
+            <li><b>First drive.</b> <code>.venv/bin/python run_brain.py</code>. Keys: w/s speed, a/d turn, r/f height, space to stand still, q to stop. Add <code>--pad</code> to drive with a paired Xbox gamepad, or <code>--depth</code> to let the camera slow it for obstacles.</li>
+          </ol>
+          <p class="warn"><b>It will fall when it stops</b> The program stops the robot if it tips past 35°, if the battery drops to 10.5 V or if a servo stops answering, and the legs go limp. Be ready to catch it, and disconnect the battery when you're done.</p>
+        </Step>
+
+        <section class="prep" id="if-something-is-wrong" aria-labelledby="wrong-title">
+          <h2 id="wrong-title">If something is wrong</h2>
+          <table>
+            <thead><tr><th>What you see</th><th>Likely cause</th><th>Do this</th></tr></thead>
+            <tbody>
+              <tr><td><code>i2cdetect</code> doesn't show <code>6a</code></td><td>IMU wiring, or I²C not turned on</td><td>Check the four wires against step {at("Fit the IMU plate and the IMU")} and the <code>config.txt</code> line from step {at("Set up the Raspberry Pi")}.</td></tr>
+              <tr><td>A wheel turns the wrong way with <code>--air</code></td><td>Calibration recorded the wrong direction</td><td>Stop with q and run <code>tools/calibrate.py</code> again.</td></tr>
+              <tr><td>A leg moves the wrong way during calibration</td><td>Two hip servos have swapped IDs</td><td>Unplug them and set their IDs again one at a time with <code>tools/setup_ids.py</code>.</td></tr>
+              <tr><td>The robot rocks slowly back and forth</td><td>A loose knee screw</td><td>Check all four knee nuts. Logs from a robot with loose knees don't mean much.</td></tr>
+              <tr><td>The program stops saying a servo didn't answer</td><td>Unplugged cable, wrong ID or no power on that bus</td><td>Check the chain on that adapter, its switch (USB) and its screw-terminal power.</td></tr>
+              <tr><td>“Battery low” warning</td><td>The pack is at 10.8 V</td><td>Finish up; at 10.5 V the program stops. Charge the battery.</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="prep" id="final-checks" aria-labelledby="checks-title">
+          <h2 id="checks-title">Final checks</h2>
+          <ul class="checks">
+            <li>Every insert is flush and straight, and every small screw grips without spinning.</li>
+            <li>No gap between any hip servo and its pads in the spine.</li>
+            <li>Washers are under the upper-link and rear-link screws, and all four knees swing freely without play.</li>
+            <li>The IMU's X arrow points to the nose and the board doesn't move.</li>
+            <li>UBEC 1 reads 5.2 V, UBEC 2 reads 7.4 V, and the wheel bus is the only one on battery voltage.</li>
+            <li>The legs never touch the tray anywhere in their range, and the head turns ±90° without pulling its cables.</li>
+          </ul>
+          <p>Before every run, check the four knee screws. Something unclear or wrong in this guide? <a href={`${REPO}/issues`}>Open an issue on GitHub</a> so the next builder benefits.</p>
+        </section>
+      </div>
+
+      <aside class="viewer-col" aria-label="3D view of the current step">
+        <div class="viewer-box">
+          <span class="viewer-step" data-viewer-label>Step 1</span>
+          <div class="viewer-bar" data-viewer-bar>
+            <button type="button" data-viewer-go="-1" aria-label="Previous step">←</button>
+            <button type="button" data-viewer-go="1" aria-label="Next step">→</button>
+            <button type="button" data-viewer-close>Close</button>
+          </div>
+          <AssemblyViewer model={MODEL} label="3D view of Road Runner Mini showing the parts for the current step" />
+        </div>
+      </aside>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .guide { padding: 32px var(--gutter) 64px; border-top: 1px solid var(--rule); }
+  .intro { display: flex; flex-direction: column; gap: 14px; max-width: 760px; margin-bottom: 32px; }
+  h1 { font-size: 48px; line-height: 1.08; letter-spacing: -.01em; }
+  .lede { font-family: var(--serif); font-style: italic; font-size: 20px; line-height: 1.45; color: var(--quote); }
+  .note { font-size: 13px; color: var(--muted); max-width: 64ch; }
+
+  .layout { display: block; }
+  .viewer-col { display: none; }
+  .steps { max-width: 68ch; }
+
+  .prep { padding: 32px 0; border-top: 1px solid var(--rule); font-size: 15px; line-height: 1.7; color: #444; }
+  .prep h2 { font-size: 30px; margin-bottom: 14px; color: var(--ink); }
+  .prep h3 { font-size: 19px; margin: 20px 0 8px; color: var(--ink); }
+  .prep ul { padding-left: 1.3em; margin: 0; }
+  .prep li + li { margin-top: .4em; }
+  .prep b { font-weight: normal; color: var(--ink); }
+  .ideas { margin: 0; display: grid; gap: 18px; }
+  .ideas dt { font-family: var(--serif); font-size: 18px; color: var(--ink); }
+  .ideas dd { margin: 4px 0 0; }
+  .joints { margin-top: 24px; border-collapse: collapse; width: 100%; font-size: 13px; }
+  .joints th, .joints td { text-align: left; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--rule); }
+  .joints th { font-weight: normal; color: var(--muted); }
+  .small { font-size: 13px; color: var(--muted); }
+  .prep .warn, .prep .tip { margin-top: 16px; padding: 10px 14px; font-size: 14px; border: 1px solid var(--rule); border-left: 3px solid var(--heat); background: #fafaf8; }
+  .prep .tip { border-left-color: var(--link); }
+  .prep .warn b:first-child, .prep .tip b:first-child { font-weight: normal; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+  .stage { margin-top: 24px; padding: 28px 0 6px; border-top: 2px solid var(--ink); font-size: 32px; line-height: 1.15; }
+  .stage span { display: block; font: 11px var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .stage-note { font-size: 14px; color: var(--quote); margin: 4px 0 8px; }
+  .rest { display: flex; gap: 12px; margin-top: 10px; }
+  .rest figure { margin: 0; flex: 1; border: 1px solid var(--rule); }
+  .rest img { display: block; width: 100%; height: auto; }
+  .rest figcaption { font-size: 11px; color: var(--muted); padding: 4px 8px; }
+  #if-something-is-wrong table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 12px; }
+  #if-something-is-wrong th, #if-something-is-wrong td { text-align: left; vertical-align: top; padding: 8px 10px 8px 0; border-bottom: 1px solid var(--rule); }
+  #if-something-is-wrong th { font-weight: normal; color: var(--muted); }
+  #if-something-is-wrong code { font: 12px var(--mono); background: var(--chip); padding: 1px 4px; border-radius: 3px; }
+  .checks { list-style: none; padding: 0 !important; }
+  .checks li { padding-left: 26px; position: relative; }
+  .checks li::before { content: "☐"; position: absolute; left: 0; color: var(--muted); }
+
+  /* Wide screens: steps on the left, a sticky 3D view on the right that follows the step being read. */
+  @media (min-width: 1000px) {
+    .guide.has-viewer .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 46%); gap: 48px; align-items: start; }
+    .guide.has-viewer .viewer-col { display: block; position: sticky; top: 16px; height: calc(100vh - 32px); max-height: 760px; }
+    .guide.has-viewer .map-slot { display: none; }
+  }
+  .viewer-box { position: relative; height: 100%; border: 1px solid var(--rule); }
+  .viewer-step { position: absolute; left: 12px; top: 10px; z-index: 2; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--heat); }
+
+  @media (max-width: 600px) { h1 { font-size: 34px; } }
+
+  /* Narrow screens: "View in 3D" on a step opens the same viewer full screen, with step buttons and Close. */
+  .viewer-bar { display: none; }
+  .guide.is-overlay .viewer-col {
+    display: block; position: fixed; inset: 0; z-index: 50; height: 100dvh; max-height: none; background: #fff;
+  }
+  .guide.is-overlay .viewer-box { border: 0; }
+  .guide.is-overlay .viewer-bar { display: flex; position: absolute; top: 8px; right: 8px; z-index: 3; gap: 6px; }
+  .viewer-bar button {
+    min-width: 44px; min-height: 44px; padding: 0 14px; font: 14px var(--sans); color: var(--ink);
+    background: #fff; border: 1px solid var(--rule); border-radius: 3px; cursor: pointer;
+  }
+  .viewer-bar [data-viewer-close] { color: var(--link); border-color: var(--link); }
+  .guide.is-overlay .viewer-step { top: 22px; font-size: 13px; }
+  :global(html.no-scroll) { overflow: hidden; }
+
+  /* ?capture renders one step at a time for the still pictures (scripts/assembly-stills.mjs). */
+  :global(body.capture) .guide > .intro, :global(body.capture) .steps, :global(body.capture .site-header), :global(body.capture .site-footer) { display: none; }
+  :global(body.capture) .guide { padding: 0; border: 0; }
+  :global(body.capture) .guide .viewer-col, :global(body.capture) .guide.has-viewer .viewer-col { display: block; position: fixed; inset: 0; width: 100vw; height: 100vh; max-height: none; }
+  :global(body.capture) .viewer-box { border: 0; }
+  :global(body.capture) .viewer-step, :global(body.capture .av-hint), :global(body.capture astro-dev-toolbar) { display: none; }
+</style>
+
+<script>
+  // Tells the 3D view which step is being read. On narrow screens the view isn't shown or loaded:
+  // each step has its own still picture instead.
+  const guide = document.querySelector<HTMLElement>("[data-guide]")!;
+  const capture = new URLSearchParams(location.search).has("capture");
+  const wide = matchMedia("(min-width: 1000px)");
+  const steps = [...document.querySelectorAll<HTMLElement>("[data-step]")];
+  const label = document.querySelector<HTMLElement>("[data-viewer-label]")!;
+  const list = (s?: string) => (s ? s.split(",").filter(Boolean) : []);
+  const stateOf = (el: HTMLElement) => ({
+    parts: list(el.dataset.parts),
+    focus: list(el.dataset.focus),
+    from: el.dataset.from ? (el.dataset.from.split(",").map(Number) as [number, number, number]) : undefined,
+    view: el.dataset.view as "front" | "back" | "below" | "left" | "right" | undefined,
+    frame: el.dataset.frame as "focus" | "all" | undefined,
+  });
+
+  if (capture) {
+    document.body.classList.add("capture");
+    (window as unknown as { guideSteps: unknown }).guideSteps = steps.map(stateOf);
+  }
+
+  let viewer: HTMLElement | null = null;
+  let current: HTMLElement | null = null;
+  const show = (el: HTMLElement) => {
+    if (el === current) return;
+    current = el;
+    label.textContent = `Step ${el.dataset.step}`;
+    document.dispatchEvent(new CustomEvent("assembly-step", { detail: stateOf(el) }));
+  };
+
+  // The step being read is the last one whose top has passed 40% of the way down the screen.
+  const update = () => {
+    const line = innerHeight * 0.4;
+    let active = steps[0];
+    for (const s of steps) if (s.getBoundingClientRect().top <= line) active = s;
+    show(active);
+  };
+
+  const start = () => {
+    if (viewer || !(wide.matches || capture)) return;
+    try { if (!document.createElement("canvas").getContext("webgl2")) return; } catch { return; }
+    guide.classList.add("has-viewer");
+    viewer = guide.querySelector("assembly-viewer");
+    let ticking = false;
+    addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; update(); }); } }, { passive: true });
+    if (!capture) update();
+  };
+  start();
+  wide.addEventListener("change", start);
+
+  // Narrow screens: each step's "View in 3D" button opens the viewer full screen at that step.
+  const hasWebGL = (() => { try { return !!document.createElement("canvas").getContext("webgl2"); } catch { return false; } })();
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>("[data-view3d]")];
+  const closeButton = document.querySelector<HTMLButtonElement>("[data-viewer-close]")!;
+  let opener: HTMLElement | null = null;
+  const stepEl = (n: number) => steps.find((s) => Number(s.dataset.step) === n);
+
+  const openAt = (n: number, from?: HTMLElement) => {
+    const el = stepEl(n);
+    if (!el) return;
+    if (from) opener = from;
+    guide.classList.add("is-overlay");
+    document.documentElement.classList.add("no-scroll");
+    // The viewer loads the first time it's on screen; replay the step once it's ready so the new parts slide in.
+    const v = guide.querySelector<HTMLElement>("assembly-viewer")!;
+    current = null;
+    show(el);
+    if (!v.classList.contains("is-ready")) {
+      const wait = setInterval(() => { if (v.classList.contains("is-ready")) { clearInterval(wait); current = null; show(el); } }, 150);
+    }
+    closeButton.focus();
+  };
+  const close = () => {
+    guide.classList.remove("is-overlay");
+    document.documentElement.classList.remove("no-scroll");
+    opener?.focus();
+  };
+  const toggleButtons = () => buttons.forEach((b) => (b.hidden = wide.matches || !hasWebGL));
+  toggleButtons();
+  wide.addEventListener("change", () => { toggleButtons(); if (wide.matches) close(); });
+  buttons.forEach((b) => b.addEventListener("click", () => openAt(Number(b.dataset.view3d), b)));
+  closeButton.addEventListener("click", close);
+  document.querySelectorAll<HTMLButtonElement>("[data-viewer-go]").forEach((b) =>
+    b.addEventListener("click", () => {
+      const n = Number(current?.dataset.step ?? 1) + Number(b.dataset.viewerGo);
+      if (stepEl(n)) openAt(n);
+    }),
+  );
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && guide.classList.contains("is-overlay")) close(); });
+</script>

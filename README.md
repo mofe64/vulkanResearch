@@ -76,6 +76,19 @@ npx gltfpack -i /tmp/orion-v2-raw.glb -o public/models/orion-v2.glb -cc -kn
 node scripts/model-poster.mjs http://localhost:4321/projects/orion/ public/art/orion-v2-poster.png
 ```
 
+Road Runner Mini comes from its single assembly STEP (`~/dev/roadrunner/roadrunner_mini/v1/cad/biped_v02/`,
+mm, +X forward, +Z up). The script drops the `keepout_` boxes, names printed parts by part number (`RR1-09l-hub-L`)
+and merges each bought component into one `HW-` mesh:
+
+```sh
+RR=~/dev/roadrunner/roadrunner_mini/v1
+$CAD/orionV2CAD/.cad-venv/bin/python scripts/roadrunner2glb.py $RR/cad/biped_v02/biped_v02_S72.step /tmp/rr-raw.glb
+npx gltfpack -i /tmp/rr-raw.glb -o public/models/roadrunner-mini-v1.glb -cc -kn   # ~6.5 MB -> ~1.0 MB
+node scripts/model-poster.mjs http://localhost:4321/projects/roadrunner-mini/ public/art/roadrunner-mini-v1-poster.png
+# the STL and 3MF plate zips on its Resources tab
+python3 scripts/roadrunner-downloads.py $RR
+```
+
 A project uses a model through `model:` and `art:` (the poster) in its file in `src/content/projects/`.
 Models render in an "ink" style (white surfaces, dark crease lines) to match the drawings; pass `look="shaded"`
 to `<RobotViewer>` for the CAD colours. A viewer can also go into an MDX article:
@@ -149,4 +162,9 @@ the stills with `npm run dev` running:
 
 ```sh
 node scripts/assembly-stills.mjs http://localhost:4321/projects/orion/assembly/ public/guides/orion
+node scripts/assembly-stills.mjs http://localhost:4321/projects/roadrunner-mini/assembly/ public/guides/roadrunner-mini
 ```
+
+Road Runner Mini's guide (`src/pages/projects/roadrunner-mini/assembly.astro`) works the same way. Its printed parts
+are numbered `01`–`13` with `l`/`r` for left and right copies (`"09l"`), and its bought parts use their model names
+(`"hipfl"`, `"wheelservol"`, `"adapter1"`). Side-mounted steps can use `view="left"` or `view="right"`.

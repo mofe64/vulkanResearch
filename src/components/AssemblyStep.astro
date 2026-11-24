@@ -10,7 +10,7 @@ interface Props {
   parts: string[]; // printed parts in place by the end of this step
   focus?: string[]; // parts added (or worked on) in this step, drawn in orange
   from?: [number, number, number]; // mm offset new parts slide in from
-  view?: "front" | "back" | "below";
+  view?: "front" | "back" | "below" | "left" | "right";
   frame?: "focus" | "all"; // fit the view to the new parts (default) or to everything shown
   hardware?: Hardware[];
   image: string; // still render, used on narrow screens and when printing
