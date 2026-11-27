@@ -46,7 +46,7 @@ const projects = defineCollection({
             z.object({
               group: z.string().default("Electronics"), // rows are listed under their group, in file order
               item: z.string(), // "Raspberry Pi Camera Module 3"
-              qty: z.number().optional(), // how many one lamp needs
+              qty: z.number().optional(), // how many one build needs
               detail: z.string().optional(), // the option to pick on the shop page, or where the part is used
               url: z.url().optional(), // buy link; common parts (screws, cables) go without one
             }),

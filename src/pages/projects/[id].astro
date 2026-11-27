@@ -21,7 +21,14 @@ const lessons = await getLessons(project.id);
 const versions = [...p.versions].reverse();
 
 // Shop name shown on each buy link, from the link's host.
-const SHOPS: Record<string, string> = { "thepihut.com": "The Pi Hut", "aliexpress.com": "AliExpress" };
+const SHOPS: Record<string, string> = {
+  "thepihut.com": "The Pi Hut",
+  "aliexpress.com": "AliExpress",
+  "adafruit.com": "Adafruit",
+  "pololu.com": "Pololu",
+  "shop.luxonis.com": "Luxonis",
+  "waveshare.com": "Waveshare",
+};
 const shopOf = (url: string) => {
   const host = new URL(url).hostname.replace(/^www\./, "");
   return SHOPS[host] ?? host;
@@ -121,7 +128,7 @@ const TABS = [
         <>
           <h3 class="rhead">Bill of materials</h3>
           <p class="rintro">
-            Everything to buy for one lamp. Common parts such as cables, screws and inserts have no link: any shop that
+            Everything to buy for one build. Common parts such as cables, screws and inserts have no link: any shop that
             sells them will do. Printed parts are under CAD files below.
           </p>
           {bomGroups.map((g) => (

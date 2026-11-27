@@ -47,11 +47,25 @@ export async function lastActivity(project: Project) {
   return new Date(Math.max(...dates.map((d) => d.valueOf())));
 }
 
+/** Start date of the project's first recorded version. */
+export const projectCreated = (project: Project) => versionStart(project.data.versions[0].dates);
+
 /** All projects, most recently active first. */
 export async function getProjectsByActivity() {
   const projects = await getProjects();
   const withDates = await Promise.all(projects.map(async (p) => ({ project: p, last: await lastActivity(p) })));
   return withDates.sort((a, b) => b.last.valueOf() - a.last.valueOf());
+}
+
+/** All projects, newest created first (tie-broken by `order`). */
+export async function getProjectsByCreated() {
+  const projects = await getProjects();
+  const withDates = await Promise.all(
+    projects.map(async (p) => ({ project: p, created: projectCreated(p), last: await lastActivity(p) })),
+  );
+  return withDates.sort(
+    (a, b) => b.created.valueOf() - a.created.valueOf() || a.project.data.order - b.project.data.order,
+  );
 }
 
 /** Published posts, newest first. Drafts show in `astro dev` but never in a build. */

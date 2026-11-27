@@ -3,8 +3,9 @@
 // printed parts that are in place by then, with the parts added in that step drawn in orange and sliding in.
 //
 // The page drives it: <assembly-viewer> listens for an "assembly-step" event on document whose detail is
-// { parts: string[], focus: string[], from?: [x, y, z] mm, view?: "front" | "back" | "below", frame?: "focus" | "all" }.
-// Parts are named by part number, the way the CAD names its files: "01" is OR21-01-base-shell,
+// { parts: string[], focus: string[], from?: [x, y, z] mm, view?: "front" | "back" | "below" | "left" | "right", frame?: "focus" | "all" }.
+// Parts are named by part number: the model's node names start with a prefix and the number ("OR21-04b-...", "RR1-09l-...").
+// For Orion, "01" is OR21-01-base-shell,
 // "04b" the yaw servo retainer, "22" all six joint caps, "10a"/"10b" the two halves of the lower arm. Bought parts
 // use their model name without the "HW-" prefix: "servoyaw", "hornsshoulder", "camera", "led", "speaker". A "?capture" page uses window.assemblyViewer to
 // render a still image of every step (scripts/assembly-stills.mjs).
@@ -30,12 +31,16 @@ const { model, label } = Astro.props;
     parts: string[];
     focus: string[];
     from?: [number, number, number];
-    view?: "front" | "back" | "below";
+    view?: "front" | "back" | "below" | "left" | "right";
     frame?: "focus" | "all"; // what the camera fits: the new parts (default) or everything shown
   };
 
-  // Camera directions (model space, Y up; the lamp faces +Z).
-  const VIEWS = { front: [1.1, 0.75, 1.5], back: [-1.1, 0.75, -1.5], below: [0.9, -1.2, 1.3] } as const;
+  // Camera directions (model space, Y up; the robot faces +Z, so its own left is +X).
+  // "left" and "right" look square-on at a side, for parts that mount there (legs, wheels).
+  const VIEWS = {
+    front: [1.1, 0.75, 1.5], back: [-1.1, 0.75, -1.5], below: [0.9, -1.2, 1.3],
+    left: [1.7, 0.55, 0.45], right: [-1.7, 0.55, 0.45],
+  } as const;
 
   /** "OR21-04b-yaw-servo-retainer" -> "04b"; "OR21-22-elbow-left-..." -> "22". */
   const partNumber = (name: string) => name.toLowerCase().replace(/^[a-z]+\d*-/, "").split(/[-_ ]/)[0];
@@ -159,8 +164,10 @@ const { model, label } = Astro.props;
         for (const p of parts) if (p.obj.visible && (fitAll || focus.has(p.num))) box.expandByObject(p.obj);
         if (box.isEmpty()) box.setFromObject(pivot);
         const target = box.getCenter(new THREE.Vector3());
-        // Half the box diagonal over-estimates how much room a tall, thin shape needs; 0.8 of it frames snugly.
-        const radius = Math.max((box.getSize(new THREE.Vector3()).length() / 2) * 0.8, 0.14);
+        const size = box.getSize(new THREE.Vector3());
+        // Half the box diagonal over-estimates how much room a box needs; 0.8 of it frames snugly,
+        // while size.y * 0.58 keeps tall narrow robots from clipping top and bottom.
+        const radius = Math.max((size.length() / 2) * 0.8, size.y * 0.58, 0.14);
         const dir = new THREE.Vector3(...VIEWS[s.view ?? "front"]).normalize();
         const fit = radius / Math.sin(THREE.MathUtils.degToRad(camera.fov / 2)) * (camera.aspect < 1 ? 1.35 : 1.05);
         const toPos = target.clone().add(dir.multiplyScalar(fit));

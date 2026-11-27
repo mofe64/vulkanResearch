@@ -1,10 +1,10 @@
 ---
-// Every project, most recently active first. Light on purpose: posters only, no 3D, so the list stays fast.
+// Every project, newest first. Light on purpose: posters only, no 3D, so the list stays fast.
 import Base from "../../layouts/Base.astro";
-import { fmtDate, getPosts, getProjectsByActivity, projectUrl } from "../../lib/content";
+import { fmtDate, getPosts, getProjectsByCreated, projectUrl } from "../../lib/content";
 
 const rows = await Promise.all(
-  (await getProjectsByActivity()).map(async ({ project, last }) => ({
+  (await getProjectsByCreated()).map(async ({ project, last }) => ({
     project,
     last,
     posts: (await getPosts((p) => p.data.project.id === project.id)).length,
@@ -13,7 +13,7 @@ const rows = await Promise.all(
 );
 ---
 
-<Base title="Projects" description="Every project from the lab, most recently active first.">
+<Base title="Projects" description="Every project from the lab, newest first.">
   <div class="wrap">
     <span class="eyebrow">Projects</span>
     <h1>Everything on the workbench.</h1>
